@@ -1,4 +1,4 @@
-package com.tallercs.com.talllercounter;
+package com.tallercs.armas;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
