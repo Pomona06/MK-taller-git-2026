@@ -31,7 +31,7 @@ curl "http://localhost:8080/armas/crear?tipo=granada&nombre=Flashbang&aturde=tru
 
 ## El modelo
 
-Acá cambió bastante respecto a la primera versión que subí. Me di cuenta que el esqueleto real que veníamos usando en POO-03 no era el que había armado yo de memoria (Arma/ArmaFuego), sino uno que ya venía con parte del código puesto: Vendible (implementa Cotizable y VideoJuegoPosicionable, con precio y descripcion), Armas extends Vendible (vacía, sin nada adentro) y ArmasDeFuego extends Armas (con un solo campo, carga). Rifle, Pistola, Sniper y Granada no estaban, esos los agregué yo.
+Acá cambió bastante respecto a la primera versión subida. Me di cuenta que el esqueleto real que veníamos usando del Zulip no era el que había armado yo, sino uno que ya venía con parte del código puesto. Rifle, Pistola, Sniper y Granada no estaban, eso le agregué yo.
 
 ```mermaid
 classDiagram
