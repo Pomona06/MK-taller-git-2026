@@ -1,24 +1,29 @@
-package com.tallercs.armas.modelo;
+package com.example.restservice;
 
-/*
- Rama de armas que disparan y recargan.
- 
- disparar() y recargar() están implementados una sola vez acá, como final:
- ninguna subclase (Rifle, Pistola, Sniper) puede reescribir cómo se gasta
- munición o cómo funciona el cooldown de recarga. Lo único que cada
- subclase aporta es su gancho (Template Method):
-   - balasPorDisparo(): cuántas balas gasta un solo disparo
-   - calcularDano():  cómo modula el daño base heredado de Arma
+/**
+ * El profesor había dejado acá un solo atributo:
+ *
+ *     protected int carga;
+ *
+ * Lo cambié a private. Un campo protected sigue siendo modificable
+ * directamente por cualquier subclase, sin pasar por recargar() ni por
+ * disparar() — eso viola justo lo que pide la consigna, que el control de
+ * munición no se pise desde afuera (ni siquiera desde una hija descuidada).
+ * Se accede a él solo a través de un getter protegido.
+ *
+ * Se agregaron el resto de los atributos que hacían falta para que
+ * disparar()/recargar() tengan una lógica real (capacidad de cargador,
+ * cargadores de repuesto, precisión, retroceso, tiempo de recarga) — no
+ * estaban en el esqueleto original porque ahí "carga" era el único campo,
+ * sin ningún método que lo usara todavía.
+ *
+ * disparar() y recargar() están implementados una sola vez acá, como final
+ * (Template Method). Rifle, Pistola y Sniper solo sobreescriben dos métodos
+ * gancho chicos: balasPorDisparo() y calcularDano().
+ */
+public abstract class ArmasDeFuego extends Armas {
 
- Esto evita la duplicación que tendríamos si Rifle, Pistola y Sniper
- reimplementaran disparar()/recargar() cada una por su cuenta
-
- balasEnCargador y cargadoresRestantes son private: el control de munición
- no se puede pisar desde afuera ni desde una hija descuidada.
-*/
-public abstract class ArmaFuego extends Arma {
-
-    private int balasEnCargador;
+    private int carga;
     private int cargadoresRestantes;
     private final int capacidadCargador;
     private final double precision;
@@ -26,16 +31,16 @@ public abstract class ArmaFuego extends Arma {
     private final long tiempoRecargaMs;
     private final String animacion;
 
-    protected ArmaFuego(String nombre, double precio, String equipo, double peso, int dano,
-                         int capacidadCargador, int cargadoresRestantes,
-                         double precision, double retroceso, long tiempoRecargaMs,
-                         String animacion) {
+    protected ArmasDeFuego(String nombre, long precio, String equipo, double peso, int dano,
+                           int capacidadCargador, int cargadoresRestantes,
+                           double precision, double retroceso, long tiempoRecargaMs,
+                           String animacion) {
         super(nombre, precio, equipo, peso, dano);
         if (capacidadCargador <= 0 || cargadoresRestantes < 0) {
             throw new IllegalArgumentException("capacidad/cargadores inválidos");
         }
         this.capacidadCargador = capacidadCargador;
-        this.balasEnCargador = capacidadCargador;
+        this.carga = capacidadCargador;
         this.cargadoresRestantes = cargadoresRestantes;
         this.precision = precision;
         this.retroceso = retroceso;
@@ -46,26 +51,26 @@ public abstract class ArmaFuego extends Arma {
     @Override
     public final String disparar() {
         int balasNecesarias = balasPorDisparo();
-        if (balasEnCargador < balasNecesarias) {
+        if (carga < balasNecesarias) {
             return getNombre() + " no puede disparar: cargador insuficiente ("
-                    + balasEnCargador + " balas, necesita " + balasNecesarias + ")";
+                    + carga + " balas, necesita " + balasNecesarias + ")";
         }
-        balasEnCargador -= balasNecesarias;
+        carga -= balasNecesarias;
         int dano = calcularDano();
         return getNombre() + " disparó (" + balasNecesarias + " balas, precisión "
                 + precision + ") causando " + dano + " de daño. Quedan "
-                + balasEnCargador + "/" + capacidadCargador + " balas.";
+                + carga + "/" + capacidadCargador + " balas.";
     }
 
     public final String recargar() {
-        if (balasEnCargador == capacidadCargador) {
+        if (carga == capacidadCargador) {
             return getNombre() + " ya tiene el cargador lleno";
         }
         if (cargadoresRestantes <= 0) {
             return getNombre() + " no tiene cargadores de repuesto";
         }
         cargadoresRestantes--;
-        balasEnCargador = capacidadCargador;
+        carga = capacidadCargador;
         return getNombre() + " recargada en " + tiempoRecargaMs
                 + "ms. Cargadores restantes: " + cargadoresRestantes;
     }
@@ -81,8 +86,8 @@ public abstract class ArmaFuego extends Arma {
     /** Método gancho: cómo esta arma concreta deriva el daño a partir del daño base. */
     protected abstract int calcularDano();
 
-    protected int getBalasEnCargador() {
-        return balasEnCargador;
+    protected int getCarga() {
+        return carga;
     }
 
     protected double getPrecision() {

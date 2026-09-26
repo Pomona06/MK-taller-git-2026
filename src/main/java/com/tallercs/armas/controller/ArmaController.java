@@ -1,18 +1,19 @@
 package com.tallercs.armas.controller;
 
-import com.tallercs.armas.modelo.*;
+import com.example.restservice.*;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
-/* 
- Construye una instancia concreta según tipo (esto si necesita un switch,
- porque construir un objeto requiere elegir su constructor) y a partir de
- ahí la maneja únicamente como Arma tipo padre: ningún método de acá
- para abajo pregunta de qué tipo concreto es la instancia.
-*/
+/**
+ * Construye una instancia concreta según "tipo" (esto SÍ necesita un switch,
+ * porque construir un objeto requiere elegir su constructor) y a partir de
+ * ahí la maneja únicamente como Armas (tipo padre, de com.example.restservice):
+ * ningún método de acá para abajo pregunta de qué tipo concreto es la
+ * instancia.
+ */
 @RestController
 public class ArmaController {
 
@@ -20,7 +21,7 @@ public class ArmaController {
     public ArmaComportamientoDTO crear(
             @RequestParam String tipo,
             @RequestParam(defaultValue = "Arma sin nombre") String nombre,
-            @RequestParam(defaultValue = "1000") double precio,
+            @RequestParam(defaultValue = "1000") long precio,
             @RequestParam(defaultValue = "CT") String equipo,
             @RequestParam(defaultValue = "2.0") double peso,
             @RequestParam(defaultValue = "30") int dano,
@@ -38,9 +39,9 @@ public class ArmaController {
             @RequestParam(defaultValue = "1000") long cooldownMs,
             @RequestParam(defaultValue = "5000") double dineroDisponible
     ) {
-        // unico lugar de toda la app que sabe de tipos concretos: construir
+        // Único lugar de toda la app que sabe de tipos concretos: construir
         // el objeto correcto es responsabilidad de este switch.
-        Arma arma = switch (tipo.toLowerCase()) {
+        Armas arma = switch (tipo.toLowerCase()) {
             case "rifle" -> new Rifle(nombre, precio, equipo, peso, dano,
                     capacidadCargador, cargadoresRestantes, precision, retroceso,
                     tiempoRecargaMs, modoRafaga);
@@ -57,9 +58,7 @@ public class ArmaController {
                     "tipo debe ser rifle, pistola, sniper o granada (recibido: " + tipo + ")");
         };
 
-        // De aca para abajo, arma se trata siempre como Arma tipo padre.
-        // El JSON de respuesta muestra que cada tipo concreto se comporta
-        // distinto ante EXACTAMENTE los mismos tres mensajes.
+        // De acá para abajo, "arma" se trata SIEMPRE como Armas (tipo padre).
         return new ArmaComportamientoDTO(
                 arma.getClass().getSimpleName(),
                 arma.mostrarEnTienda(),

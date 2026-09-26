@@ -1,17 +1,11 @@
-package com.tallercs.armas.modelo;
+package com.example.restservice;
 
-/* 
- Pistola: arma inicial del jugador, también puede tener modo ráfaga
- (tipo una máquina como la CZ en modo automático).
- Reutiliza el mismo gancho balasPorDisparo() que Rifle en vez de
- inventar un método nuevo, evitando duplicación.
-*/
-public class Pistola extends ArmaFuego {
+public class Pistola extends ArmasDeFuego {
 
     private final boolean esArmaInicial;
     private final boolean modoRafaga;
 
-    public Pistola(String nombre, double precio, String equipo, double peso, int dano,
+    public Pistola(String nombre, long precio, String equipo, double peso, int dano,
                     int capacidadCargador, int cargadoresRestantes,
                     double precision, double retroceso, long tiempoRecargaMs,
                     boolean esArmaInicial, boolean modoRafaga) {

@@ -1,15 +1,10 @@
-package com.tallercs.armas.modelo;
+package com.example.restservice;
 
-/* 
- Rifle: puede disparar en ráfaga automática o tiro a tiro.
- Solo aporta sus dos métodos gancho; disparar()/recargar() los hereda
- sin tocarlos.
-*/
-public class Rifle extends ArmaFuego {
+public class Rifle extends ArmasDeFuego {
 
     private final boolean modoRafaga;
 
-    public Rifle(String nombre, double precio, String equipo, double peso, int dano,
+    public Rifle(String nombre, long precio, String equipo, double peso, int dano,
                  int capacidadCargador, int cargadoresRestantes,
                  double precision, double retroceso, long tiempoRecargaMs,
                  boolean modoRafaga) {
@@ -29,7 +24,6 @@ public class Rifle extends ArmaFuego {
 
     @Override
     protected int calcularDano() {
-        // en ráfaga cada bala individual pega un poco menos (retroceso acumulado)
         return modoRafaga ? (int) Math.round(getDano() * 0.8) : getDano();
     }
 }

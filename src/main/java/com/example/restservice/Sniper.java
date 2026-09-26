@@ -1,17 +1,10 @@
-package com.tallercs.armas.modelo;
+package com.example.restservice;
 
-/*
- Sniper: dispara un solo tiro por vez, pero el daño depende de si el
- jugador está apuntando con la mira (conMira). A diferencia de Rifle/
- Pistola, acá lo que cambia entre instancias no es cuántas balas gasta
- sino cómo calcula el daño, por eso sobreescribe calcularDano() en vez
- de balasPorDisparo().
-*/
-public class Sniper extends ArmaFuego {
+public class Sniper extends ArmasDeFuego {
 
     private boolean conMira;
 
-    public Sniper(String nombre, double precio, String equipo, double peso, int dano,
+    public Sniper(String nombre, long precio, String equipo, double peso, int dano,
                   int capacidadCargador, int cargadoresRestantes,
                   double precision, double retroceso, long tiempoRecargaMs) {
         super(nombre, precio, equipo, peso, dano, capacidadCargador, cargadoresRestantes,
@@ -34,7 +27,6 @@ public class Sniper extends ArmaFuego {
 
     @Override
     protected int calcularDano() {
-        // sin mira, el daño cae fuerte (disparo "a ojo")
         return conMira ? getDano() : (int) Math.round(getDano() * 0.4);
     }
 }

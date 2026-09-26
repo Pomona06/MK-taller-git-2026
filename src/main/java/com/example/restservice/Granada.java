@@ -1,15 +1,11 @@
-package com.tallercs.armas.modelo;
+package com.example.restservice;
 
-/*
- Granada: NO es un ArmaFuego (no dispara balas ni se recarga), pero
- sigue siendo una Arma y por lo tanto responde a disparar() como
- cualquier otra — acá disparar() delega en lanzar(), que es privado.
-
- El cooldown (ultimoLanzamiento, cooldownMs) es privado y se controla
- enteramente adentro de la clase: nadie desde afuera puede forzar una
- explosión ni resetear el temporizador.
+/**
+ * Granada extiende Armas directamente, no ArmasDeFuego, porque no dispara
+ * balas ni se recarga. Sigue respondiendo a disparar() como cualquier otra
+ * Arma — acá disparar() delega en lanzar(), que es privado.
  */
-public class Granada extends Arma {
+public class Granada extends Armas {
 
     private final double radioExplosion;
     private final double distanciaLanzamiento;
@@ -19,7 +15,7 @@ public class Granada extends Arma {
     private long ultimoLanzamiento;
     private boolean explotada;
 
-    public Granada(String nombre, double precio, String equipo, double peso, int dano,
+    public Granada(String nombre, long precio, String equipo, double peso, int dano,
                     double radioExplosion, double distanciaLanzamiento,
                     boolean aturde, double visibilidadReducida, long cooldownMs) {
         super(nombre, precio, equipo, peso, dano);
