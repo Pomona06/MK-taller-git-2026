@@ -31,15 +31,19 @@ curl "http://localhost:8080/armas/crear?tipo=granada&nombre=Flashbang&aturde=tru
 
 ## El modelo
 
-Parti de la jerarquía que veníamos usando en POO-03 (Arma → ArmaFuego /
-Granada → Rifle / Pistola / Sniper) y tuve que cambiar para que se cumpla lo que pedía la consigna (no estaba del todo bien en el inicial):
+Acá cambió bastante respecto a la primera versión que subí. Me di cuenta que el esqueleto real que veníamos usando en POO-03 no era el que había armado yo de memoria (Arma/ArmaFuego), sino uno que ya venía con parte del código puesto: Vendible (implementa Cotizable y VideoJuegoPosicionable, con precio y descripcion), Armas extends Vendible (vacía, sin nada adentro) y ArmasDeFuego extends Armas (con un solo campo, carga). Rifle, Pistola, Sniper y Granada no estaban, esos los agregué yo.
 
 ```mermaid
 classDiagram
-    class Arma {
+    class Vendible {
+        Long precio
+        String descripcion
+        +getPrecio() Long
+        +getDescripcion() String
+    }
+    class Armas {
         <<abstract>>
         -String nombre
-        -double precio
         -String equipo
         -double peso
         -int dano
@@ -48,9 +52,9 @@ classDiagram
         +inspeccionar()* String
         +mostrarEnTienda() String
     }
-    class ArmaFuego {
+    class ArmasDeFuego {
         <<abstract>>
-        -int balasEnCargador
+        -int carga
         -int cargadoresRestantes
         -int capacidadCargador
         -double precision
@@ -97,44 +101,38 @@ classDiagram
         #balasPorDisparo() int
         #calcularDano() int
     }
-    Arma <|-- ArmaFuego
-    Arma <|-- Granada
-    ArmaFuego <|-- Rifle
-    ArmaFuego <|-- Pistola
-    ArmaFuego <|-- Sniper
+    Vendible <|-- Armas
+    Armas <|-- ArmasDeFuego
+    Armas <|-- Granada
+    ArmasDeFuego <|-- Rifle
+    ArmasDeFuego <|-- Pistola
+    ArmasDeFuego <|-- Sniper
 ```
 
 ## Por qué es así
 
-La consigna pedía que el inventario pueda tratar cualquier arma igual (pedirle que dispare, que recargue, que se muestre en la tienda) sin fijarse de qué tipo es. Por eso disparar() está declarado como abstracto directamente en Arma, no en ArmaFuego - así una Granada también responde a disparar() aunque por dentro lo que hace es lanzarse y explotar (delega en un lanzar() privado).
+Vendible no la toqué, ya venía con precio y descripcion resueltos, no hacía falta duplicar eso en Armas.
 
-Lo que sí costó pensar fue cómo evitar que Rifle, Pistola y Sniper terminen repitiendo el mismo disparar() tres veces con pequeños cambios. Terminé poniendo disparar() y recargar() como final en ArmaFuego, se escriben una sola vez ahí y cada subclase solo
-sobreescribe dos métodos pequeños: balasPorDisparo() (cuántas balas gasta un tiro) y calcularDano() (cómo calcula el daño). Rifle y Pistola en modo ráfaga gastan 3 balas por vez, Sniper siempre gasta 1 pero calcula el daño distinto según si tenés la mira puesta o no.
+Armas estaba vacía. La completé con lo común a cualquier arma: nombre, equipo, peso, daño. Y con lo que pedía la consigna, que el inventario pueda tratar cualquier arma igual (pedirle que dispare, que recargue, que se muestre en la tienda) sin fijarse de qué tipo es. Por eso disparar() está declarado como abstracto directamente en Armas, no en ArmasDeFuego - así una Granada también responde a disparar() aunque por dentro lo que hace es lanzarse y explotar (delega en un lanzar() privado).
+
+ArmasDeFuego traía un solo campo, carga, y estaba puesto como protected. Lo cambié a private, porque protected igual deja que una subclase lo modifique directo sin pasar por recargar(), y eso rompe lo de que la munición no se pise desde afuera. Lo que sí costó pensar fue cómo evitar que Rifle, Pistola y Sniper terminen repitiendo el mismo disparar() tres veces con pequeños cambios. Terminé poniendo disparar() y recargar() como final en ArmasDeFuego, se escriben una sola vez ahí y cada subclase solo sobreescribe dos métodos pequeños: balasPorDisparo() (cuántas balas gasta un tiro) y calcularDano() (cómo calcula el daño). Rifle y Pistola en modo ráfaga gastan 3 balas por vez, Sniper siempre gasta 1 pero calcula el daño distinto según si tenés la mira puesta o no.
 
 Un cambio que hice durante la realizacion, al principio solo Rifle tenía lo de ráfaga/automático. Pero analizando mejor debido a innumerables horas de experiencia en ese juegazo recordé que las pistolas CZ también puede disparar en ráfaga, así que le agregué el mismo campo modoRafaga a Pistola y reutilicé el mismo método gancho en vez de inventar uno nuevo, si no, iba a terminar duplicando lógica entre las dos.
 
-Todo lo que tiene que ver con munición (balasEnCargador,
-cargadoresRestantes) y con el cooldown de la granada
-(ultimoLanzamiento, cooldownMs) lo dejé private. La idea es que nadie
-de afuera pueda, por ejemplo, resetear el cooldown para hacer explotar una
-granada antes de tiempo, ni cargar balas de la nada sin pasar por
-recargar().
+Todo lo que tiene que ver con munición (carga, cargadoresRestantes) y con el cooldown de la granada (ultimoLanzamiento, cooldownMs) lo dejé private. La idea es que nadie de afuera pueda, por ejemplo, resetear el cooldown para hacer explotar una granada antes de tiempo, ni cargar balas de la nada sin pasar por recargar().
 
-Una cosa que agregué y que no estaba en el diagrama original,
-el atributo nombre en Arma. Lo necesitaba porque si no, comprar(),
-inspeccionar() y el JSON que devuelve el controller no tienen forma de
-decir de qué arma están hablando.
+Una cosa que agregué y que no estaba en el esqueleto original, el atributo nombre en Armas. Lo necesitaba porque si no, comprar(), inspeccionar() y el JSON que devuelve el controller no tienen forma de decir de qué arma están hablando.
 
-mostrarEnTienda() deje como método normal no abstracto en Arma,
-porque con nombre, precio, equipo y peso alcanza para mostrarla en la
-tienda - no hacía falta que cada subclase lo reescriba.
+mostrarEnTienda() deje como método normal no abstracto en Armas, porque con nombre, precio, equipo y peso alcanza para mostrarla en la tienda - no hacía falta que cada subclase lo reescriba.
+
+Granada tampoco existía, la agregué extendiendo Armas directamente y no ArmasDeFuego, porque no dispara balas ni se recarga.
 
 ## controller
 
 ArmaController recibe tipo por query param y ahí sí tiene que usar un
 switch para saber qué constructor llamar ya eso no se puede evitar porque construir
 el objeto correcto requiere saber el tipo. Pero una vez que la instancia
-ya existe, todo el resto del método la trata como Arma, llama
+ya existe, todo el resto del método la trata como Armas, llama
 .mostrarEnTienda(), .comprar(), .disparar(), .inspeccionar() sin
 ningún if ni instanceof de por medio.
 
