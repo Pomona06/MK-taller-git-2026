@@ -1,12 +1,12 @@
 package com.tallercs.armas.modelo;
 
-/**
- * Sniper: dispara un solo tiro por vez, pero el daño depende de si el
- * jugador está apuntando con la mira (conMira). A diferencia de Rifle/
- * Pistola, acá lo que cambia entre instancias no es cuántas balas gasta
- * sino cómo calcula el daño, por eso sobreescribe calcularDano() en vez
- * de balasPorDisparo().
- */
+/*
+ Sniper: dispara un solo tiro por vez, pero el daño depende de si el
+ jugador está apuntando con la mira (conMira). A diferencia de Rifle/
+ Pistola, acá lo que cambia entre instancias no es cuántas balas gasta
+ sino cómo calcula el daño, por eso sobreescribe calcularDano() en vez
+ de balasPorDisparo().
+*/
 public class Sniper extends ArmaFuego {
 
     private boolean conMira;

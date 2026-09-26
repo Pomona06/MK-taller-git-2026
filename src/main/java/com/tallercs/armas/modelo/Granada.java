@@ -1,13 +1,13 @@
 package com.tallercs.armas.modelo;
 
-/**
- * Granada: NO es un ArmaFuego (no dispara balas ni se recarga), pero
- * sigue siendo una Arma y por lo tanto responde a disparar() como
- * cualquier otra — acá disparar() delega en lanzar(), que es privado.
- *
- * El cooldown (ultimoLanzamiento, cooldownMs) es privado y se controla
- * enteramente adentro de la clase: nadie desde afuera puede forzar una
- * explosión ni resetear el temporizador.
+/*
+ Granada: NO es un ArmaFuego (no dispara balas ni se recarga), pero
+ sigue siendo una Arma y por lo tanto responde a disparar() como
+ cualquier otra — acá disparar() delega en lanzar(), que es privado.
+
+ El cooldown (ultimoLanzamiento, cooldownMs) es privado y se controla
+ enteramente adentro de la clase: nadie desde afuera puede forzar una
+ explosión ni resetear el temporizador.
  */
 public class Granada extends Arma {
 

@@ -7,12 +7,12 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
-/**
- * Construye una instancia concreta según "tipo" (esto SÍ necesita un switch,
- * porque construir un objeto requiere elegir su constructor) y a partir de
- * ahí la maneja únicamente como Arma (tipo padre): ningún método de acá
- * para abajo pregunta de qué tipo concreto es la instancia.
- */
+/* 
+ Construye una instancia concreta según tipo (esto si necesita un switch,
+ porque construir un objeto requiere elegir su constructor) y a partir de
+ ahí la maneja únicamente como Arma tipo padre: ningún método de acá
+ para abajo pregunta de qué tipo concreto es la instancia.
+*/
 @RestController
 public class ArmaController {
 
@@ -38,7 +38,7 @@ public class ArmaController {
             @RequestParam(defaultValue = "1000") long cooldownMs,
             @RequestParam(defaultValue = "5000") double dineroDisponible
     ) {
-        // Único lugar de toda la app que sabe de tipos concretos: construir
+        // unico lugar de toda la app que sabe de tipos concretos: construir
         // el objeto correcto es responsabilidad de este switch.
         Arma arma = switch (tipo.toLowerCase()) {
             case "rifle" -> new Rifle(nombre, precio, equipo, peso, dano,
@@ -57,7 +57,7 @@ public class ArmaController {
                     "tipo debe ser rifle, pistola, sniper o granada (recibido: " + tipo + ")");
         };
 
-        // De acá para abajo, "arma" se trata SIEMPRE como Arma (tipo padre).
+        // De aca para abajo, arma se trata siempre como Arma tipo padre.
         // El JSON de respuesta muestra que cada tipo concreto se comporta
         // distinto ante EXACTAMENTE los mismos tres mensajes.
         return new ArmaComportamientoDTO(

@@ -1,11 +1,11 @@
 package com.tallercs.armas.modelo;
 
-/**
- * Pistola: arma inicial del jugador, también puede tener modo ráfaga
- * (p. ej. una máquina como la CZ75 en modo automático).
- * Reutiliza el mismo gancho balasPorDisparo() que Rifle en vez de
- * inventar un método nuevo, evitando duplicación.
- */
+/* 
+ Pistola: arma inicial del jugador, también puede tener modo ráfaga
+ (tipo una máquina como la CZ en modo automático).
+ Reutiliza el mismo gancho balasPorDisparo() que Rifle en vez de
+ inventar un método nuevo, evitando duplicación.
+*/
 public class Pistola extends ArmaFuego {
 
     private final boolean esArmaInicial;

@@ -1,21 +1,21 @@
 package com.tallercs.armas.modelo;
 
-/**
- * Rama de armas que disparan y recargan.
- *
- * disparar() y recargar() están implementados UNA SOLA VEZ acá, como final:
- * ninguna subclase (Rifle, Pistola, Sniper) puede reescribir cómo se gasta
- * munición o cómo funciona el cooldown de recarga. Lo único que cada
- * subclase aporta es su "gancho" (Template Method):
- *   - balasPorDisparo(): cuántas balas gasta un solo disparo
- *   - calcularDano():    cómo modula el daño base heredado de Arma
- *
- * Esto evita la duplicación que tendríamos si Rifle, Pistola y Sniper
- * reimplementaran disparar()/recargar() cada una por su cuenta.
- *
- * balasEnCargador y cargadoresRestantes son private: el control de munición
- * no se puede pisar desde afuera ni desde una hija descuidada.
- */
+/*
+ Rama de armas que disparan y recargan.
+ 
+ disparar() y recargar() están implementados una sola vez acá, como final:
+ ninguna subclase (Rifle, Pistola, Sniper) puede reescribir cómo se gasta
+ munición o cómo funciona el cooldown de recarga. Lo único que cada
+ subclase aporta es su gancho (Template Method):
+   - balasPorDisparo(): cuántas balas gasta un solo disparo
+   - calcularDano():  cómo modula el daño base heredado de Arma
+
+ Esto evita la duplicación que tendríamos si Rifle, Pistola y Sniper
+ reimplementaran disparar()/recargar() cada una por su cuenta
+
+ balasEnCargador y cargadoresRestantes son private: el control de munición
+ no se puede pisar desde afuera ni desde una hija descuidada.
+*/
 public abstract class ArmaFuego extends Arma {
 
     private int balasEnCargador;

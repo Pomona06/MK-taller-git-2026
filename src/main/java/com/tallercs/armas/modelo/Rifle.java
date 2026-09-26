@@ -1,10 +1,10 @@
 package com.tallercs.armas.modelo;
 
-/**
- * Rifle: puede disparar en ráfaga automática o tiro a tiro.
- * Solo aporta sus dos métodos gancho; disparar()/recargar() los hereda
- * sin tocarlos.
- */
+/* 
+ Rifle: puede disparar en ráfaga automática o tiro a tiro.
+ Solo aporta sus dos métodos gancho; disparar()/recargar() los hereda
+ sin tocarlos.
+*/
 public class Rifle extends ArmaFuego {
 
     private final boolean modoRafaga;

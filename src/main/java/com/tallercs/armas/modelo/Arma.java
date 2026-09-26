@@ -1,18 +1,18 @@
 package com.tallercs.armas.modelo;
 
-/**
- * Clase base de toda la jerarquía de armas de CS2.
- *
- * Concentra lo que es común a CUALQUIER arma (nombre, precio, equipo, peso,
- * daño base) y el contrato uniforme que el inventario necesita para tratar
- * cualquier instancia sin preguntar de qué tipo concreto es:
- *   - disparar()       -> comportamiento propio de cada rama (fuego vs. granada)
- *   - mostrarEnTienda() -> igual para todas, por eso NO es abstracto acá
- *   - comprar()         -> regla de negocio única, por eso es final
- *
- * Todos los campos son privados: nadie fuera de la jerarquía puede dejar
- * un arma en un estado imposible (p. ej. un precio negativo puesto desde afuera).
- */
+/*
+ Clase base de toda la jerarquía de armas de CS2.
+
+ Concentra lo que es comun a CUALQUIER arma (nombre, precio, equipo, peso,
+ daño base) y el contrato uniforme que el inventario necesita para tratar
+ cualquier instancia sin preguntar de qué tipo concreto es:
+   - disparar()      comportamiento propio de cada rama (fuego vs granada)
+   - mostrarEnTienda() igual para todas, por eso no es abstracto acá
+   - comprar()  regla de negocio unica, por eso es final
+
+ Todos los campos son privados: nadie fuera de la jerarquía puede dejar
+ un arma en un estado imposible (p. ej. un precio negativo puesto desde afuera).
+*/
 public abstract class Arma {
 
     private final String nombre;
