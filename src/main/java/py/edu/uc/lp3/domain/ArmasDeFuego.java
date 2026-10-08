@@ -1,4 +1,4 @@
-package com.example.restservice;
+package py.edu.uc.lp3.domain;
 
 /**
  * El profesor había dejado acá un solo atributo:
@@ -39,6 +39,12 @@ public abstract class ArmasDeFuego extends Armas {
         if (capacidadCargador <= 0 || cargadoresRestantes < 0) {
             throw new IllegalArgumentException("capacidad/cargadores inválidos");
         }
+        if (precision < 0 || precision > 1) {
+            throw new IllegalArgumentException("la precisión debe estar entre 0 y 1");
+        }
+        if (retroceso < 0 || tiempoRecargaMs < 0) {
+            throw new IllegalArgumentException("retroceso y tiempo de recarga no pueden ser negativos");
+        }
         this.capacidadCargador = capacidadCargador;
         this.carga = capacidadCargador;
         this.cargadoresRestantes = cargadoresRestantes;
@@ -50,16 +56,41 @@ public abstract class ArmasDeFuego extends Armas {
 
     @Override
     public final String disparar() {
+        return efectuarDisparo(calcularDano(), "");
+    }
+
+    /** Sobrecarga: fuera del alcance efectivo el daño se reduce a la mitad. */
+    @Override
+    public final String disparar(double distanciaMetros) {
+        validarDistancia(distanciaMetros);
+        int dano = calcularDano();
+        String detalle = " a " + distanciaMetros + "m";
+        if (distanciaMetros > alcanceEfectivo()) {
+            dano = (int) Math.round(dano * 0.5);
+            detalle += " (fuera del alcance efectivo de " + alcanceEfectivo() + "m, daño a la mitad)";
+        }
+        return efectuarDisparo(dano, detalle);
+    }
+
+    /** Única forma de gastar munición: ambas versiones de disparar pasan por acá. */
+    private String efectuarDisparo(int dano, String detalle) {
         int balasNecesarias = balasPorDisparo();
         if (carga < balasNecesarias) {
             return getNombre() + " no puede disparar: cargador insuficiente ("
                     + carga + " balas, necesita " + balasNecesarias + ")";
         }
         carga -= balasNecesarias;
-        int dano = calcularDano();
-        return getNombre() + " disparó (" + balasNecesarias + " balas, precisión "
+        return getNombre() + " disparó" + detalle + " (" + balasNecesarias + " balas, precisión "
                 + precision + ") causando " + dano + " de daño. Quedan "
                 + carga + "/" + capacidadCargador + " balas.";
+    }
+
+    /**
+     * Distancia en metros hasta la que el arma conserva todo su daño. Un rifle
+     * de asalto usa este valor; Pistola y Sniper lo sobreescriben.
+     */
+    protected double alcanceEfectivo() {
+        return 30.0;
     }
 
     public final String recargar() {

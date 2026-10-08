@@ -1,4 +1,4 @@
-package com.example.restservice;
+package py.edu.uc.lp3.domain;
 
 /**
  * El profesor dejó esta clase vacía (public class Armas extends Vendible {}).
@@ -17,6 +17,12 @@ public abstract class Armas extends Vendible {
     private final int dano; // daño base; cada rama decide cómo usarlo
 
     protected Armas(String nombre, long precio, String equipo, double peso, int dano) {
+        if (nombre == null || nombre.isBlank()) {
+            throw new IllegalArgumentException("el nombre no puede estar vacío");
+        }
+        if (!"CT".equals(equipo) && !"TT".equals(equipo)) {
+            throw new IllegalArgumentException("equipo debe ser CT o TT (recibido: " + equipo + ")");
+        }
         if (precio < 0 || peso < 0 || dano < 0) {
             throw new IllegalArgumentException("precio, peso y daño no pueden ser negativos");
         }
@@ -44,6 +50,13 @@ public abstract class Armas extends Vendible {
      */
     public abstract String disparar();
 
+    /**
+     * Sobrecarga de disparar(): la misma acción con otro argumento. Indicando
+     * la distancia al objetivo, cada rama decide qué cambia (un arma de fuego
+     * pierde daño fuera de su alcance, una granada puede no llegar).
+     */
+    public abstract String disparar(double distanciaMetros);
+
     public abstract String inspeccionar();
 
     /**
@@ -53,6 +66,13 @@ public abstract class Armas extends Vendible {
      */
     public String mostrarEnTienda() {
         return String.format("%s | %d$ | equipo %s | %.2fkg", nombre, getPrecio(), equipo, peso);
+    }
+
+    /** Regla común para cualquier disparo a distancia: no hay distancias negativas. */
+    protected static void validarDistancia(double distanciaMetros) {
+        if (Double.isNaN(distanciaMetros) || distanciaMetros < 0) {
+            throw new IllegalArgumentException("la distancia no puede ser negativa");
+        }
     }
 
     protected int getDano() {

@@ -1,9 +1,25 @@
-package com.example.restservice;
+package py.edu.uc.lp3.domain;
 
 public class Sniper extends ArmasDeFuego {
 
     private boolean conMira;
 
+    /** Constructor simple: el AWP de los antiterroristas. */
+    public Sniper() {
+        this("AWP");
+    }
+
+    /** Sobrecarga: francotirador de los antiterroristas con otro nombre. */
+    public Sniper(String nombre) {
+        this(nombre, "CT");
+    }
+
+    /** Sobrecarga: francotirador para el equipo indicado (CT o TT). */
+    public Sniper(String nombre, String equipo) {
+        this(nombre, 4750, equipo, 6.5, 115, 5, 6, 0.95, 9.0, 3700);
+    }
+
+    /** Constructor completo: es el único que llama a super(...). */
     public Sniper(String nombre, long precio, String equipo, double peso, int dano,
                   int capacidadCargador, int cargadoresRestantes,
                   double precision, double retroceso, long tiempoRecargaMs) {
@@ -18,6 +34,11 @@ public class Sniper extends ArmasDeFuego {
 
     public void bajarMira() {
         this.conMira = false;
+    }
+
+    @Override
+    protected double alcanceEfectivo() {
+        return 200.0;
     }
 
     @Override
