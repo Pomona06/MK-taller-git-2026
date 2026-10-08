@@ -40,6 +40,11 @@ public class Pistola extends ArmasDeFuego {
     }
 
     @Override
+    protected double alcanceEfectivo() {
+        return 15.0;
+    }
+
+    @Override
     protected int balasPorDisparo() {
         return modoRafaga ? 3 : 1;
     }

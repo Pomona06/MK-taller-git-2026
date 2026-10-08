@@ -3,7 +3,7 @@ package py.edu.uc.lp3.domain;
 /**
  * Granada extiende Armas directamente, no ArmasDeFuego, porque no dispara
  * balas ni se recarga. Sigue respondiendo a disparar() como cualquier otra
- * Arma — acá disparar() delega en lanzar(), que es privado.
+ * Arma — acá disparar() y disparar(double) delegan en lanzar(), que es privado.
  */
 public class Granada extends Armas {
 
@@ -59,10 +59,21 @@ public class Granada extends Armas {
 
     @Override
     public String disparar() {
-        return lanzar();
+        return lanzar(distanciaLanzamiento);
     }
 
-    private String lanzar() {
+    /** Sobrecarga: lanzar a una distancia concreta, que no puede pasar del máximo. */
+    @Override
+    public String disparar(double distanciaMetros) {
+        validarDistancia(distanciaMetros);
+        if (distanciaMetros > distanciaLanzamiento) {
+            return getNombre() + " no llega a " + distanciaMetros
+                    + "m: el alcance máximo es " + distanciaLanzamiento + "m";
+        }
+        return lanzar(distanciaMetros);
+    }
+
+    private String lanzar(double distanciaMetros) {
         long ahora = System.currentTimeMillis();
         long transcurrido = ahora - ultimoLanzamiento;
         if (transcurrido < cooldownMs) {
@@ -70,7 +81,7 @@ public class Granada extends Armas {
         }
         ultimoLanzamiento = ahora;
         explotada = false;
-        return "Lanzada a " + distanciaLanzamiento + "m. " + explotar();
+        return "Lanzada a " + distanciaMetros + "m. " + explotar();
     }
 
     private String explotar() {

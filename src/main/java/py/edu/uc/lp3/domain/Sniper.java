@@ -37,6 +37,11 @@ public class Sniper extends ArmasDeFuego {
     }
 
     @Override
+    protected double alcanceEfectivo() {
+        return 200.0;
+    }
+
+    @Override
     protected int balasPorDisparo() {
         return 1;
     }

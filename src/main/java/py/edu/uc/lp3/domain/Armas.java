@@ -50,6 +50,13 @@ public abstract class Armas extends Vendible {
      */
     public abstract String disparar();
 
+    /**
+     * Sobrecarga de disparar(): la misma acción con otro argumento. Indicando
+     * la distancia al objetivo, cada rama decide qué cambia (un arma de fuego
+     * pierde daño fuera de su alcance, una granada puede no llegar).
+     */
+    public abstract String disparar(double distanciaMetros);
+
     public abstract String inspeccionar();
 
     /**
@@ -59,6 +66,13 @@ public abstract class Armas extends Vendible {
      */
     public String mostrarEnTienda() {
         return String.format("%s | %d$ | equipo %s | %.2fkg", nombre, getPrecio(), equipo, peso);
+    }
+
+    /** Regla común para cualquier disparo a distancia: no hay distancias negativas. */
+    protected static void validarDistancia(double distanciaMetros) {
+        if (Double.isNaN(distanciaMetros) || distanciaMetros < 0) {
+            throw new IllegalArgumentException("la distancia no puede ser negativa");
+        }
     }
 
     protected int getDano() {

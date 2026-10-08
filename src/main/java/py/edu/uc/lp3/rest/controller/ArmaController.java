@@ -35,7 +35,8 @@ public class ArmaController {
             @RequestParam(defaultValue = "false") boolean aturde,
             @RequestParam(defaultValue = "0") double visibilidadReducida,
             @RequestParam(defaultValue = "1000") long cooldownMs,
-            @RequestParam(defaultValue = "5000") double dineroDisponible
+            @RequestParam(defaultValue = "5000") double dineroDisponible,
+            @RequestParam(required = false) Double distancia
     ) {
         // Construir el objeto correcto es lo único que necesita conocer el
         // tipo concreto; por eso el switch está acá y en ningún otro lado.
@@ -55,7 +56,7 @@ public class ArmaController {
             default -> throw new IllegalArgumentException(
                     "tipo debe ser rifle, pistola, sniper o granada (recibido: " + tipo + ")");
         };
-        return describir(arma, "completo", dineroDisponible);
+        return describir(arma, "completo", dineroDisponible, distancia);
     }
 
     /**
@@ -71,7 +72,8 @@ public class ArmaController {
             @RequestParam(required = false) String equipo,
             @RequestParam(required = false) Boolean modoRafaga,
             @RequestParam(required = false) Boolean aturde,
-            @RequestParam(defaultValue = "5000") double dineroDisponible
+            @RequestParam(defaultValue = "5000") double dineroDisponible,
+            @RequestParam(required = false) Double distancia
     ) {
         Armas arma;
         String constructor;
@@ -99,17 +101,26 @@ public class ArmaController {
             default -> throw new IllegalArgumentException(
                     "tipo debe ser rifle, pistola, sniper o granada (recibido: " + tipo + ")");
         }
-        return describir(arma, constructor, dineroDisponible);
+        return describir(arma, constructor, dineroDisponible, distancia);
     }
 
-    /** Desde acá "arma" se trata SIEMPRE como Armas (tipo padre). */
-    private ArmaComportamientoDTO describir(Armas arma, String constructor, double dineroDisponible) {
+    /**
+     * Desde acá "arma" se trata SIEMPRE como Armas (tipo padre). Si la URL
+     * trae distancia se usa la sobrecarga disparar(double); si no, disparar().
+     */
+    private ArmaComportamientoDTO describir(Armas arma, String constructor,
+                                            double dineroDisponible, Double distancia) {
+        String tienda = arma.mostrarEnTienda();
+        String compra = arma.comprar(dineroDisponible);
+        String mensajeDisparo = distancia == null ? "disparar()" : "disparar(double)";
+        String disparo = distancia == null ? arma.disparar() : arma.disparar(distancia);
         return new ArmaComportamientoDTO(
                 arma.getClass().getSimpleName(),
                 constructor,
-                arma.mostrarEnTienda(),
-                arma.comprar(dineroDisponible),
-                arma.disparar(),
+                tienda,
+                compra,
+                mensajeDisparo,
+                disparo,
                 arma.inspeccionar()
         );
     }
@@ -119,6 +130,7 @@ public class ArmaController {
             String constructor,
             String tienda,
             String compra,
+            String mensajeDisparo,
             String disparo,
             String inspeccion
     ) {}
