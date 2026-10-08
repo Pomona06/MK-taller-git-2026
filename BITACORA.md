@@ -8,7 +8,7 @@ Ejercicio: POO-06, revisión, paquetes, constructores y sobrecarga (Counter-Stri
 | Dato | Valor |
 |---|---|
 | Marca del asistente o agente | Claude Code (Anthropic), sesión web en claude.ai/code |
-| Modelo exacto del LLM | _(completar con el modelo que muestra la herramienta)_ |
+| Modelo exacto del LLM | _claude-opus-5-5 alto |
 
 <!-- Si en el taller anterior (commits del 25/09) usaste otra IA, agregá una fila más con su marca y modelo. -->
 
