@@ -1,4 +1,4 @@
-package com.example.restservice;
+package py.edu.uc.lp3.domain;
 
 import py.edu.uc.lp3.interfaces.Avatar;
 import py.edu.uc.lp3.interfaces.Cotizable;

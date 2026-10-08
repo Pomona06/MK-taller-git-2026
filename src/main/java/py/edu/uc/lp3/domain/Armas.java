@@ -1,4 +1,4 @@
-package com.example.restservice;
+package py.edu.uc.lp3.domain;
 
 /**
  * El profesor dejó esta clase vacía (public class Armas extends Vendible {}).

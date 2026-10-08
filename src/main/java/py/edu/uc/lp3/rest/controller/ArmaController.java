@@ -1,6 +1,6 @@
-package com.tallercs.armas.controller;
+package py.edu.uc.lp3.rest.controller;
 
-import com.example.restservice.*;
+import py.edu.uc.lp3.domain.*;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -10,7 +10,7 @@ import org.springframework.http.HttpStatus;
 /**
  * Construye una instancia concreta según "tipo" (esto SÍ necesita un switch,
  * porque construir un objeto requiere elegir su constructor) y a partir de
- * ahí la maneja únicamente como Armas (tipo padre, de com.example.restservice):
+ * ahí la maneja únicamente como Armas (tipo padre, de py.edu.uc.lp3.domain):
  * ningún método de acá para abajo pregunta de qué tipo concreto es la
  * instancia.
  */

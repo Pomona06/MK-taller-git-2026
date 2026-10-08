@@ -1,4 +1,4 @@
-package com.example.restservice;
+package py.edu.uc.lp3.domain;
 
 /**
  * Granada extiende Armas directamente, no ArmasDeFuego, porque no dispara
