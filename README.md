@@ -7,7 +7,7 @@ sobreescritura, sobrecarga, ocultamiento de información y paquetes según el te
 - Enunciado: [ejercicio-poo-06-revision-paquetes-constructores-2026-09-30](https://github.com/alefq/afq-taller-git-2024/blob/main/docs/ejercicio-poo-06-revision-paquetes-constructores-2026-09-30.md)
 - Bitácora de IA: [BITACORA.md](BITACORA.md)
 - Especificaciones aplicadas a CS2 (objetivo, consignas y cómo probarlo): [docs/ESPECIFICACIONES.md](docs/ESPECIFICACIONES.md)
-- Enlace al commit de la solución: (https://github.com/Pomona06/MK-taller-git-2026/commit/dd82cd88c1306a6d4f5e3cad2c661f396710acff)
+- Enlace al commit de la solución: (https://github.com/Pomona06/MK-taller-git-2026/commit/e7a1c2019b316689e0d4b630e5aee0edf2a06bf2)
 
 ## Licencia
 
