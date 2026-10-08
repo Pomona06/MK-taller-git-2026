@@ -5,6 +5,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 /**
  * Construye una instancia concreta según "tipo" (esto SÍ necesita un switch,
  * porque construir un objeto requiere elegir su constructor) y a partir de
@@ -103,6 +105,24 @@ public class ArmaController {
         }
         return describir(arma, constructor, dineroDisponible, distancia);
     }
+
+    /**
+     * Le pide el mismo mensaje abstracto, disparar(), a una instancia de cada
+     * clase hija. La lista es de Armas: el controller no sabe qué tipo
+     * concreto tiene cada elemento y el texto sale del método sobreescrito.
+     */
+    @GetMapping("/armas/comparar")
+    public List<DisparoDTO> comparar(@RequestParam(required = false) Double distancia) {
+        List<Armas> inventario = List.of(new Rifle(), new Pistola(), new Sniper(), new Granada());
+        return inventario.stream()
+                .map(arma -> new DisparoDTO(
+                        arma.getClass().getSimpleName(),
+                        arma.getNombre(),
+                        distancia == null ? arma.disparar() : arma.disparar(distancia)))
+                .toList();
+    }
+
+    public record DisparoDTO(String tipoConcreto, String nombre, String disparo) {}
 
     /**
      * Desde acá "arma" se trata SIEMPRE como Armas (tipo padre). Si la URL
