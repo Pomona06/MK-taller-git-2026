@@ -17,6 +17,12 @@ public abstract class Armas extends Vendible {
     private final int dano; // daño base; cada rama decide cómo usarlo
 
     protected Armas(String nombre, long precio, String equipo, double peso, int dano) {
+        if (nombre == null || nombre.isBlank()) {
+            throw new IllegalArgumentException("el nombre no puede estar vacío");
+        }
+        if (!"CT".equals(equipo) && !"TT".equals(equipo)) {
+            throw new IllegalArgumentException("equipo debe ser CT o TT (recibido: " + equipo + ")");
+        }
         if (precio < 0 || peso < 0 || dano < 0) {
             throw new IllegalArgumentException("precio, peso y daño no pueden ser negativos");
         }

@@ -4,8 +4,6 @@ import py.edu.uc.lp3.domain.*;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
-import org.springframework.http.HttpStatus;
 
 /**
  * Construye una instancia concreta según "tipo" (esto SÍ necesita un switch,
@@ -54,7 +52,7 @@ public class ArmaController {
             case "granada" -> new Granada(nombre, precio, equipo, peso, dano,
                     radioExplosion, distanciaLanzamiento, aturde, visibilidadReducida,
                     cooldownMs);
-            default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+            default -> throw new IllegalArgumentException(
                     "tipo debe ser rifle, pistola, sniper o granada (recibido: " + tipo + ")");
         };
 

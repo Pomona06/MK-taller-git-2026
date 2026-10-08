@@ -39,6 +39,12 @@ public abstract class ArmasDeFuego extends Armas {
         if (capacidadCargador <= 0 || cargadoresRestantes < 0) {
             throw new IllegalArgumentException("capacidad/cargadores inválidos");
         }
+        if (precision < 0 || precision > 1) {
+            throw new IllegalArgumentException("la precisión debe estar entre 0 y 1");
+        }
+        if (retroceso < 0 || tiempoRecargaMs < 0) {
+            throw new IllegalArgumentException("retroceso y tiempo de recarga no pueden ser negativos");
+        }
         this.capacidadCargador = capacidadCargador;
         this.carga = capacidadCargador;
         this.cargadoresRestantes = cargadoresRestantes;

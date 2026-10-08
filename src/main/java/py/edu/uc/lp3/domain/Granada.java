@@ -19,6 +19,15 @@ public class Granada extends Armas {
                     double radioExplosion, double distanciaLanzamiento,
                     boolean aturde, double visibilidadReducida, long cooldownMs) {
         super(nombre, precio, equipo, peso, dano);
+        if (radioExplosion <= 0 || distanciaLanzamiento <= 0) {
+            throw new IllegalArgumentException("radio de explosión y distancia de lanzamiento deben ser positivos");
+        }
+        if (visibilidadReducida < 0 || visibilidadReducida > 100) {
+            throw new IllegalArgumentException("la visibilidad reducida debe estar entre 0 y 100");
+        }
+        if (cooldownMs < 0) {
+            throw new IllegalArgumentException("el cooldown no puede ser negativo");
+        }
         this.radioExplosion = radioExplosion;
         this.distanciaLanzamiento = distanciaLanzamiento;
         this.aturde = aturde;
