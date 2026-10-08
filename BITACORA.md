@@ -5,19 +5,12 @@ Ejercicio: POO-06, revisión, paquetes, constructores y sobrecarga (Counter-Stri
 
 ## Asistente y modelo
 
-### Esta sesión (ejercicio POO-06, revisión final e implementación)
+Usé el mismo asistente y el mismo modelo en todos los chats: taller de Git, ejercicio POO-06 y revisión final.
 
 | Dato | Valor |
 |---|---|
 | Marca del asistente o agente | Claude Code (Anthropic), sesión web en claude.ai/code |
 | Modelo exacto del LLM | _claude-opus-5-5 alto |
-
-### Chats anteriores (taller de Git y primera parte de POO-06)
-
-| Dato | Valor |
-|---|---|
-| Marca del asistente o agente | _(completar)_ |
-| Modelo exacto del LLM | _(completar como lo muestra la herramienta)_ |
 
 ## Resumen de prompts
 
