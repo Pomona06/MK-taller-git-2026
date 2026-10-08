@@ -45,8 +45,3 @@ Usé el mismo asistente y el mismo modelo en todos los chats: taller de Git, eje
 - Le pedí que me guíe en los pasos de la entrega, que arme el documento de especificaciones y que verifique que el repo cumpla todos los criterios.
 - Le hice consultas sobre el commit de la solución y sobre qué tenía que incluir esta bitácora.
 
-## Verificación propia (marcar al hacerla)
-
-- [ ] Corrí `./mvnw spring-boot:run` y probé los curl del README.
-- [ ] Corrí `./mvnw test`.
-- [ ] Leí el diff de cada commit antes de pasarlo a `main`.
