@@ -34,6 +34,42 @@ Ejercicio: POO-06, revisión, paquetes, constructores y sobrecarga (Counter-Stri
    7. actualizar el README con la licencia, el Mermaid y el apartado de sobrecarga y sobreescritura;
    8. crear esta bitácora.
 
+   Desde la interfaz de Claude Code creé el pull request #1 con esos commits.
+3. **Qué hacer después.** Le dije que no entendía qué me tocaba hacer y le pedí los pasos uno por uno,
+   indicando dónde se hace cada uno (GitHub, Classroom o la terminal). Me dio el orden:
+   1. revisar el PR;
+   2. completar el modelo en la bitácora;
+   3. mergear con «Create a merge commit»;
+   4. copiar el enlace al commit;
+   5. ponerlo en el README;
+   6. entregar en Classroom;
+   7. pasar mi usuario al chat del curso.
+4. **Archivo de especificaciones.** Le pedí que hiciera el archivo para Classroom. Armó
+   `docs/ESPECIFICACIONES.md` con:
+   - objetivo;
+   - consignas aplicadas a las armas de CS2;
+   - cómo probarlo: arranque, diez casos con la respuesta esperada (comprobados con el servicio levantado),
+     tests y pregunta de anclaje.
+5. **Ajuste de la bitácora.** Le aclaré que en la línea del modelo dejo `alto` porque trabajé con el nivel
+   alto de esfuerzo, y le pedí los pasos que faltaban sin esa corrección.
+6. **Después del merge.** Le avisé que el PR estaba mergeado. Revisó `main`, me confirmó que el commit de la
+   solución es el del merge y me devolvió el archivo de especificaciones con ese enlace ya puesto.
+7. **Verificación final.** Le pedí que verificara si el repositorio cumplía todos los indicadores. Clonó
+   `main` desde cero y comprobó lo siguiente:
+   - compila;
+   - pasan los 11 tests;
+   - arranca con `./mvnw spring-boot:run`;
+   - los endpoints responden, también los casos que deben dar 400;
+   - no hay archivos de compilación en Git.
+
+   Después lo comparó criterio por criterio con la rúbrica. Lo que quedaba pendiente era de mi lado:
+   entregar en Classroom y escribir en el chat.
+8. **Dudas sobre la entrega.** Le pregunté:
+   - qué era el commit `dd82cd8`: es el merge del PR, la foto de la solución completa;
+   - si hacía falta una lista de commits: no la pide la rúbrica, porque el historial se ve en GitHub.
+9. **Esta bitácora.** Le pedí que el resumen incluyera todos los prompts de la sesión, no solo los de la
+   implementación, y la actualizó.
+
 ## Verificación propia (marcar al hacerla)
 
 - [ ] Corrí `./mvnw spring-boot:run` y probé los curl del README.
