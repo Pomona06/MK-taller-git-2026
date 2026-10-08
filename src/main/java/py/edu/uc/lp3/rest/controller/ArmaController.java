@@ -37,8 +37,8 @@ public class ArmaController {
             @RequestParam(defaultValue = "1000") long cooldownMs,
             @RequestParam(defaultValue = "5000") double dineroDisponible
     ) {
-        // Único lugar de toda la app que sabe de tipos concretos: construir
-        // el objeto correcto es responsabilidad de este switch.
+        // Construir el objeto correcto es lo único que necesita conocer el
+        // tipo concreto; por eso el switch está acá y en ningún otro lado.
         Armas arma = switch (tipo.toLowerCase()) {
             case "rifle" -> new Rifle(nombre, precio, equipo, peso, dano,
                     capacidadCargador, cargadoresRestantes, precision, retroceso,
@@ -55,10 +55,58 @@ public class ArmaController {
             default -> throw new IllegalArgumentException(
                     "tipo debe ser rifle, pistola, sniper o granada (recibido: " + tipo + ")");
         };
+        return describir(arma, "completo", dineroDisponible);
+    }
 
-        // De acá para abajo, "arma" se trata SIEMPRE como Armas (tipo padre).
+    /**
+     * Construye con los constructores simples y sobrecargados. Según qué
+     * parámetros vengan en la URL se usa el constructor sin argumentos, el
+     * de un argumento o el de dos; en todos los casos el objeto queda en un
+     * estado legal con los valores por defecto del arma.
+     */
+    @GetMapping("/armas/crear-simple")
+    public ArmaComportamientoDTO crearSimple(
+            @RequestParam String tipo,
+            @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) String equipo,
+            @RequestParam(required = false) Boolean modoRafaga,
+            @RequestParam(required = false) Boolean aturde,
+            @RequestParam(defaultValue = "5000") double dineroDisponible
+    ) {
+        Armas arma;
+        String constructor;
+        switch (tipo.toLowerCase()) {
+            case "rifle" -> {
+                if (nombre == null) { arma = new Rifle(); constructor = "Rifle()"; }
+                else if (modoRafaga == null) { arma = new Rifle(nombre); constructor = "Rifle(String)"; }
+                else { arma = new Rifle(nombre, modoRafaga); constructor = "Rifle(String, boolean)"; }
+            }
+            case "pistola" -> {
+                if (nombre == null) { arma = new Pistola(); constructor = "Pistola()"; }
+                else if (equipo == null) { arma = new Pistola(nombre); constructor = "Pistola(String)"; }
+                else { arma = new Pistola(nombre, equipo); constructor = "Pistola(String, String)"; }
+            }
+            case "sniper" -> {
+                if (nombre == null) { arma = new Sniper(); constructor = "Sniper()"; }
+                else if (equipo == null) { arma = new Sniper(nombre); constructor = "Sniper(String)"; }
+                else { arma = new Sniper(nombre, equipo); constructor = "Sniper(String, String)"; }
+            }
+            case "granada" -> {
+                if (nombre == null) { arma = new Granada(); constructor = "Granada()"; }
+                else if (aturde == null) { arma = new Granada(nombre); constructor = "Granada(String)"; }
+                else { arma = new Granada(nombre, aturde); constructor = "Granada(String, boolean)"; }
+            }
+            default -> throw new IllegalArgumentException(
+                    "tipo debe ser rifle, pistola, sniper o granada (recibido: " + tipo + ")");
+        }
+        return describir(arma, constructor, dineroDisponible);
+    }
+
+    /** Desde acá "arma" se trata SIEMPRE como Armas (tipo padre). */
+    private ArmaComportamientoDTO describir(Armas arma, String constructor, double dineroDisponible) {
         return new ArmaComportamientoDTO(
                 arma.getClass().getSimpleName(),
+                constructor,
                 arma.mostrarEnTienda(),
                 arma.comprar(dineroDisponible),
                 arma.disparar(),
@@ -68,6 +116,7 @@ public class ArmaController {
 
     public record ArmaComportamientoDTO(
             String tipoConcreto,
+            String constructor,
             String tienda,
             String compra,
             String disparo,

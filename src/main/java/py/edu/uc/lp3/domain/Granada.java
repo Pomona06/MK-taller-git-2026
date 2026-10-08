@@ -15,6 +15,26 @@ public class Granada extends Armas {
     private long ultimoLanzamiento;
     private boolean explotada;
 
+    /** Constructor simple: una granada explosiva (HE). */
+    public Granada() {
+        this("HE");
+    }
+
+    /** Sobrecarga: granada explosiva con otro nombre. */
+    public Granada(String nombre) {
+        this(nombre, false);
+    }
+
+    /**
+     * Sobrecarga: si aturde es una flashbang (sin daño, ciega por completo),
+     * si no es una explosiva.
+     */
+    public Granada(String nombre, boolean aturde) {
+        this(nombre, aturde ? 200 : 300, "CT", 0.5, aturde ? 0 : 57,
+                aturde ? 4.0 : 5.0, 20.0, aturde, aturde ? 100 : 0, 1000);
+    }
+
+    /** Constructor completo: es el único que llama a super(...). */
     public Granada(String nombre, long precio, String equipo, double peso, int dano,
                     double radioExplosion, double distanciaLanzamiento,
                     boolean aturde, double visibilidadReducida, long cooldownMs) {
