@@ -12,7 +12,7 @@ una base **H2** con un CRUD REST en tres capas (ver [POO-08](#poo-08-crud-rest-h
 - Especificaciones de POO-06 aplicadas a CS2: [docs/ESPECIFICACIONES.md](docs/ESPECIFICACIONES.md)
 - Colección de Insomnia: [insomnia/coleccion-armas-cs2.json](insomnia/coleccion-armas-cs2.json)
 - Enlace al commit de la solución POO-06: (https://github.com/Pomona06/MK-taller-git-2026/commit/e7a1c2019b316689e0d4b630e5aee0edf2a06bf2)
-- Enlace al commit de la solución POO-08: _(se completa con el hash del merge)_
+- Enlace al commit de la solución POO-08: https://github.com/Pomona06/MK-taller-git-2026/commit/2a37c2d7a4c4f61627d4085429563db0a095b30d)
 
 ## Licencia
 
