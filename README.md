@@ -4,12 +4,15 @@ Ejercicio POO-06 (revisión, paquetes, constructores y sobrecarga) de Lenguaje d
 Servicio HTTP propio en Spring Boot sobre el modelado de Counter-Strike 2 (opción B), con herencia,
 sobreescritura, sobrecarga, ocultamiento de información y paquetes según el template de la cátedra.
 Después se sumó el ejercicio de **interfaces**: una capacidad compartida por dos familias distintas
-(ver [Interfaz Audible](#interfaz-audible-capacidad-compartida)).
+(ver [Interfaz Audible](#interfaz-audible-capacidad-compartida)). En **POO-08** las armas se guardan en
+una base **H2** con un CRUD REST en tres capas (ver [POO-08](#poo-08-crud-rest-h2-e-insomnia)).
 
-- Enunciado: [ejercicio-poo-06-revision-paquetes-constructores-2026-09-30](https://github.com/alefq/afq-taller-git-2024/blob/main/docs/ejercicio-poo-06-revision-paquetes-constructores-2026-09-30.md)
+- Enunciados: [POO-06](https://github.com/alefq/afq-taller-git-2024/blob/main/docs/ejercicio-poo-06-revision-paquetes-constructores-2026-09-30.md) · [POO-08](https://github.com/alefq/afq-taller-git-2024/blob/main/docs/ejercicio-poo-08-crud-h2-insomnia-2026-10-28.md)
 - Bitácora de IA: [BITACORA.md](BITACORA.md)
-- Especificaciones aplicadas a CS2 (objetivo, consignas y cómo probarlo): [docs/ESPECIFICACIONES.md](docs/ESPECIFICACIONES.md)
-- Enlace al commit de la solución: (https://github.com/Pomona06/MK-taller-git-2026/commit/e7a1c2019b316689e0d4b630e5aee0edf2a06bf2)
+- Especificaciones de POO-06 aplicadas a CS2: [docs/ESPECIFICACIONES.md](docs/ESPECIFICACIONES.md)
+- Colección de Insomnia: [insomnia/coleccion-armas-cs2.json](insomnia/coleccion-armas-cs2.json)
+- Enlace al commit de la solución POO-06: (https://github.com/Pomona06/MK-taller-git-2026/commit/e7a1c2019b316689e0d4b630e5aee0edf2a06bf2)
+- Enlace al commit de la solución POO-08: _(se completa con el hash del merge)_
 
 ## Licencia
 
@@ -25,7 +28,239 @@ Requiere Java 21.
 
 Queda escuchando en http://localhost:8080. Los tests se corren con `./mvnw test`.
 
-## Endpoints
+## POO-08: CRUD REST, H2 e Insomnia
+
+### Las dos reglas
+
+1. **Regla de munición:** un arma de fuego solo dispara si el cargador tiene las balas que pide ese disparo y solo recarga si le queda un cargador de repuesto; si no, el servicio responde 409 y la munición guardada no cambia.
+2. **Regla de vida:** la vida de un jugador queda siempre entre 0 y 100 y un jugador eliminado no puede recibir más daño; si se le dispara igual, el servicio responde 409 y el arma no gasta la bala.
+
+### Propiedades de H2
+
+Están en `src/main/resources/application.properties`:
+
+| Propiedad | Qué hace |
+|---|---|
+| `spring.datasource.url=jdbc:h2:file:./data/armas` | Guarda la base en el archivo `./data/armas.mv.db`, así lo creado sigue ahí después de reiniciar el servicio. |
+| `spring.datasource.username=sa` | Usuario de la base (el que se pone en la consola H2). |
+| `spring.datasource.password=` | La contraseña está vacía porque la base es local y solo de desarrollo. |
+| `spring.jpa.hibernate.ddl-auto=update` | Hibernate crea la tabla `arma` si no existe y la ajusta a las entidades sin borrar los datos. |
+| `spring.jpa.open-in-view=false` | La conexión a la base se cierra al terminar el servicio y no queda abierta mientras se arma el JSON. |
+| `spring.h2.console.enabled=true` | Habilita la consola web de H2 en `/h2-console` (solo para desarrollo). |
+
+La carpeta `data/` está en `.gitignore`: la base es de cada uno y no se sube al repo. Los tests usan una
+base en memoria aparte (`src/test/resources/application.properties`).
+
+### Ver la tabla en la consola H2
+
+1. Arrancá el servicio con `./mvnw spring-boot:run`.
+2. Abrí http://localhost:8080/h2-console
+3. En **JDBC URL** poné `jdbc:h2:file:./data/armas`, usuario `sa` y contraseña vacía, y tocá **Connect**.
+4. Corré `SELECT * FROM ARMA;`. Todas las armas están en esa tabla y la columna `TIPO` dice si la fila es
+   `rifle`, `pistola`, `sniper` o `granada`.
+
+### Endpoints de la API
+
+| Método y ruta | Qué hace | Éxito | Errores |
+|---|---|---|---|
+| `POST /api/armas` | Crea un arma. El JSON lleva `tipo` y los campos que quieras; lo que falte toma el valor del constructor simple de ese tipo. No lleva `id`. | 201 + `id` + `Location` | 400 |
+| `GET /api/armas` | Lista lo guardado. Filtros opcionales: `?equipo=CT` o `?precioMaximo=3000`. | 200 | |
+| `GET /api/armas/{id}` | Un arma. | 200 | 404 |
+| `PATCH /api/armas/{id}` | Cambia `nombre` y/o `precio`. | 200 | 400, 404 |
+| `DELETE /api/armas/{id}` | Borra el arma. | 204 | 404 |
+| `POST /api/armas/{id}/disparos?distancia=` | Simulación de munición: dispara y guarda la carga. | 200 | 404, 409 |
+| `POST /api/armas/{id}/recargas` | Simulación de munición: usa un cargador de repuesto. | 200 | 400 (granada), 404, 409 |
+| `POST /api/simulaciones/dano` | Simulación de daño: el arma guardada le dispara a un jugador con o sin chaleco. | 200 | 400, 404, 409 |
+| `GET /api/sonidos?sitio=&segundos=` | Las granadas guardadas y una C4, tratadas como `Audible`. | 200 | 400 |
+
+Ejemplo de creación y de simulación:
+
+```bash
+curl -X POST localhost:8080/api/armas -H "Content-Type: application/json" \
+     -d '{"tipo":"rifle","nombre":"AK-47","modoRafaga":true}'
+curl -X POST localhost:8080/api/simulaciones/dano -H "Content-Type: application/json" \
+     -d '{"armaId":1,"distancia":10,"jugador":"Enemigo","vida":100,"blindaje":100}'
+```
+
+### Simulación de daño: tres clases del modelo
+
+`POST /api/simulaciones/dano` hace participar a tres clases:
+
+1. **El arma guardada** (cualquier hija de `Armas`): `disparar(distancia)` gasta munición y `danoA(distancia)`
+   dice cuánto daño hace a esa distancia. Cada rama lo calcula a su modo: un arma de fuego pierde la mitad
+   fuera de su alcance y una granada solo daña dentro de su radio.
+2. **`Chaleco`** (Kevlar, es un `Vendible` pero no un arma): absorbe la mitad del daño mientras le quede
+   durabilidad.
+3. **`Jugador`**: `recibirDano()` aplica lo que pasa el chaleco y sostiene la regla de vida.
+
+Todo corre en una transacción. Si una regla falla, la munición que se gastó en memoria no se guarda.
+
+### Jerarquía de excepciones y un handler por tipo
+
+```
+RuntimeException
+└── JuegoException (abstracta)
+    ├── ValorInvalidoException         400  un constructor o mensaje recibió un valor ilegal
+    ├── RecursoNoEncontradoException   404  no hay un arma con ese id
+    ├── MunicionInsuficienteException  409  regla de munición
+    └── JugadorEliminadoException      409  regla de vida
+```
+
+`ManejadorErrores` tiene un `@ExceptionHandler` por cada tipo y responde
+`{"error": "<mensaje>", "excepcion": "<tipo>"}`. Elegí 409 (*Conflict*) para las dos reglas porque el
+pedido está bien formado, pero el estado del arma o del jugador no permite hacerlo; 400 queda para datos
+que son ilegales en sí mismos.
+
+### Arquitectura en tres capas
+
+```mermaid
+classDiagram
+    direction LR
+    class ArmaCrudController {
+        +crear(ArmaRequest) 201
+        +listar(equipo, precioMaximo)
+        +buscar(id)
+        +actualizar(id, ArmaPatchRequest)
+        +borrar(id) 204
+        +disparar(id, distancia)
+        +recargar(id)
+    }
+    class SimulacionController {
+        +simularDano(SimulacionDanoRequest)
+    }
+    class SonidoController {
+        +sonidosGuardados(sitio, segundos)
+    }
+    class ArmaService {
+        <<interface>>
+    }
+    class SimulacionService {
+        <<interface>>
+    }
+    class ArmaServiceImpl
+    class SimulacionServiceImpl
+    class ArmaRepository {
+        <<interface>>
+        +findByEquipo(String) List~Armas~
+        +findByPrecioLessThanEqual(Long) List~Armas~
+    }
+    class GranadaRepository {
+        <<interface>>
+    }
+    class JpaRepository~T, ID~ {
+        <<interface>>
+    }
+    class Armas {
+        <<Entity>>
+    }
+    class Granada {
+        <<Entity>>
+    }
+    class Jugador
+    class Chaleco
+    class Audible {
+        <<interface>>
+    }
+    ArmaCrudController ..> ArmaService : usa
+    SimulacionController ..> SimulacionService : usa
+    SonidoController ..> ArmaService : usa
+    SonidoController ..> Audible : usa
+    ArmaService <|.. ArmaServiceImpl
+    SimulacionService <|.. SimulacionServiceImpl
+    ArmaServiceImpl ..> ArmaRepository : usa
+    ArmaServiceImpl ..> GranadaRepository : usa
+    SimulacionServiceImpl ..> ArmaRepository : usa
+    SimulacionServiceImpl ..> Jugador : crea
+    Jugador o-- Chaleco
+    JpaRepository <|-- ArmaRepository
+    JpaRepository <|-- GranadaRepository
+    ArmaRepository ..> Armas : guarda
+    GranadaRepository ..> Granada : guarda
+    Armas <|-- Granada
+    Audible <|.. Granada
+```
+
+Cómo leer las flechas:
+
+- **Herencia** (`<|--`, línea llena): «es un». `Granada` es un `Armas`, y `ArmaRepository` extiende
+  `JpaRepository`.
+- **Implementación de interfaz** (`<|..`, línea punteada con triángulo): la clase cumple el protocolo.
+  `ArmaServiceImpl` implementa `ArmaService` y `Granada` implementa `Audible`.
+- **Uso** (`..>`, línea punteada con flecha): una capa le habla a la otra a través de una interfaz. El
+  controller usa el servicio y el servicio usa el repositorio; ninguno conoce la clase concreta que
+  Spring arma por detrás.
+
+El diagrama completo de la familia de armas está en [El modelo](#el-modelo).
+
+### Colección de Insomnia
+
+El archivo es `insomnia/coleccion-armas-cs2.json`.
+
+1. Arrancá el servicio con `./mvnw spring-boot:run`.
+2. En Insomnia: **Import** → **From File** → elegí `insomnia/coleccion-armas-cs2.json`.
+3. El entorno trae `base_url` (`http://localhost:8080`), `armaId` y `sniperId`.
+4. Corré las carpetas en orden, de arriba abajo:
+   - **0. Servicio vivo:** `GET /`.
+   - **1. CRUD (caso feliz):** el primer `POST` crea el AK-47. **Copiá el `id` de la respuesta a `armaId`**
+     en el entorno y seguí con `GET` lista, `GET` por id, `PATCH` y el filtro por equipo.
+   - **2. Simulaciones e interfaz:** la simulación de daño usa `armaId`. El `POST` del AWP crea un
+     francotirador con una sola bala: **copiá su `id` a `sniperId`**. Después se dispara esa bala, se crea
+     una flashbang y se piden los sonidos por la interfaz.
+   - **3. Errores:** un pedido por cada error. Tres 400, tres 404, dos 409 de munición (el AWP ya no tiene
+     balas ni cargadores) y un 409 de jugador eliminado. Después del `POST` ilegal, el `GET` lista muestra
+     que no se guardó nada.
+   - **4. Borrar:** `DELETE` del AK-47 (204) y el `GET` posterior (404).
+
+Si la base es nueva, los ids son 1 (AK-47) y 2 (AWP), que son los valores que ya trae el entorno.
+
+### Lo que hay que pensar
+
+**Recurso y verbo.** El sustantivo de la API es `armas`: la URL nombra el recurso (`/api/armas/7`) y el
+verbo HTTP dice qué hacer (`GET` leer, `POST` crear, `PATCH` cambiar, `DELETE` borrar). Con
+`/api/crearRifle` habría que inventar una URL por cada acción y por cada tipo, y el verbo dejaría de
+significar algo. Las simulaciones crean un resultado nuevo (un disparo, una recarga), por eso son `POST`
+sobre subrecursos: `/api/armas/7/disparos`.
+
+**Identidad.** La clave es `id` (`Long`) y la genera H2 (`GenerationType.IDENTITY`). El JSON de creación no
+lo lleva: `ArmaRequest` ni siquiera tiene ese campo. Se devuelve en la respuesta del `POST` y en el
+encabezado `Location`.
+
+**Herencia y tablas.** Elegí `SINGLE_TABLE`: toda la familia en la tabla `arma`, con la columna `tipo` como
+discriminador. Las cuatro hijas comparten casi todo (nombre, precio, equipo, daño) y casi siempre se listan
+juntas en el inventario, así que una sola tabla evita joins. El costo es que las columnas de una hija
+quedan en `null` en las filas de otra: una granada no tiene `carga`. En el JSON, `@JsonTypeInfo` agrega la
+propiedad `"tipo": "rifle"` (o `granada`, etc.) con el mismo nombre que el discriminador. Para crear,
+`ArmaRequest` también lleva `tipo` y el servicio elige el constructor de esa hija.
+
+**Interfaz y repositorio.** `ArmaRepository` es una interfaz y Spring Data genera la clase. El servicio
+depende de esa interfaz, no de una clase concreta de acceso a datos, y el controller depende de la
+interfaz `ArmaService`. Es lo mismo que con `Audible`: quien pide un mensaje no necesita saber el apellido
+de la clase que lo responde. Por eso cambiar la base no toca ni el servicio ni el controller.
+
+**Protocolo del dominio.** `GET /api/sonidos` usa la interfaz `Audible`. En la misma lista aparecen las
+granadas guardadas en H2 (familia `Armas`) y una C4 (otra familia, no persistida), y el endpoint solo les
+pide `sonido()` y `alcanceSonido()`.
+
+**Ocultamiento.** Las reglas las validan los constructores y los mensajes del dominio (`renombrar`,
+`cambiarPrecio`, `disparar`, `recargar`, `recibirDano`). Los campos son privados y no tienen setters
+públicos. JPA los carga por reflexión y el JSON nunca se asigna directo a la entidad: llega a un
+`ArmaRequest` y el servicio llama al constructor. El constructor sin argumentos que pide JPA es el
+constructor simple de POO-06 (`new Rifle()` es un AK-47 legal), así que tampoco deja un objeto a medias.
+En Insomnia, el pedido «400 POST con daño negativo» seguido de «GET listar armas» muestra que no quedó
+una fila sucia.
+
+**PUT y PATCH.** Elegí `PATCH` y solo para `nombre` y `precio`, que son lo que cambia en la tienda (un
+cambio de balance o un skin con otro nombre). Un campo omitido queda como estaba. Lo demás no se edita a
+mano: la munición cambia disparando y recargando, y el tipo o el daño definen otra arma.
+
+**DELETE.** Es un borrado físico: la fila desaparece y la respuesta es 204. El dominio no tiene un mensaje
+de «descartar», así que no hay un estado intermedio que modelar.
+
+**Si mañana cambiamos H2 por otra base**, se tocan `pom.xml` (el driver) y `application.properties` (URL,
+usuario y contraseña). Quedan quietos el dominio, los repositorios, los servicios y los controllers,
+porque hablan con interfaces y con anotaciones JPA estándar.
+
+## Endpoints en memoria (POO-06 y POO-07)
 
 | Método y ruta | Qué hace |
 |---|---|
@@ -43,7 +278,7 @@ cómo se ve en la tienda, qué pasa si la comprás, qué mensaje de disparo se u
 animación de inspección.
 
 Si un valor rompe una regla del dominio, la clase lo rechaza en el constructor y el servicio responde
-**400** con el mensaje de la clase: `{"error": "..."}`.
+**400** con el mensaje de la clase: `{"error": "...", "excepcion": "ValorInvalidoException"}`.
 
 ### Ejemplos probados
 
@@ -81,23 +316,34 @@ La organización sigue el template [lp3-template-tp](https://github.com/alefq/lp
 src/main/java/py/edu/uc/lp3/
 ├── Application.java              solo arranca Spring Boot
 ├── domain/                       reglas del juego
-│   ├── Vendible.java
-│   ├── Armas.java                (abstracta)
-│   ├── ArmasDeFuego.java         (abstracta)
-│   ├── Rifle.java · Pistola.java · Sniper.java
-│   ├── Granada.java              (también implementa Audible)
+│   ├── Vendible.java             @MappedSuperclass
+│   ├── Armas.java                @Entity abstracta (tabla arma, SINGLE_TABLE)
+│   ├── ArmasDeFuego.java         @Entity abstracta
+│   ├── Rifle.java · Pistola.java · Sniper.java · Granada.java   @Entity
 │   ├── Audible.java              interfaz: sonido() y default alcanceSonido()
-│   └── BombaC4.java              otra familia: implementa Audible
+│   ├── BombaC4.java              otra familia: implementa Audible
+│   ├── Jugador.java              simulación de daño: regla de vida
+│   └── Chaleco.java              Kevlar: absorbe daño
+├── exceptions/                   JuegoException y sus cuatro hijas
 ├── interfaces/                   Cotizable, VideoJuegoPosicionable, Avatar, Posicion
+├── repository/                   interfaces de Spring Data
+│   ├── ArmaRepository.java
+│   └── GranadaRepository.java
+├── service/                      capa de negocio (interfaces)
+│   ├── ArmaService.java · SimulacionService.java
+│   ├── dto/                      ArmaRequest, ArmaPatchRequest, SimulacionDanoRequest, respuestas
+│   └── impl/                     ArmaServiceImpl, SimulacionServiceImpl
 └── rest/controller/              entrada HTTP
     ├── IndexController.java      GET /
+    ├── ArmaCrudController.java   /api/armas (CRUD y munición)
+    ├── SimulacionController.java /api/simulaciones/dano
     ├── ArmaController.java       /armas/crear, /armas/crear-simple, /armas/comparar
-    ├── SonidoController.java     /sonidos
-    └── ManejadorErrores.java     IllegalArgumentException del dominio -> 400
+    ├── SonidoController.java     /sonidos y /api/sonidos
+    └── ManejadorErrores.java     un @ExceptionHandler por tipo de excepción
 ```
 
-El dominio no conoce nada de HTTP y los controllers no tienen reglas del juego: solo construyen, piden
-mensajes al tipo padre y traducen el rechazo de una regla a un 400.
+El dominio no conoce nada de HTTP ni de la base, los repositorios son solo interfaces y los controllers no
+tienen reglas del juego: traducen HTTP, le hablan al servicio y devuelven el error de cada excepción.
 
 ## El modelo
 
@@ -129,6 +375,7 @@ classDiagram
         }
         class Armas {
             <<abstract>>
+            -Long id
             -String nombre
             -String equipo
             -double peso
@@ -138,6 +385,10 @@ classDiagram
             +disparar()* String
             +disparar(double distanciaMetros)* String
             +inspeccionar()* String
+            +recargar()* String
+            +danoA(double distanciaMetros)* int
+            +renombrar(String) void
+            +cambiarPrecio(long) void
             +mostrarEnTienda() String
             #validarDistancia(double)$ void
         }
@@ -153,6 +404,7 @@ classDiagram
             #ArmasDeFuego(nombre, precio, equipo, peso, dano, capacidadCargador, cargadoresRestantes, precision, retroceso, tiempoRecargaMs, animacion)
             +disparar() String final
             +disparar(double distanciaMetros) String final
+            +danoA(double distanciaMetros) int final
             +recargar() String final
             +inspeccionar() String
             -efectuarDisparo(int, String) String
@@ -175,9 +427,27 @@ classDiagram
             +disparar() String
             +disparar(double distanciaMetros) String
             +inspeccionar() String
+            +danoA(double distanciaMetros) int
+            +recargar() String
             -lanzar(double) String
             -explotar() String
             +sonido() String
+        }
+        class Jugador {
+            +int VIDA_MAXIMA$
+            -String nombre
+            -int vida
+            -Chaleco chaleco
+            +Jugador(String nombre)
+            +Jugador(String nombre, int vida, Chaleco chaleco)
+            +recibirDano(int) int
+            +estaEliminado() boolean
+        }
+        class Chaleco {
+            -int durabilidad
+            +Chaleco()
+            +Chaleco(int durabilidad)
+            +absorber(int) int
         }
         class Audible {
             <<interface>>
@@ -242,6 +512,8 @@ classDiagram
     ArmasDeFuego <|-- Sniper
     Audible <|.. Granada
     Audible <|.. BombaC4
+    Vendible <|-- Chaleco
+    Jugador o-- Chaleco
 ```
 
 Convención del diagrama: `-` privado, `#` protegido, `+` público, `*` abstracto, `$` estático.
