@@ -1,11 +1,11 @@
 # Bitácora de asistencia de IA
 
 Alumno: Marcelo Kropff (Y43819)
-Ejercicios: POO-06 (revisión, paquetes, constructores y sobrecarga) e interfaces (Counter-Strike 2)
+Ejercicios: POO-06 (revisión, paquetes, constructores y sobrecarga), interfaces y POO-08 (CRUD REST, H2 e Insomnia), sobre Counter-Strike 2
 
 ## Asistente y modelo
 
-Usé el mismo asistente y el mismo modelo en todos los chats: taller de Git, ejercicio POO-06, revisión final y ejercicio de interfaces.
+Usé el mismo asistente y el mismo modelo en todos los chats: taller de Git, ejercicio POO-06, revisión final, ejercicio de interfaces y POO-08.
 
 | Dato | Valor |
 |---|---|
@@ -50,3 +50,9 @@ Usé el mismo asistente y el mismo modelo en todos los chats: taller de Git, eje
 - Le pasé la consigna de la clase y el ejemplo de la pizarra, y le pedí ayuda para resolverla con mi modelo de CS2.
 - Elegimos como capacidad compartida el sonido: la implementan la Granada y una clase nueva, la bomba C4, que no es un arma. La C4 reemplaza el alcance por defecto porque se escucha en todo el mapa.
 - Le pedí que agregue el servicio REST, los tests, la sección del README y esta parte de la bitácora en commits separados.
+
+### Ejercicio POO-08 (CRUD REST, H2 e Insomnia)
+
+- Le pasé lo que se escribió en el Zulip de la clase y capturas de Spring Initializr y de la consola H2, porque no había entendido qué se pedía. Encontró el enunciado POO-08 en el repo de la cátedra y lo resolvió sobre mis armas.
+- Le pedí que guarde la familia de armas en H2 con un CRUD en tres capas (controller, servicio y repositorio), con una simulación de daño y de munición en la que participen tres clases, una jerarquía de excepciones con un handler por tipo, la colección de Insomnia con el caso feliz y cada error, y el README con las dos reglas.
+- Lo pidió en commits separados y comprobó que todo funcione: tests, la colección completa contra el servicio, los datos después de reiniciar y la tabla en H2.

@@ -6,7 +6,9 @@ import org.springframework.web.bind.annotation.RestController;
 import py.edu.uc.lp3.domain.Audible;
 import py.edu.uc.lp3.domain.BombaC4;
 import py.edu.uc.lp3.domain.Granada;
+import py.edu.uc.lp3.service.ArmaService;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -17,6 +19,12 @@ import java.util.List;
 @RestController
 public class SonidoController {
 
+    private final ArmaService armaService;
+
+    public SonidoController(ArmaService armaService) {
+        this.armaService = armaService;
+    }
+
     @GetMapping("/sonidos")
     public List<SonidoDTO> sonidos(
             @RequestParam(defaultValue = "A") String sitio,
@@ -26,6 +34,23 @@ public class SonidoController {
                 new Granada(),
                 new Granada("Flashbang", true),
                 new BombaC4(sitio, segundos));
+        return audibles.stream()
+                .map(a -> new SonidoDTO(a.getClass().getSimpleName(), a.sonido(), a.alcanceSonido()))
+                .toList();
+    }
+
+    /**
+     * Versión persistida: las granadas guardadas en H2 más una C4, todas
+     * tratadas como Audible. Mezcla en la misma lista una fila de la tabla
+     * "arma" y un objeto de otra familia que no se guarda.
+     */
+    @GetMapping("/api/sonidos")
+    public List<SonidoDTO> sonidosGuardados(
+            @RequestParam(defaultValue = "A") String sitio,
+            @RequestParam(defaultValue = "40") int segundos
+    ) {
+        List<Audible> audibles = new ArrayList<>(armaService.audiblesGuardados());
+        audibles.add(new BombaC4(sitio, segundos));
         return audibles.stream()
                 .map(a -> new SonidoDTO(a.getClass().getSimpleName(), a.sonido(), a.alcanceSonido()))
                 .toList();

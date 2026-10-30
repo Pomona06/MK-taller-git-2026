@@ -1,5 +1,10 @@
 package py.edu.uc.lp3.domain;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import py.edu.uc.lp3.exceptions.MunicionInsuficienteException;
+import py.edu.uc.lp3.exceptions.ValorInvalidoException;
+
 /**
  * El profesor había dejado acá un solo atributo:
  *
@@ -20,16 +25,21 @@ package py.edu.uc.lp3.domain;
  * disparar() y recargar() están implementados una sola vez acá, como final
  * (Template Method). Rifle, Pistola y Sniper solo sobreescriben dos métodos
  * gancho chicos: balasPorDisparo() y calcularDano().
+ *
+ * Es @Entity abstracta para que sus campos (munición incluida) se guarden en
+ * la tabla "arma". La carga persistida solo cambia con disparar() y recargar().
  */
+@Entity
 public abstract class ArmasDeFuego extends Armas {
 
     private int carga;
     private int cargadoresRestantes;
-    private final int capacidadCargador;
-    private final double precision;
-    private final double retroceso;
-    private final long tiempoRecargaMs;
-    private final String animacion;
+    private int capacidadCargador;
+    @Column(name = "precision_tiro")
+    private double precision;
+    private double retroceso;
+    private long tiempoRecargaMs;
+    private String animacion;
 
     protected ArmasDeFuego(String nombre, long precio, String equipo, double peso, int dano,
                            int capacidadCargador, int cargadoresRestantes,
@@ -37,13 +47,13 @@ public abstract class ArmasDeFuego extends Armas {
                            String animacion) {
         super(nombre, precio, equipo, peso, dano);
         if (capacidadCargador <= 0 || cargadoresRestantes < 0) {
-            throw new IllegalArgumentException("capacidad/cargadores inválidos");
+            throw new ValorInvalidoException("capacidad/cargadores inválidos");
         }
         if (precision < 0 || precision > 1) {
-            throw new IllegalArgumentException("la precisión debe estar entre 0 y 1");
+            throw new ValorInvalidoException("la precisión debe estar entre 0 y 1");
         }
         if (retroceso < 0 || tiempoRecargaMs < 0) {
-            throw new IllegalArgumentException("retroceso y tiempo de recarga no pueden ser negativos");
+            throw new ValorInvalidoException("retroceso y tiempo de recarga no pueden ser negativos");
         }
         this.capacidadCargador = capacidadCargador;
         this.carga = capacidadCargador;
@@ -62,22 +72,27 @@ public abstract class ArmasDeFuego extends Armas {
     /** Sobrecarga: fuera del alcance efectivo el daño se reduce a la mitad. */
     @Override
     public final String disparar(double distanciaMetros) {
-        validarDistancia(distanciaMetros);
-        int dano = calcularDano();
+        int dano = danoA(distanciaMetros);
         String detalle = " a " + distanciaMetros + "m";
         if (distanciaMetros > alcanceEfectivo()) {
-            dano = (int) Math.round(dano * 0.5);
             detalle += " (fuera del alcance efectivo de " + alcanceEfectivo() + "m, daño a la mitad)";
         }
         return efectuarDisparo(dano, detalle);
+    }
+
+    @Override
+    public final int danoA(double distanciaMetros) {
+        validarDistancia(distanciaMetros);
+        int dano = calcularDano();
+        return distanciaMetros > alcanceEfectivo() ? (int) Math.round(dano * 0.5) : dano;
     }
 
     /** Única forma de gastar munición: ambas versiones de disparar pasan por acá. */
     private String efectuarDisparo(int dano, String detalle) {
         int balasNecesarias = balasPorDisparo();
         if (carga < balasNecesarias) {
-            return getNombre() + " no puede disparar: cargador insuficiente ("
-                    + carga + " balas, necesita " + balasNecesarias + ")";
+            throw new MunicionInsuficienteException(getNombre() + " no puede disparar: cargador insuficiente ("
+                    + carga + " balas, necesita " + balasNecesarias + ")");
         }
         carga -= balasNecesarias;
         return getNombre() + " disparó" + detalle + " (" + balasNecesarias + " balas, precisión "
@@ -93,12 +108,13 @@ public abstract class ArmasDeFuego extends Armas {
         return 30.0;
     }
 
+    @Override
     public final String recargar() {
         if (carga == capacidadCargador) {
             return getNombre() + " ya tiene el cargador lleno";
         }
         if (cargadoresRestantes <= 0) {
-            return getNombre() + " no tiene cargadores de repuesto";
+            throw new MunicionInsuficienteException(getNombre() + " no tiene cargadores de repuesto");
         }
         cargadoresRestantes--;
         carga = capacidadCargador;
@@ -117,11 +133,27 @@ public abstract class ArmasDeFuego extends Armas {
     /** Método gancho: cómo esta arma concreta deriva el daño a partir del daño base. */
     protected abstract int calcularDano();
 
-    protected int getCarga() {
+    public int getCarga() {
         return carga;
     }
 
-    protected double getPrecision() {
+    public int getCargadoresRestantes() {
+        return cargadoresRestantes;
+    }
+
+    public int getCapacidadCargador() {
+        return capacidadCargador;
+    }
+
+    public double getPrecision() {
         return precision;
+    }
+
+    public double getRetroceso() {
+        return retroceso;
+    }
+
+    public long getTiempoRecargaMs() {
+        return tiempoRecargaMs;
     }
 }

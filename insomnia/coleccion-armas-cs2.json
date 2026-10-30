@@ -1,0 +1,585 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2026-10-30T12:00:00.000Z",
+  "__export_source": "insomnia.desktop.app:v10.3.0",
+  "resources": [
+    {
+      "_id": "wrk_mk_cs2",
+      "_type": "workspace",
+      "parentId": null,
+      "name": "MK CS2 Armas (POO-08)",
+      "description": "CRUD REST sobre H2, simulaciones y errores. Orden: carpetas 0 a 3 de arriba abajo.",
+      "scope": "collection"
+    },
+    {
+      "_id": "env_mk_base",
+      "_type": "environment",
+      "parentId": "wrk_mk_cs2",
+      "name": "Base Environment",
+      "data": {
+        "base_url": "http://localhost:8080",
+        "armaId": 1,
+        "sniperId": 2
+      },
+      "dataPropertyOrder": {
+        "&": [
+          "base_url",
+          "armaId",
+          "sniperId"
+        ]
+      },
+      "color": null,
+      "isPrivate": false,
+      "metaSortKey": 1
+    },
+    {
+      "_id": "fld_mk_0",
+      "_type": "request_group",
+      "parentId": "wrk_mk_cs2",
+      "name": "0. Servicio vivo",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 100
+    },
+    {
+      "_id": "req_mk_01",
+      "_type": "request",
+      "parentId": "fld_mk_0",
+      "name": "GET / (vivo y cantidad de armas)",
+      "description": "200 con estado vivo y armasGuardadas.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 10,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {}
+    },
+    {
+      "_id": "fld_mk_1",
+      "_type": "request_group",
+      "parentId": "wrk_mk_cs2",
+      "name": "1. CRUD (caso feliz)",
+      "description": "Crear primero y copiar el id de la respuesta a la variable armaId del entorno.",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 200
+    },
+    {
+      "_id": "req_mk_02",
+      "_type": "request",
+      "parentId": "fld_mk_1",
+      "name": "POST crear rifle AK-47",
+      "description": "201 con id y tipo rifle. Copiar el id a armaId.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/armas",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 20,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"rifle\",\n  \"nombre\": \"AK-47\",\n  \"modoRafaga\": true\n}"
+      }
+    },
+    {
+      "_id": "req_mk_03",
+      "_type": "request",
+      "parentId": "fld_mk_1",
+      "name": "GET listar armas",
+      "description": "200: lo guardado en H2.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/armas",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 30,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {}
+    },
+    {
+      "_id": "req_mk_04",
+      "_type": "request",
+      "parentId": "fld_mk_1",
+      "name": "GET arma por id",
+      "description": "200: coincide con lo creado.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/armas/{{ _.armaId }}",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 40,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {}
+    },
+    {
+      "_id": "req_mk_05",
+      "_type": "request",
+      "parentId": "fld_mk_1",
+      "name": "PATCH cambiar precio",
+      "description": "200: precio 2500; el nombre queda igual. Repetir el GET por id para ver que se guardó.",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/api/armas/{{ _.armaId }}",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 50,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"precio\": 2500\n}"
+      }
+    },
+    {
+      "_id": "req_mk_06",
+      "_type": "request",
+      "parentId": "fld_mk_1",
+      "name": "GET filtrar por equipo TT",
+      "description": "200: usa findByEquipo del repositorio.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/armas?equipo=TT",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 60,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {}
+    },
+    {
+      "_id": "fld_mk_2",
+      "_type": "request_group",
+      "parentId": "wrk_mk_cs2",
+      "name": "2. Simulaciones e interfaz (caso feliz)",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 300
+    },
+    {
+      "_id": "req_mk_07",
+      "_type": "request",
+      "parentId": "fld_mk_2",
+      "name": "POST simulación de daño (AK-47 contra jugador con chaleco)",
+      "description": "200: participan el arma guardada, el Jugador y el Chaleco. La carga del AK-47 baja.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/simulaciones/dano",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 70,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"armaId\": {{ _.armaId }},\n  \"distancia\": 10,\n  \"jugador\": \"Enemigo\",\n  \"vida\": 100,\n  \"blindaje\": 100\n}"
+      }
+    },
+    {
+      "_id": "req_mk_08",
+      "_type": "request",
+      "parentId": "fld_mk_2",
+      "name": "POST crear AWP con 1 bala y sin repuestos",
+      "description": "201. Copiar el id a sniperId.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/armas",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 80,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"sniper\",\n  \"nombre\": \"AWP\",\n  \"capacidadCargador\": 1,\n  \"cargadoresRestantes\": 0\n}"
+      }
+    },
+    {
+      "_id": "req_mk_09",
+      "_type": "request",
+      "parentId": "fld_mk_2",
+      "name": "POST disparar AWP (gasta la única bala)",
+      "description": "200: carga 0, guardada en H2.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/armas/{{ _.sniperId }}/disparos?distancia=50",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 90,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {}
+    },
+    {
+      "_id": "req_mk_10",
+      "_type": "request",
+      "parentId": "fld_mk_2",
+      "name": "POST crear flashbang",
+      "description": "201: tipo granada.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/armas",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 100,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"granada\",\n  \"nombre\": \"Flashbang\",\n  \"aturde\": true\n}"
+      }
+    },
+    {
+      "_id": "req_mk_11",
+      "_type": "request",
+      "parentId": "fld_mk_2",
+      "name": "GET sonidos (interfaz Audible)",
+      "description": "200: las granadas guardadas y una C4, todas como Audible.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/sonidos?sitio=B&segundos=7",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 110,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {}
+    },
+    {
+      "_id": "fld_mk_3",
+      "_type": "request_group",
+      "parentId": "wrk_mk_cs2",
+      "name": "3. Errores (uno por tipo de excepción)",
+      "description": "Correr después de la carpeta 2.",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 400
+    },
+    {
+      "_id": "req_mk_12",
+      "_type": "request",
+      "parentId": "fld_mk_3",
+      "name": "400 POST con daño negativo (ValorInvalidoException)",
+      "description": "400. Después, GET listar: la colección no creció.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/armas",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 120,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"rifle\",\n  \"nombre\": \"AK-47\",\n  \"dano\": -5\n}"
+      }
+    },
+    {
+      "_id": "req_mk_13",
+      "_type": "request",
+      "parentId": "fld_mk_3",
+      "name": "400 POST con tipo desconocido (ValorInvalidoException)",
+      "description": "400.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/armas",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 130,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"hacha\"\n}"
+      }
+    },
+    {
+      "_id": "req_mk_14",
+      "_type": "request",
+      "parentId": "fld_mk_3",
+      "name": "400 simulación con vida 150 (ValorInvalidoException)",
+      "description": "400.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/simulaciones/dano",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 140,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"armaId\": {{ _.armaId }},\n  \"jugador\": \"Enemigo\",\n  \"vida\": 150\n}"
+      }
+    },
+    {
+      "_id": "req_mk_15",
+      "_type": "request",
+      "parentId": "fld_mk_3",
+      "name": "404 GET id inexistente (RecursoNoEncontradoException)",
+      "description": "404.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/armas/9999",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 150,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {}
+    },
+    {
+      "_id": "req_mk_16",
+      "_type": "request",
+      "parentId": "fld_mk_3",
+      "name": "404 DELETE id inexistente (RecursoNoEncontradoException)",
+      "description": "404.",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/armas/9999",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 160,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {}
+    },
+    {
+      "_id": "req_mk_17",
+      "_type": "request",
+      "parentId": "fld_mk_3",
+      "name": "404 simulación con arma inexistente (RecursoNoEncontradoException)",
+      "description": "404.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/simulaciones/dano",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 170,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"armaId\": 9999,\n  \"jugador\": \"Enemigo\"\n}"
+      }
+    },
+    {
+      "_id": "req_mk_18",
+      "_type": "request",
+      "parentId": "fld_mk_3",
+      "name": "409 disparar AWP sin balas (MunicionInsuficienteException)",
+      "description": "409: regla de munición.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/armas/{{ _.sniperId }}/disparos",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 180,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {}
+    },
+    {
+      "_id": "req_mk_19",
+      "_type": "request",
+      "parentId": "fld_mk_3",
+      "name": "409 recargar AWP sin cargadores (MunicionInsuficienteException)",
+      "description": "409: regla de munición.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/armas/{{ _.sniperId }}/recargas",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 190,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {}
+    },
+    {
+      "_id": "req_mk_20",
+      "_type": "request",
+      "parentId": "fld_mk_3",
+      "name": "409 simulación contra jugador eliminado (JugadorEliminadoException)",
+      "description": "409: regla de vida. La carga del AK-47 no cambia.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/simulaciones/dano",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 200,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"armaId\": {{ _.armaId }},\n  \"jugador\": \"Caido\",\n  \"vida\": 0\n}"
+      }
+    },
+    {
+      "_id": "fld_mk_4",
+      "_type": "request_group",
+      "parentId": "wrk_mk_cs2",
+      "name": "4. Borrar (al final)",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 500
+    },
+    {
+      "_id": "req_mk_21",
+      "_type": "request",
+      "parentId": "fld_mk_4",
+      "name": "DELETE arma",
+      "description": "204. Después, GET por id da 404.",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/armas/{{ _.armaId }}",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 210,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {}
+    },
+    {
+      "_id": "req_mk_22",
+      "_type": "request",
+      "parentId": "fld_mk_4",
+      "name": "GET arma borrada (404)",
+      "description": "404.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/armas/{{ _.armaId }}",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 220,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {}
+    }
+  ]
+}

@@ -1,10 +1,19 @@
 package py.edu.uc.lp3.domain;
 
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+
+@Entity
+@DiscriminatorValue("rifle")
 public class Rifle extends ArmasDeFuego {
 
-    private final boolean modoRafaga;
+    private boolean modoRafaga;
 
-    /** Constructor simple: un AK-47 de los terroristas, tiro a tiro. */
+    /**
+     * Constructor simple: un AK-47 de los terroristas, tiro a tiro. Es también
+     * el constructor sin argumentos que necesita JPA: deja un objeto legal y
+     * después JPA le carga los valores de la fila.
+     */
     public Rifle() {
         this("AK-47");
     }
@@ -30,6 +39,10 @@ public class Rifle extends ArmasDeFuego {
     }
 
     public boolean automatico() {
+        return modoRafaga;
+    }
+
+    public boolean isModoRafaga() {
         return modoRafaga;
     }
 
