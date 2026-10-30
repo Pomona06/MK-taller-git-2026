@@ -108,6 +108,7 @@ public abstract class ArmasDeFuego extends Armas {
         return 30.0;
     }
 
+    @Override
     public final String recargar() {
         if (carga == capacidadCargador) {
             return getNombre() + " ya tiene el cargador lleno";

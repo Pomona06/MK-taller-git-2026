@@ -94,6 +94,12 @@ public class Granada extends Armas implements Audible {
         return distanciaMetros <= radioExplosion ? getDano() : 0;
     }
 
+    /** Una granada no tiene cargador: se usa una vez y se compra otra. */
+    @Override
+    public String recargar() {
+        throw new ValorInvalidoException(getNombre() + " es una granada y no se recarga");
+    }
+
     private String lanzar(double distanciaMetros) {
         long ahora = System.currentTimeMillis();
         long transcurrido = ahora - ultimoLanzamiento;

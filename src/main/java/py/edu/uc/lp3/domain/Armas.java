@@ -108,6 +108,9 @@ public abstract class Armas extends Vendible {
 
     public abstract String inspeccionar();
 
+    /** Volver a cargar el arma. Cada rama decide si puede hacerlo. */
+    public abstract String recargar();
+
     /**
      * Cuánto daño le hace esta arma a un objetivo que está a esa distancia.
      * Lo usa la simulación de daño; cada rama lo calcula a su modo.
