@@ -3,6 +3,8 @@
 Ejercicio POO-06 (revisión, paquetes, constructores y sobrecarga) de Lenguaje de Programación 3.
 Servicio HTTP propio en Spring Boot sobre el modelado de Counter-Strike 2 (opción B), con herencia,
 sobreescritura, sobrecarga, ocultamiento de información y paquetes según el template de la cátedra.
+Después se sumó el ejercicio de **interfaces**: una capacidad compartida por dos familias distintas
+(ver [Interfaz Audible](#interfaz-audible-capacidad-compartida)).
 
 - Enunciado: [ejercicio-poo-06-revision-paquetes-constructores-2026-09-30](https://github.com/alefq/afq-taller-git-2024/blob/main/docs/ejercicio-poo-06-revision-paquetes-constructores-2026-09-30.md)
 - Bitácora de IA: [BITACORA.md](BITACORA.md)
@@ -31,6 +33,7 @@ Queda escuchando en http://localhost:8080. Los tests se corren con `./mvnw test`
 | `GET /armas/crear?tipo=...` | Construye el arma con el **constructor completo**. Todos los atributos se pueden pisar por query string (`nombre`, `precio`, `equipo`, `dano`, `modoRafaga`, `aturde`, etc.); si no mandás, usa unos defaults razonables. |
 | `GET /armas/crear-simple?tipo=...` | Construye el arma con los **constructores sobrecargados**: sin argumentos, `(nombre)` o `(nombre, equipo / modoRafaga / aturde)` según lo que venga en la URL. El JSON dice qué firma se usó. |
 | `GET /armas/comparar` | Arma una `List<Armas>` con un Rifle, una Pistola, un Sniper y una Granada y le pide a cada una `disparar()`. |
+| `GET /sonidos?sitio=A&segundos=40` | Arma una `List<Audible>` con una HE, una flashbang y una C4, y le pide a cada una `sonido()` y `alcanceSonido()` a través de la interfaz. `sitio` (A o B) y `segundos` (0 a 40) son opcionales y configuran la C4. |
 
 `tipo` puede ser `rifle`, `pistola`, `sniper` o `granada`. En los tres endpoints de armas, el parámetro
 opcional `distancia` hace que se use la sobrecarga `disparar(double)` en lugar de `disparar()`.
@@ -53,6 +56,8 @@ curl "http://localhost:8080/armas/crear-simple?tipo=granada&nombre=Flashbang&atu
 curl "http://localhost:8080/armas/crear-simple?tipo=pistola&nombre=USP-S&equipo=CT&distancia=25"
 curl "http://localhost:8080/armas/comparar"
 curl "http://localhost:8080/armas/comparar?distancia=25"
+curl "http://localhost:8080/sonidos?sitio=B&segundos=7"
+curl "http://localhost:8080/sonidos?sitio=C"             # 400: sitio inválido
 curl "http://localhost:8080/armas/crear?tipo=rifle&dano=-5"      # 400: daño negativo
 curl "http://localhost:8080/armas/crear?tipo=rifle&equipo=XYZ"   # 400: equipo inválido
 ```
@@ -80,11 +85,14 @@ src/main/java/py/edu/uc/lp3/
 │   ├── Armas.java                (abstracta)
 │   ├── ArmasDeFuego.java         (abstracta)
 │   ├── Rifle.java · Pistola.java · Sniper.java
-│   └── Granada.java
+│   ├── Granada.java              (también implementa Audible)
+│   ├── Audible.java              interfaz: sonido() y default alcanceSonido()
+│   └── BombaC4.java              otra familia: implementa Audible
 ├── interfaces/                   Cotizable, VideoJuegoPosicionable, Avatar, Posicion
 └── rest/controller/              entrada HTTP
     ├── IndexController.java      GET /
     ├── ArmaController.java       /armas/crear, /armas/crear-simple, /armas/comparar
+    ├── SonidoController.java     /sonidos
     └── ManejadorErrores.java     IllegalArgumentException del dominio -> 400
 ```
 
@@ -169,6 +177,24 @@ classDiagram
             +inspeccionar() String
             -lanzar(double) String
             -explotar() String
+            +sonido() String
+        }
+        class Audible {
+            <<interface>>
+            +sonido() String
+            +alcanceSonido() String
+        }
+        class BombaC4 {
+            +int TIEMPO_TOTAL$
+            -int DESACTIVAR_SIN_KIT$
+            -String sitio
+            -int segundosRestantes
+            +BombaC4(String sitio)
+            +BombaC4(String sitio, int segundosRestantes)
+            +sonido() String
+            +alcanceSonido() String
+            +getSitio() String
+            +getSegundosRestantes() int
         }
         class Rifle {
             -boolean modoRafaga
@@ -214,9 +240,55 @@ classDiagram
     ArmasDeFuego <|-- Rifle
     ArmasDeFuego <|-- Pistola
     ArmasDeFuego <|-- Sniper
+    Audible <|.. Granada
+    Audible <|.. BombaC4
 ```
 
 Convención del diagrama: `-` privado, `#` protegido, `+` público, `*` abstracto, `$` estático.
+
+## Interfaz Audible (capacidad compartida)
+
+**La capacidad:** sonar en la partida. En CS2 el sonido es información: una HE o una flash se oyen
+cerca, y el bip de la C4 se oye desde todo el mapa y se acelera cuando queda poco tiempo.
+
+**Dos familias distintas:**
+- `Granada` pertenece a la familia `Vendible → Armas`: se compra y se lanza.
+- `BombaC4` no es un arma ni se vende, es el objetivo de la ronda: es otra familia.
+
+No tiene sentido una clase padre común solo para «sonar». Por eso la capacidad es una `interface` en
+`domain`, y cada clase la implementa sin cambiar su herencia: `Granada extends Armas implements Audible`.
+
+```java
+public interface Audible {
+    String sonido();                       // cada clase lo resuelve a su modo
+    default String alcanceSonido() {       // comportamiento por defecto
+        return "se escucha solo cerca";
+    }
+}
+```
+
+| Clase | `sonido()` | `alcanceSonido()` |
+|---|---|---|
+| `Granada` | HE: «¡BOOM! grave que retumba». Flashbang: «¡pum! seco y después un pitido agudo en los oídos». | Usa el **default**: «se escucha solo cerca» |
+| `BombaC4` | El bip se acelera: «bip... bip...» con más de 10 s, «bip-bip-bip-bip» cuando sin kit ya no da el tiempo, «¡BOOM!» en 0 s. | **Reemplaza el default**: «se escucha en todo el mapa» |
+
+**Servicio REST:** `SonidoController` arma una `List<Audible>` y le pide `sonido()` y `alcanceSonido()`
+a cada elemento a través del tipo de la interfaz, sin preguntar a qué familia pertenece:
+
+```bash
+curl "http://localhost:8080/sonidos?sitio=B&segundos=7"
+```
+
+```json
+[
+  {"tipoConcreto":"Granada","sonido":"HE: ¡BOOM! grave que retumba","alcance":"se escucha solo cerca"},
+  {"tipoConcreto":"Granada","sonido":"Flashbang: ¡pum! seco y después un pitido agudo en los oídos","alcance":"se escucha solo cerca"},
+  {"tipoConcreto":"BombaC4","sonido":"bip-bip-bip-bip: quedan 7 s en el sitio B, sin kit ya no llega a desactivarse","alcance":"se escucha en todo el mapa"}
+]
+```
+
+La C4 también cuida su estado: el constructor rechaza un sitio distinto de A o B y segundos fuera de 0 a
+40, y el servicio responde 400 con el mensaje de la clase.
 
 ## Sobrecarga y sobreescritura
 

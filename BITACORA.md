@@ -1,11 +1,11 @@
 # Bitácora de asistencia de IA
 
 Alumno: Marcelo Kropff (Y43819)
-Ejercicio: POO-06, revisión, paquetes, constructores y sobrecarga (Counter-Strike 2)
+Ejercicios: POO-06 (revisión, paquetes, constructores y sobrecarga) e interfaces (Counter-Strike 2)
 
 ## Asistente y modelo
 
-Usé el mismo asistente y el mismo modelo en todos los chats: taller de Git, ejercicio POO-06 y revisión final.
+Usé el mismo asistente y el mismo modelo en todos los chats: taller de Git, ejercicio POO-06, revisión final y ejercicio de interfaces.
 
 | Dato | Valor |
 |---|---|
@@ -45,3 +45,8 @@ Usé el mismo asistente y el mismo modelo en todos los chats: taller de Git, eje
 - Le pedí que me guíe en los pasos de la entrega, que arme el documento de especificaciones y que verifique que el repo cumpla todos los criterios.
 - Le hice consultas sobre el commit de la solución y sobre qué tenía que incluir esta bitácora.
 
+### Ejercicio de interfaces
+
+- Le pasé la consigna de la clase y el ejemplo de la pizarra, y le pedí ayuda para resolverla con mi modelo de CS2.
+- Elegimos como capacidad compartida el sonido: la implementan la Granada y una clase nueva, la bomba C4, que no es un arma. La C4 reemplaza el alcance por defecto porque se escucha en todo el mapa.
+- Le pedí que agregue el servicio REST, los tests, la sección del README y esta parte de la bitácora en commits separados.
