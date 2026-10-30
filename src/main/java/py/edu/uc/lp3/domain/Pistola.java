@@ -1,9 +1,14 @@
 package py.edu.uc.lp3.domain;
 
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+
+@Entity
+@DiscriminatorValue("pistola")
 public class Pistola extends ArmasDeFuego {
 
-    private final boolean esArmaInicial;
-    private final boolean modoRafaga;
+    private boolean esArmaInicial;
+    private boolean modoRafaga;
 
     /** Constructor simple: la Glock-18 con la que arrancan los terroristas. */
     public Pistola() {
@@ -36,6 +41,14 @@ public class Pistola extends ArmasDeFuego {
     }
 
     public boolean disparoUnicoORafaga() {
+        return modoRafaga;
+    }
+
+    public boolean isEsArmaInicial() {
+        return esArmaInicial;
+    }
+
+    public boolean isModoRafaga() {
         return modoRafaga;
     }
 

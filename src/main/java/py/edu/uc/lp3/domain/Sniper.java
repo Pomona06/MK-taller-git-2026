@@ -1,5 +1,10 @@
 package py.edu.uc.lp3.domain;
 
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+
+@Entity
+@DiscriminatorValue("sniper")
 public class Sniper extends ArmasDeFuego {
 
     private boolean conMira;
@@ -34,6 +39,10 @@ public class Sniper extends ArmasDeFuego {
 
     public void bajarMira() {
         this.conMira = false;
+    }
+
+    public boolean isConMira() {
+        return conMira;
     }
 
     @Override

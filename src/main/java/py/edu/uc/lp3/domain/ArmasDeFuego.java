@@ -1,5 +1,7 @@
 package py.edu.uc.lp3.domain;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
 import py.edu.uc.lp3.exceptions.MunicionInsuficienteException;
 import py.edu.uc.lp3.exceptions.ValorInvalidoException;
 
@@ -23,16 +25,21 @@ import py.edu.uc.lp3.exceptions.ValorInvalidoException;
  * disparar() y recargar() están implementados una sola vez acá, como final
  * (Template Method). Rifle, Pistola y Sniper solo sobreescriben dos métodos
  * gancho chicos: balasPorDisparo() y calcularDano().
+ *
+ * Es @Entity abstracta para que sus campos (munición incluida) se guarden en
+ * la tabla "arma". La carga persistida solo cambia con disparar() y recargar().
  */
+@Entity
 public abstract class ArmasDeFuego extends Armas {
 
     private int carga;
     private int cargadoresRestantes;
-    private final int capacidadCargador;
-    private final double precision;
-    private final double retroceso;
-    private final long tiempoRecargaMs;
-    private final String animacion;
+    private int capacidadCargador;
+    @Column(name = "precision_tiro")
+    private double precision;
+    private double retroceso;
+    private long tiempoRecargaMs;
+    private String animacion;
 
     protected ArmasDeFuego(String nombre, long precio, String equipo, double peso, int dano,
                            int capacidadCargador, int cargadoresRestantes,
@@ -65,14 +72,19 @@ public abstract class ArmasDeFuego extends Armas {
     /** Sobrecarga: fuera del alcance efectivo el daño se reduce a la mitad. */
     @Override
     public final String disparar(double distanciaMetros) {
-        validarDistancia(distanciaMetros);
-        int dano = calcularDano();
+        int dano = danoA(distanciaMetros);
         String detalle = " a " + distanciaMetros + "m";
         if (distanciaMetros > alcanceEfectivo()) {
-            dano = (int) Math.round(dano * 0.5);
             detalle += " (fuera del alcance efectivo de " + alcanceEfectivo() + "m, daño a la mitad)";
         }
         return efectuarDisparo(dano, detalle);
+    }
+
+    @Override
+    public final int danoA(double distanciaMetros) {
+        validarDistancia(distanciaMetros);
+        int dano = calcularDano();
+        return distanciaMetros > alcanceEfectivo() ? (int) Math.round(dano * 0.5) : dano;
     }
 
     /** Única forma de gastar munición: ambas versiones de disparar pasan por acá. */
@@ -120,11 +132,27 @@ public abstract class ArmasDeFuego extends Armas {
     /** Método gancho: cómo esta arma concreta deriva el daño a partir del daño base. */
     protected abstract int calcularDano();
 
-    protected int getCarga() {
+    public int getCarga() {
         return carga;
     }
 
-    protected double getPrecision() {
+    public int getCargadoresRestantes() {
+        return cargadoresRestantes;
+    }
+
+    public int getCapacidadCargador() {
+        return capacidadCargador;
+    }
+
+    public double getPrecision() {
         return precision;
+    }
+
+    public double getRetroceso() {
+        return retroceso;
+    }
+
+    public long getTiempoRecargaMs() {
+        return tiempoRecargaMs;
     }
 }
