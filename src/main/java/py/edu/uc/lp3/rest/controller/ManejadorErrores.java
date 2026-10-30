@@ -45,6 +45,6 @@ public class ManejadorErrores {
     }
 
     private Map<String, String> cuerpo(JuegoException e) {
-        return Map.of("error", e.getMessage(), "tipo", e.getClass().getSimpleName());
+        return Map.of("error", e.getMessage(), "excepcion", e.getClass().getSimpleName());
     }
 }
