@@ -25,6 +25,7 @@ public class IndexController {
                 "endpoints", List.of(
                         "POST|GET /api/armas, GET|PATCH|DELETE /api/armas/{id} (CRUD sobre H2)",
                         "POST /api/armas/{id}/disparos[?distancia=...] y /api/armas/{id}/recargas (munición)",
+                        "POST /api/simulaciones/dano (arma guardada + Jugador + Chaleco)",
                         "GET /armas/crear?tipo=rifle|pistola|sniper|granada&... (constructor completo)",
                         "GET /armas/crear-simple?tipo=...&nombre=... (constructores sobrecargados)",
                         "GET /armas/comparar[?distancia=...] (disparar() en cada clase hija)",
