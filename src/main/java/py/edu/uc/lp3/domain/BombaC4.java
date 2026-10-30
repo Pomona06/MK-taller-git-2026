@@ -1,5 +1,7 @@
 package py.edu.uc.lp3.domain;
 
+import py.edu.uc.lp3.exceptions.ValorInvalidoException;
+
 /**
  * La C4 no es un Armas ni un Vendible: no se compra ni se dispara, es el
  * objetivo de la ronda. Es otra familia del modelo; lo único que comparte con
@@ -22,10 +24,10 @@ public class BombaC4 implements Audible {
 
     public BombaC4(String sitio, int segundosRestantes) {
         if (!"A".equals(sitio) && !"B".equals(sitio)) {
-            throw new IllegalArgumentException("el sitio debe ser A o B (recibido: " + sitio + ")");
+            throw new ValorInvalidoException("el sitio debe ser A o B (recibido: " + sitio + ")");
         }
         if (segundosRestantes < 0 || segundosRestantes > TIEMPO_TOTAL) {
-            throw new IllegalArgumentException("los segundos restantes deben estar entre 0 y " + TIEMPO_TOTAL);
+            throw new ValorInvalidoException("los segundos restantes deben estar entre 0 y " + TIEMPO_TOTAL);
         }
         this.sitio = sitio;
         this.segundosRestantes = segundosRestantes;

@@ -1,6 +1,8 @@
 package py.edu.uc.lp3.domain;
 
 import org.junit.jupiter.api.Test;
+import py.edu.uc.lp3.exceptions.MunicionInsuficienteException;
+import py.edu.uc.lp3.exceptions.ValorInvalidoException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -23,13 +25,13 @@ class ArmasTest {
 
     @Test
     void elConstructorRechazaValoresQueRompenLasReglas() {
-        assertThrows(IllegalArgumentException.class, () -> new Pistola("P250", "XX"));
-        assertThrows(IllegalArgumentException.class, () -> new Rifle(" "));
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(ValorInvalidoException.class, () -> new Pistola("P250", "XX"));
+        assertThrows(ValorInvalidoException.class, () -> new Rifle(" "));
+        assertThrows(ValorInvalidoException.class,
                 () -> new Sniper("AWP", 4750, "CT", 6.5, 115, 0, 6, 0.95, 9.0, 3700));
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(ValorInvalidoException.class,
                 () -> new Rifle("AK-47", 2700, "TT", 3.6, 36, 30, 3, 1.5, 7.0, 2500, false));
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(ValorInvalidoException.class,
                 () -> new Granada("HE", 300, "CT", 0.5, 57, 5.0, 20.0, false, 150, 1000));
     }
 
@@ -47,7 +49,7 @@ class ArmasTest {
         assertTrue(pistola.disparar(10).contains("causando 30 de daño"));
         assertTrue(pistola.disparar(40).contains("causando 15 de daño"));
         assertTrue(new Granada().disparar(50).contains("no llega"));
-        assertThrows(IllegalArgumentException.class, () -> pistola.disparar(-1));
+        assertThrows(ValorInvalidoException.class, () -> pistola.disparar(-1));
     }
 
     @Test
@@ -56,7 +58,7 @@ class ArmasTest {
         for (int i = 0; i < 5; i++) {
             sniper.disparar();
         }
-        assertTrue(sniper.disparar().contains("no puede disparar"));
+        assertThrows(MunicionInsuficienteException.class, sniper::disparar);
         assertTrue(sniper.recargar().contains("Cargadores restantes: 5"));
         assertEquals(5, sniper.getCarga());
     }

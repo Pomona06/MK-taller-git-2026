@@ -1,5 +1,8 @@
 package py.edu.uc.lp3.domain;
 
+import py.edu.uc.lp3.exceptions.MunicionInsuficienteException;
+import py.edu.uc.lp3.exceptions.ValorInvalidoException;
+
 /**
  * El profesor había dejado acá un solo atributo:
  *
@@ -37,13 +40,13 @@ public abstract class ArmasDeFuego extends Armas {
                            String animacion) {
         super(nombre, precio, equipo, peso, dano);
         if (capacidadCargador <= 0 || cargadoresRestantes < 0) {
-            throw new IllegalArgumentException("capacidad/cargadores inválidos");
+            throw new ValorInvalidoException("capacidad/cargadores inválidos");
         }
         if (precision < 0 || precision > 1) {
-            throw new IllegalArgumentException("la precisión debe estar entre 0 y 1");
+            throw new ValorInvalidoException("la precisión debe estar entre 0 y 1");
         }
         if (retroceso < 0 || tiempoRecargaMs < 0) {
-            throw new IllegalArgumentException("retroceso y tiempo de recarga no pueden ser negativos");
+            throw new ValorInvalidoException("retroceso y tiempo de recarga no pueden ser negativos");
         }
         this.capacidadCargador = capacidadCargador;
         this.carga = capacidadCargador;
@@ -76,8 +79,8 @@ public abstract class ArmasDeFuego extends Armas {
     private String efectuarDisparo(int dano, String detalle) {
         int balasNecesarias = balasPorDisparo();
         if (carga < balasNecesarias) {
-            return getNombre() + " no puede disparar: cargador insuficiente ("
-                    + carga + " balas, necesita " + balasNecesarias + ")";
+            throw new MunicionInsuficienteException(getNombre() + " no puede disparar: cargador insuficiente ("
+                    + carga + " balas, necesita " + balasNecesarias + ")");
         }
         carga -= balasNecesarias;
         return getNombre() + " disparó" + detalle + " (" + balasNecesarias + " balas, precisión "
@@ -98,7 +101,7 @@ public abstract class ArmasDeFuego extends Armas {
             return getNombre() + " ya tiene el cargador lleno";
         }
         if (cargadoresRestantes <= 0) {
-            return getNombre() + " no tiene cargadores de repuesto";
+            throw new MunicionInsuficienteException(getNombre() + " no tiene cargadores de repuesto");
         }
         cargadoresRestantes--;
         carga = capacidadCargador;

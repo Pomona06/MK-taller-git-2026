@@ -1,5 +1,7 @@
 package py.edu.uc.lp3.domain;
 
+import py.edu.uc.lp3.exceptions.ValorInvalidoException;
+
 /**
  * El profesor dejó esta clase vacía (public class Armas extends Vendible {}).
  * Acá se completa con lo que es común a cualquier arma de la jerarquía, y con
@@ -18,13 +20,13 @@ public abstract class Armas extends Vendible {
 
     protected Armas(String nombre, long precio, String equipo, double peso, int dano) {
         if (nombre == null || nombre.isBlank()) {
-            throw new IllegalArgumentException("el nombre no puede estar vacío");
+            throw new ValorInvalidoException("el nombre no puede estar vacío");
         }
         if (!"CT".equals(equipo) && !"TT".equals(equipo)) {
-            throw new IllegalArgumentException("equipo debe ser CT o TT (recibido: " + equipo + ")");
+            throw new ValorInvalidoException("equipo debe ser CT o TT (recibido: " + equipo + ")");
         }
         if (precio < 0 || peso < 0 || dano < 0) {
-            throw new IllegalArgumentException("precio, peso y daño no pueden ser negativos");
+            throw new ValorInvalidoException("precio, peso y daño no pueden ser negativos");
         }
         this.nombre = nombre;
         this.equipo = equipo;
@@ -71,7 +73,7 @@ public abstract class Armas extends Vendible {
     /** Regla común para cualquier disparo a distancia: no hay distancias negativas. */
     protected static void validarDistancia(double distanciaMetros) {
         if (Double.isNaN(distanciaMetros) || distanciaMetros < 0) {
-            throw new IllegalArgumentException("la distancia no puede ser negativa");
+            throw new ValorInvalidoException("la distancia no puede ser negativa");
         }
     }
 

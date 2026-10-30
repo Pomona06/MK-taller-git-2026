@@ -1,5 +1,6 @@
 package py.edu.uc.lp3.rest.controller;
 
+import py.edu.uc.lp3.exceptions.ValorInvalidoException;
 import py.edu.uc.lp3.domain.*;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -55,7 +56,7 @@ public class ArmaController {
             case "granada" -> new Granada(nombre, precio, equipo, peso, dano,
                     radioExplosion, distanciaLanzamiento, aturde, visibilidadReducida,
                     cooldownMs);
-            default -> throw new IllegalArgumentException(
+            default -> throw new ValorInvalidoException(
                     "tipo debe ser rifle, pistola, sniper o granada (recibido: " + tipo + ")");
         };
         return describir(arma, "completo", dineroDisponible, distancia);
@@ -100,7 +101,7 @@ public class ArmaController {
                 else if (aturde == null) { arma = new Granada(nombre); constructor = "Granada(String)"; }
                 else { arma = new Granada(nombre, aturde); constructor = "Granada(String, boolean)"; }
             }
-            default -> throw new IllegalArgumentException(
+            default -> throw new ValorInvalidoException(
                     "tipo debe ser rifle, pistola, sniper o granada (recibido: " + tipo + ")");
         }
         return describir(arma, constructor, dineroDisponible, distancia);

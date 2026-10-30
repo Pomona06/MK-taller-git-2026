@@ -1,6 +1,7 @@
 package py.edu.uc.lp3.domain;
 
 import org.junit.jupiter.api.Test;
+import py.edu.uc.lp3.exceptions.ValorInvalidoException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -31,8 +32,8 @@ class AudibleTest {
 
     @Test
     void laC4RechazaUnEstadoImposible() {
-        assertThrows(IllegalArgumentException.class, () -> new BombaC4("C"));
-        assertThrows(IllegalArgumentException.class, () -> new BombaC4("A", -1));
-        assertThrows(IllegalArgumentException.class, () -> new BombaC4("A", 41));
+        assertThrows(ValorInvalidoException.class, () -> new BombaC4("C"));
+        assertThrows(ValorInvalidoException.class, () -> new BombaC4("A", -1));
+        assertThrows(ValorInvalidoException.class, () -> new BombaC4("A", 41));
     }
 }

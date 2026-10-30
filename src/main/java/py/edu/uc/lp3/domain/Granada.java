@@ -1,5 +1,7 @@
 package py.edu.uc.lp3.domain;
 
+import py.edu.uc.lp3.exceptions.ValorInvalidoException;
+
 /**
  * Granada extiende Armas directamente, no ArmasDeFuego, porque no dispara
  * balas ni se recarga. Sigue respondiendo a disparar() como cualquier otra
@@ -40,13 +42,13 @@ public class Granada extends Armas implements Audible {
                     boolean aturde, double visibilidadReducida, long cooldownMs) {
         super(nombre, precio, equipo, peso, dano);
         if (radioExplosion <= 0 || distanciaLanzamiento <= 0) {
-            throw new IllegalArgumentException("radio de explosión y distancia de lanzamiento deben ser positivos");
+            throw new ValorInvalidoException("radio de explosión y distancia de lanzamiento deben ser positivos");
         }
         if (visibilidadReducida < 0 || visibilidadReducida > 100) {
-            throw new IllegalArgumentException("la visibilidad reducida debe estar entre 0 y 100");
+            throw new ValorInvalidoException("la visibilidad reducida debe estar entre 0 y 100");
         }
         if (cooldownMs < 0) {
-            throw new IllegalArgumentException("el cooldown no puede ser negativo");
+            throw new ValorInvalidoException("el cooldown no puede ser negativo");
         }
         this.radioExplosion = radioExplosion;
         this.distanciaLanzamiento = distanciaLanzamiento;

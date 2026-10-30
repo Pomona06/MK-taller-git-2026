@@ -1,5 +1,6 @@
 package py.edu.uc.lp3.domain;
 
+import py.edu.uc.lp3.exceptions.ValorInvalidoException;
 import py.edu.uc.lp3.interfaces.Avatar;
 import py.edu.uc.lp3.interfaces.Cotizable;
 import py.edu.uc.lp3.interfaces.Posicion;
@@ -21,7 +22,7 @@ public class Vendible  implements VideoJuegoPosicionable, Cotizable {
 
     protected void setPrecio(Long precio) {
         if (precio == null || precio < 0) {
-            throw new IllegalArgumentException("el precio no puede ser nulo ni negativo");
+            throw new ValorInvalidoException("el precio no puede ser nulo ni negativo");
         }
         this.precio = precio;
     }
