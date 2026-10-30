@@ -18,6 +18,7 @@ public class IndexController {
                         "GET /armas/crear?tipo=rifle|pistola|sniper|granada&... (constructor completo)",
                         "GET /armas/crear-simple?tipo=...&nombre=... (constructores sobrecargados)",
                         "GET /armas/comparar[?distancia=...] (disparar() en cada clase hija)",
+                        "GET /sonidos[?sitio=A|B&segundos=0..40] (sonido() a través de la interfaz Audible)",
                         "Parámetro opcional distancia: usa la sobrecarga disparar(double)")
         );
     }
