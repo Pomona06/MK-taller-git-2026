@@ -5,7 +5,7 @@ package py.edu.uc.lp3.domain;
  * balas ni se recarga. Sigue respondiendo a disparar() como cualquier otra
  * Arma — acá disparar() y disparar(double) delegan en lanzar(), que es privado.
  */
-public class Granada extends Armas {
+public class Granada extends Armas implements Audible {
 
     private final double radioExplosion;
     private final double distanciaLanzamiento;
@@ -90,6 +90,17 @@ public class Granada extends Armas {
                 ? "aturde y reduce visibilidad " + visibilidadReducida + "%"
                 : "causa " + getDano() + " de daño";
         return getNombre() + " explotó (radio " + radioExplosion + "m, " + efecto + ")";
+    }
+
+    /**
+     * Implementación de Audible. Usa el alcance por defecto de la interfaz:
+     * una granada se escucha solo cerca.
+     */
+    @Override
+    public String sonido() {
+        return aturde
+                ? getNombre() + ": ¡pum! seco y después un pitido agudo en los oídos"
+                : getNombre() + ": ¡BOOM! grave que retumba";
     }
 
     @Override
