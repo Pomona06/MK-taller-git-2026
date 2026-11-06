@@ -1,7 +1,7 @@
 {
   "_type": "export",
   "__export_format": 4,
-  "__export_date": "2026-10-30T12:00:00.000Z",
+  "__export_date": "2026-11-06T12:00:00.000Z",
   "__export_source": "insomnia.desktop.app:v10.3.0",
   "resources": [
     {
@@ -9,7 +9,7 @@
       "_type": "workspace",
       "parentId": null,
       "name": "MK CS2 Armas (POO-08)",
-      "description": "CRUD REST sobre H2, simulaciones y errores. Orden: carpetas 0 a 3 de arriba abajo.",
+      "description": "CRUD REST sobre H2, simulaciones y errores. Orden: carpetas 0 a 4 de arriba abajo.",
       "scope": "collection"
     },
     {
@@ -20,13 +20,17 @@
       "data": {
         "base_url": "http://localhost:8080",
         "armaId": 1,
-        "sniperId": 2
+        "sniperId": 2,
+        "jugadorId": 1,
+        "botId": 2
       },
       "dataPropertyOrder": {
         "&": [
           "base_url",
           "armaId",
-          "sniperId"
+          "sniperId",
+          "jugadorId",
+          "botId"
         ]
       },
       "color": null,
@@ -188,7 +192,7 @@
       "_type": "request_group",
       "parentId": "wrk_mk_cs2",
       "name": "2. Simulaciones e interfaz (caso feliz)",
-      "description": "",
+      "description": "Crear el jugador y copiar su id a jugadorId; crear el Bot y copiar su id a botId.",
       "environment": {},
       "environmentPropertyOrder": null,
       "metaSortKey": 300
@@ -197,8 +201,8 @@
       "_id": "req_mk_07",
       "_type": "request",
       "parentId": "fld_mk_2",
-      "name": "POST simulación de daño (AK-47 contra jugador con chaleco)",
-      "description": "200: participan el arma guardada, el Jugador y el Chaleco. La carga del AK-47 baja.",
+      "name": "POST simulación de daño (AK-47 contra el Enemigo con chaleco)",
+      "description": "200: participan el arma, el Jugador y el Chaleco, los tres guardados. El AK-47 en ráfaga gasta 3 balas (queda 27/30) y hace 29 de daño; el chaleco absorbe 14 y el Enemigo queda con 85 de vida y 86 de blindaje.",
       "method": "POST",
       "url": "{{ _.base_url }}/api/simulaciones/dano",
       "parameters": [],
@@ -217,7 +221,7 @@
       "settingRebuildPath": true,
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"armaId\": {{ _.armaId }},\n  \"distancia\": 10,\n  \"jugador\": \"Enemigo\",\n  \"vida\": 100,\n  \"blindaje\": 100\n}"
+        "text": "{\n  \"armaId\": {{ _.armaId }},\n  \"jugadorId\": {{ _.jugadorId }},\n  \"distancia\": 10\n}"
       }
     },
     {
@@ -380,10 +384,10 @@
       "_id": "req_mk_14",
       "_type": "request",
       "parentId": "fld_mk_3",
-      "name": "400 simulación con vida 150 (ValorInvalidoException)",
-      "description": "400.",
+      "name": "400 POST jugador con vida 150 (ValorInvalidoException)",
+      "description": "400: la vida debe estar entre 0 y 100. GET jugadores muestra que no se guardó.",
       "method": "POST",
-      "url": "{{ _.base_url }}/api/simulaciones/dano",
+      "url": "{{ _.base_url }}/api/jugadores",
       "parameters": [],
       "headers": [
         {
@@ -400,7 +404,7 @@
       "settingRebuildPath": true,
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"armaId\": {{ _.armaId }},\n  \"jugador\": \"Enemigo\",\n  \"vida\": 150\n}"
+        "text": "{\n  \"nombre\": \"Enemigo\",\n  \"vida\": 150\n}"
       }
     },
     {
@@ -465,7 +469,7 @@
       "settingRebuildPath": true,
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"armaId\": 9999,\n  \"jugador\": \"Enemigo\"\n}"
+        "text": "{\n  \"armaId\": 9999,\n  \"jugadorId\": {{ _.jugadorId }}\n}"
       }
     },
     {
@@ -510,8 +514,8 @@
       "_id": "req_mk_20",
       "_type": "request",
       "parentId": "fld_mk_3",
-      "name": "409 simulación contra jugador eliminado (JugadorEliminadoException)",
-      "description": "409: regla de vida. La carga del AK-47 no cambia.",
+      "name": "409 simulación contra el Bot eliminado (JugadorEliminadoException)",
+      "description": "409: el Bot ya tiene vida 0. No se gasta la bala ni cambia nada.",
       "method": "POST",
       "url": "{{ _.base_url }}/api/simulaciones/dano",
       "parameters": [],
@@ -530,7 +534,7 @@
       "settingRebuildPath": true,
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"armaId\": {{ _.armaId }},\n  \"jugador\": \"Caido\",\n  \"vida\": 0\n}"
+        "text": "{\n  \"armaId\": {{ _.armaId }},\n  \"jugadorId\": {{ _.botId }},\n  \"distancia\": 10\n}"
       }
     },
     {
@@ -574,6 +578,182 @@
       "headers": [],
       "authentication": {},
       "metaSortKey": 220,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {}
+    },
+    {
+      "_id": "req_mk_06a",
+      "_type": "request",
+      "parentId": "fld_mk_2",
+      "name": "POST crear jugador Enemigo con chaleco",
+      "description": "201: jugador con 100 de vida y chaleco de 100. Copiar el id a jugadorId.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/jugadores",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 65,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nombre\": \"Enemigo\",\n  \"vida\": 100,\n  \"blindaje\": 100\n}"
+      }
+    },
+    {
+      "_id": "req_mk_07b",
+      "_type": "request",
+      "parentId": "fld_mk_2",
+      "name": "GET jugador después de simular (vida y blindaje guardados)",
+      "description": "200: vida 85 y blindaje 86, lo que dejó la simulación. Sigue así después de reiniciar el servicio.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/jugadores/{{ _.jugadorId }}",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 72,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {}
+    },
+    {
+      "_id": "req_mk_07c",
+      "_type": "request",
+      "parentId": "fld_mk_2",
+      "name": "GET AK-47 después de simular (carga guardada)",
+      "description": "200: carga 27 de 30, las balas de la simulación quedaron gastadas.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/armas/{{ _.armaId }}",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 74,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {}
+    },
+    {
+      "_id": "req_mk_07d",
+      "_type": "request",
+      "parentId": "fld_mk_2",
+      "name": "POST crear Bot con 10 de vida y sin chaleco",
+      "description": "201: copiar el id a botId.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/jugadores",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 76,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nombre\": \"Bot\",\n  \"vida\": 10\n}"
+      }
+    },
+    {
+      "_id": "req_mk_07e",
+      "_type": "request",
+      "parentId": "fld_mk_2",
+      "name": "POST simulación que elimina al Bot",
+      "description": "200: el AK-47 hace 29 de daño, el Bot no tiene chaleco: vida 0 y eliminado true. La carga baja a 24.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/simulaciones/dano",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 78,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"armaId\": {{ _.armaId }},\n  \"jugadorId\": {{ _.botId }},\n  \"distancia\": 10\n}"
+      }
+    },
+    {
+      "_id": "req_mk_07f",
+      "_type": "request",
+      "parentId": "fld_mk_2",
+      "name": "GET jugadores (lista guardada)",
+      "description": "200: Enemigo y Bot, con la vida que les dejó la simulación. ?vivos=true deja solo al Enemigo.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/jugadores",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 79,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {}
+    },
+    {
+      "_id": "req_mk_17b",
+      "_type": "request",
+      "parentId": "fld_mk_3",
+      "name": "404 GET jugador inexistente (RecursoNoEncontradoException)",
+      "description": "404: no existe un jugador con id 9999.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/jugadores/9999",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 175,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {}
+    },
+    {
+      "_id": "req_mk_20b",
+      "_type": "request",
+      "parentId": "fld_mk_3",
+      "name": "GET Bot después del 409 (sigue en 0)",
+      "description": "200: vida 0. El 409 deshizo toda la simulación: la carga del AK-47 sigue en 24.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/jugadores/{{ _.botId }}",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 205,
       "settingStoreCookies": true,
       "settingSendCookies": true,
       "settingFollowRedirects": "global",
