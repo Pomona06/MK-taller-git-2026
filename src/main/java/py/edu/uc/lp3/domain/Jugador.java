@@ -1,20 +1,49 @@
 package py.edu.uc.lp3.domain;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import py.edu.uc.lp3.exceptions.JugadorEliminadoException;
 import py.edu.uc.lp3.exceptions.ValorInvalidoException;
 
 /**
- * El objetivo de un disparo en la simulación de daño. La vida solo cambia con
- * recibirDano(), que sostiene la regla: siempre entre 0 y 100, y un jugador
- * eliminado no recibe más daño.
+ * El objetivo de un disparo en la simulación de daño. Se guarda en la tabla
+ * "jugador", así la vida que dejó la simulación se ve en un GET posterior.
+ *
+ * La vida solo cambia con recibirDano(), que sostiene la regla: siempre entre
+ * 0 y 100, y un jugador eliminado no recibe más daño. No hay setters.
  */
+@Entity
+@Table(name = "jugador")
 public class Jugador {
 
     public static final int VIDA_MAXIMA = 100;
 
-    private final String nombre;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String nombre;
     private int vida;
-    private final Chaleco chaleco; // null si no compró chaleco
+
+    /** null si no compró chaleco. Se guarda y se borra junto con el jugador. */
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "chaleco_id")
+    private Chaleco chaleco;
+
+    /**
+     * Solo para JPA, que necesita un constructor sin argumentos para armar el
+     * objeto desde la fila. Es protected: desde afuera del paquete nadie puede
+     * hacer new Jugador() y quedarse con un jugador sin nombre. JPA completa
+     * los campos por reflexión con valores que ya pasaron la validación.
+     */
+    protected Jugador() {
+    }
 
     /** Constructor simple: vida completa y sin chaleco. */
     public Jugador(String nombre) {
@@ -50,6 +79,10 @@ public class Jugador {
         return vida == 0;
     }
 
+    public Long getId() {
+        return id;
+    }
+
     public String getNombre() {
         return nombre;
     }
@@ -60,5 +93,10 @@ public class Jugador {
 
     public int getBlindaje() {
         return chaleco == null ? 0 : chaleco.getDurabilidad();
+    }
+
+    /** Para el JSON: "eliminado": true cuando la vida llegó a 0. */
+    public boolean isEliminado() {
+        return estaEliminado();
     }
 }

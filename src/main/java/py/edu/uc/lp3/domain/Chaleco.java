@@ -1,14 +1,30 @@
 package py.edu.uc.lp3.domain;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import py.edu.uc.lp3.exceptions.ValorInvalidoException;
 
 /**
  * Kevlar: se compra en la tienda (es un Vendible) pero no es un arma. Absorbe
  * parte del daño mientras le quede durabilidad.
+ *
+ * Se guarda en la tabla "chaleco" (precio y descripcion vienen de Vendible,
+ * que es @MappedSuperclass). La durabilidad solo baja con absorber(). El
+ * constructor sin argumentos que pide JPA es el constructor simple: un
+ * chaleco nuevo y legal.
  */
+@Entity
+@Table(name = "chaleco")
 public class Chaleco extends Vendible {
 
     public static final int DURABILIDAD_MAXIMA = 100;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     private int durabilidad;
 
@@ -34,6 +50,10 @@ public class Chaleco extends Vendible {
         int absorbido = Math.min(dano / 2, durabilidad);
         durabilidad -= absorbido;
         return dano - absorbido;
+    }
+
+    public Long getId() {
+        return id;
     }
 
     public int getDurabilidad() {
