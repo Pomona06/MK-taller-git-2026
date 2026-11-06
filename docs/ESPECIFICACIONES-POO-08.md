@@ -8,7 +8,7 @@
 | **Dominio** | Counter-Strike 2: armas del inventario, jugadores y chalecos |
 | **Usuario de GitHub** | `Pomona06` |
 | **Repositorio** | https://github.com/Pomona06/MK-taller-git-2026 |
-| **Enlace al commit de la solución** | Al final de este documento y en la entrega de Classroom |
+| **Enlace al commit de la solución** | https://github.com/Pomona06/MK-taller-git-2026/commit/e1f5309ec85711a4ed4cf5b854950a821bed5858 |
 | **Colección de Insomnia** | [`insomnia/coleccion-armas-cs2.json`](../insomnia/coleccion-armas-cs2.json) |
 
 ---
@@ -165,4 +165,4 @@ jugador. Usan una base H2 en memoria aparte (`src/test/resources/application.pro
 
 ## 6. Enlace al commit
 
-El enlace exacto va en la entrega de Classroom y al principio del [README](../README.md).
+https://github.com/Pomona06/MK-taller-git-2026/commit/e1f5309ec85711a4ed4cf5b854950a821bed5858

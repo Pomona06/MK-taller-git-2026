@@ -12,7 +12,7 @@ chaleco, también guardados (ver [POO-08](#poo-08-crud-rest-h2-e-insomnia)).
 - Bitácora de IA: [BITACORA.md](BITACORA.md)
 - Especificaciones aplicadas a CS2: [POO-08](docs/ESPECIFICACIONES-POO-08.md) · [POO-06](docs/ESPECIFICACIONES.md)
 - Colección de Insomnia: [insomnia/coleccion-armas-cs2.json](insomnia/coleccion-armas-cs2.json)
-- Enlace al commit de la solución POO-08: se escribe acá en el commit siguiente, que solo agrega este enlace (también va en Classroom)
+- Enlace al commit de la solución POO-08: https://github.com/Pomona06/MK-taller-git-2026/commit/e1f5309ec85711a4ed4cf5b854950a821bed5858
 - Enlace al commit de la solución POO-06: https://github.com/Pomona06/MK-taller-git-2026/commit/e7a1c2019b316689e0d4b630e5aee0edf2a06bf2
 
 ## Licencia
