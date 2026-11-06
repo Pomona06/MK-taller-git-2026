@@ -9,9 +9,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import py.edu.uc.lp3.domain.Armas;
+import py.edu.uc.lp3.domain.Chaleco;
+import py.edu.uc.lp3.domain.Jugador;
 import py.edu.uc.lp3.domain.Rifle;
 import py.edu.uc.lp3.domain.Sniper;
 import py.edu.uc.lp3.repository.ArmaRepository;
+import py.edu.uc.lp3.repository.JugadorRepository;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -28,9 +31,19 @@ class ArmaCrudControllerTest {
     @Autowired
     private ArmaRepository armaRepository;
 
+    @Autowired
+    private JugadorRepository jugadorRepository;
+
     @BeforeEach
     void limpiar() {
         armaRepository.deleteAll();
+        jugadorRepository.deleteAll();
+    }
+
+    private ResultActions simular(Long armaId, Long jugadorId, Integer distancia) throws Exception {
+        String json = "{\"armaId\":" + armaId + ",\"jugadorId\":" + jugadorId
+                + (distancia == null ? "" : ",\"distancia\":" + distancia) + "}";
+        return mvc.perform(post("/api/simulaciones/dano").contentType(MediaType.APPLICATION_JSON).content(json));
     }
 
     private ResultActions crear(String json) throws Exception {
@@ -98,28 +111,60 @@ class ArmaCrudControllerTest {
     }
 
     @Test
-    void simulacionDeDanoConLasTresClases() throws Exception {
-        Long id = armaRepository.save(new Sniper()).getId();
-        mvc.perform(post("/api/simulaciones/dano").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"armaId\":" + id + ",\"distancia\":50,\"jugador\":\"Enemigo\",\"vida\":100,\"blindaje\":100}"))
+    void simulacionDeDanoGuardaLaMunicionYLaVida() throws Exception {
+        Long armaId = armaRepository.save(new Sniper()).getId();
+        Long jugadorId = jugadorRepository.save(new Jugador("Enemigo", 100, new Chaleco(100))).getId();
+        simular(armaId, jugadorId, 50)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.danoDelArma").value(46))
                 .andExpect(jsonPath("$.danoRecibido").value(23))
+                .andExpect(jsonPath("$.cargaDespues").value(4))
                 .andExpect(jsonPath("$.vidaDespues").value(77))
                 .andExpect(jsonPath("$.blindajeDespues").value(77));
-        Armas awp = armaRepository.findById(id).orElseThrow();
-        assertEquals(4, ((Sniper) awp).getCarga());
+
+        // Un GET posterior muestra el estado ya persistido de las tres clases.
+        mvc.perform(get("/api/armas/" + armaId)).andExpect(jsonPath("$.carga").value(4));
+        mvc.perform(get("/api/jugadores/" + jugadorId))
+                .andExpect(jsonPath("$.vida").value(77))
+                .andExpect(jsonPath("$.blindaje").value(77))
+                .andExpect(jsonPath("$.eliminado").value(false));
     }
 
     @Test
     void unJugadorEliminadoDevuelve409YNoGastaMunicion() throws Exception {
-        Long id = armaRepository.save(new Rifle()).getId();
-        mvc.perform(post("/api/simulaciones/dano").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"armaId\":" + id + ",\"jugador\":\"Caido\",\"vida\":0}"))
+        Long armaId = armaRepository.save(new Rifle()).getId();
+        mvc.perform(post("/api/jugadores").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nombre\":\"Bot\",\"vida\":10}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").exists());
+        Long botId = jugadorRepository.findAll().get(0).getId();
+
+        simular(armaId, botId, 10).andExpect(status().isOk())
+                .andExpect(jsonPath("$.eliminado").value(true));
+        simular(armaId, botId, 10)
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.excepcion").value("JugadorEliminadoException"))
-                .andExpect(jsonPath("$.error", containsString("Caido")));
-        assertEquals(30, ((Rifle) armaRepository.findById(id).orElseThrow()).getCarga());
+                .andExpect(jsonPath("$.error", containsString("Bot")));
+        // Solo la primera bala se gastó: la segunda simulación se deshizo entera.
+        assertEquals(29, ((Rifle) armaRepository.findById(armaId).orElseThrow()).getCarga());
+        mvc.perform(get("/api/jugadores/" + botId)).andExpect(jsonPath("$.vida").value(0));
+    }
+
+    @Test
+    void jugadoresInvalidosOInexistentes() throws Exception {
+        mvc.perform(post("/api/jugadores").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nombre\":\"Enemigo\",\"vida\":150}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.excepcion").value("ValorInvalidoException"));
+        mvc.perform(post("/api/jugadores").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nombre\":\"Enemigo\",\"blindaje\":-1}"))
+                .andExpect(status().isBadRequest());
+        assertEquals(0, jugadorRepository.count());
+
+        Long armaId = armaRepository.save(new Rifle()).getId();
+        simular(armaId, 9999L, null).andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error", containsString("jugador")));
+        mvc.perform(get("/api/jugadores/9999")).andExpect(status().isNotFound());
     }
 
     @Test
