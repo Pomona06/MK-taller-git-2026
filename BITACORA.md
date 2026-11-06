@@ -10,7 +10,7 @@ Usé el mismo asistente y el mismo modelo en todos los chats: taller de Git, eje
 | Dato | Valor |
 |---|---|
 | Marca del asistente o agente | Claude Code (Anthropic), sesión web en claude.ai/code |
-| Modelo exacto del LLM | _claude-opus-5-5 alto |
+| Modelo exacto del LLM | `claude-opus-5-5` (Claude Opus 5.5, nivel de esfuerzo «high») |
 
 ## Resumen de prompts
 
@@ -56,3 +56,17 @@ Usé el mismo asistente y el mismo modelo en todos los chats: taller de Git, eje
 - Le pasé lo que se escribió en el Zulip de la clase y capturas de Spring Initializr y de la consola H2, porque no había entendido qué se pedía. Encontró el enunciado POO-08 en el repo de la cátedra y lo resolvió sobre mis armas.
 - Le pedí que guarde la familia de armas en H2 con un CRUD en tres capas (controller, servicio y repositorio), con una simulación de daño y de munición en la que participen tres clases, una jerarquía de excepciones con un handler por tipo, la colección de Insomnia con el caso feliz y cada error, y el README con las dos reglas.
 - Lo pidió en commits separados y comprobó que todo funcione: tests, la colección completa contra el servicio, los datos después de reiniciar y la tabla en H2.
+
+### POO-08: revisión final y persistencia del jugador
+
+- Le pasé otra vez el enunciado de POO-08, la rúbrica y el template, y le pedí que verifique todo lo que
+  pedían, qué ya estaba hecho y que me diga paso a paso qué tenía que entregar y si hacían falta capturas.
+- Me marcó que la simulación de daño creaba el jugador y el chaleco en memoria, así que la regla de vida no
+  quedaba guardada y un GET posterior solo mostraba la munición. Le pedí que guarde Jugador y Chaleco en
+  H2, con un endpoint /api/jugadores, y que la simulación reciba armaId y jugadorId.
+- También le pedí completar lo que faltaba en el README: la familia de excepciones en el diagrama, por
+  qué las excepciones son no comprobadas, las respuestas de «Dos reglas» y «Excepciones», y arreglar el
+  enlace al commit, que estaba mal escrito.
+- Le pedí el documento de especificaciones de POO-08 para Classroom, porque el que estaba era el de POO-06.
+- Corrió los tests, recorrió la colección de Insomnia contra el servicio, reinició para ver que los datos
+  seguían y miró las tres tablas en la consola H2. Lo subió en commits separados.
