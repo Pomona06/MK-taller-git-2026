@@ -1,5 +1,10 @@
 # Especificaciones — Ejercicio POO-06 aplicado a Counter-Strike 2
 
+> **Documento histórico.** Describe la entrega de POO-06 tal como estaba en su commit. El código actual
+> cambió (catálogo de armas, validaciones en los servicios, `ValorInvalidoException` en lugar de
+> `IllegalArgumentException` y sin los endpoints `/armas/...`): su descripción está en
+> [ESPECIFICACIONES-POO-08.md](ESPECIFICACIONES-POO-08.md).
+
 | | |
 |---|---|
 | **Alumno** | Marcelo Kropff (Y43819) |

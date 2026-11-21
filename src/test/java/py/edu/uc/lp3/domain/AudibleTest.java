@@ -1,7 +1,7 @@
 package py.edu.uc.lp3.domain;
 
 import org.junit.jupiter.api.Test;
-import py.edu.uc.lp3.exceptions.ValorInvalidoException;
+import py.edu.uc.lp3.constants.CatalogoArmas;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -9,10 +9,10 @@ class AudibleTest {
 
     @Test
     void cadaFamiliaImplementaSonidoASuModo() {
-        Audible granada = new Granada();
-        Audible flash = new Granada("Flashbang", true);
+        Audible he = new Granada();
+        Audible flash = new Granada(CatalogoArmas.FLASHBANG);
         Audible bomba = new BombaC4("A");
-        assertTrue(granada.sonido().contains("¡BOOM!"));
+        assertTrue(he.sonido().contains("¡BOOM!"));
         assertTrue(flash.sonido().contains("pitido"));
         assertTrue(bomba.sonido().contains("bip"));
     }
@@ -28,12 +28,5 @@ class AudibleTest {
         assertTrue(new BombaC4("A", 30).sonido().startsWith("bip... bip..."));
         assertTrue(new BombaC4("A", 5).sonido().startsWith("bip-bip-bip-bip"));
         assertTrue(new BombaC4("A", 0).sonido().contains("explotó"));
-    }
-
-    @Test
-    void laC4RechazaUnEstadoImposible() {
-        assertThrows(ValorInvalidoException.class, () -> new BombaC4("C"));
-        assertThrows(ValorInvalidoException.class, () -> new BombaC4("A", -1));
-        assertThrows(ValorInvalidoException.class, () -> new BombaC4("A", 41));
     }
 }

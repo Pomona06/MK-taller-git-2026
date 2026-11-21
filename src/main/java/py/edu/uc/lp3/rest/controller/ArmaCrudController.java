@@ -21,8 +21,8 @@ import java.util.List;
 
 /**
  * CRUD REST sobre el recurso "armas". La URL nombra el recurso y el verbo
- * HTTP dice qué hacer. El controller solo traduce HTTP: las reglas están en
- * el dominio y el acceso a datos en el servicio.
+ * HTTP dice qué hacer. El controller solo traduce HTTP: las validaciones y
+ * las reglas están en el servicio.
  */
 @RestController
 @RequestMapping("/api/armas")
@@ -62,10 +62,15 @@ public class ArmaCrudController {
         return ResponseEntity.noContent().build();
     }
 
-    /** Simulación de munición: gasta balas del arma guardada. */
+    /**
+     * Simulación de munición: dispara el arma guardada una vez o las veces
+     * indicadas (por ejemplo, para vaciar el cargador).
+     */
     @PostMapping("/{id}/disparos")
-    public DisparoResponse disparar(@PathVariable Long id, @RequestParam(required = false) Double distancia) {
-        return armaService.disparar(id, distancia);
+    public DisparoResponse disparar(@PathVariable Long id,
+                                    @RequestParam(required = false) Double distancia,
+                                    @RequestParam(required = false) Integer veces) {
+        return armaService.disparar(id, distancia, veces);
     }
 
     /** Simulación de munición: usa un cargador de repuesto. */

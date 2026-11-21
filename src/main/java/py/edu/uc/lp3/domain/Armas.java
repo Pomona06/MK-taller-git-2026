@@ -1,31 +1,36 @@
 package py.edu.uc.lp3.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.Table;
-import py.edu.uc.lp3.exceptions.ValorInvalidoException;
+import py.edu.uc.lp3.constants.CatalogoArmas;
 
 /**
  * El profesor dejó esta clase vacía (public class Armas extends Vendible {}).
- * Acá se completa con lo que es común a cualquier arma de la jerarquía, y con
- * el contrato uniforme que pide el taller: disparar() e inspeccionar() son
- * abstractos para que cualquier hija (arma de fuego o granada) responda al
- * mismo mensaje sin que nadie pregunte de qué tipo concreto se trata.
+ * Acá se completa con lo que es común a cualquier arma: el modelo del
+ * catálogo, el equipo y el apodo. disparar() es abstracto para que cualquier
+ * hija (arma de fuego o granada) responda al mismo mensaje sin que nadie
+ * pregunte de qué tipo concreto se trata.
  *
- * precio y descripcion ya vienen de Vendible, así que no se repiten acá.
+ * El dominio guarda el estado y hace los cálculos de cada tipo de arma. No
+ * valida ni lanza excepciones: las reglas del juego y los datos que llegan
+ * del JSON los controla la capa service antes de mandar cada mensaje.
  *
  * Persistencia: toda la familia se guarda en una sola tabla "arma"
  * (SINGLE_TABLE). La columna "tipo" es el discriminador (rifle, pistola,
- * sniper, granada) y el JSON lleva el mismo dato en la propiedad "tipo".
- * Los campos no tienen setters públicos: JPA los carga por reflexión y el
- * resto del código solo los cambia con mensajes del dominio que validan.
+ * sniper, granada) y el JSON lleva el mismo dato en la propiedad "tipo". Las
+ * estadísticas (daño, cargador, precio) no se pueden elegir: salen del
+ * modelo del catálogo.
  */
 @Entity
 @Table(name = "arma")
@@ -45,111 +50,88 @@ public abstract class Armas extends Vendible {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String nombre;
+    @Enumerated(EnumType.STRING)
+    private CatalogoArmas modelo;
+
     private String equipo; // "CT" o "TT"
-    private double peso;
-    private int dano; // daño base; cada rama decide cómo usarlo
 
-    protected Armas(String nombre, long precio, String equipo, double peso, int dano) {
-        validarNombre(nombre);
-        if (!"CT".equals(equipo) && !"TT".equals(equipo)) {
-            throw new ValorInvalidoException("equipo debe ser CT o TT (recibido: " + equipo + ")");
-        }
-        if (precio < 0 || peso < 0 || dano < 0) {
-            throw new ValorInvalidoException("precio, peso y daño no pueden ser negativos");
-        }
-        this.nombre = nombre;
+    /** Name Tag: un nombre propio que el jugador le pone a su arma. Puede no tener. */
+    private String apodo;
+
+    protected Armas(CatalogoArmas modelo, String equipo) {
+        this.modelo = modelo;
         this.equipo = equipo;
-        this.peso = peso;
-        this.dano = dano;
-        setPrecio(precio);
-    }
-
-    /** Mensaje del dominio para PATCH: cambiar el nombre pasando por la misma validación. */
-    public void renombrar(String nuevoNombre) {
-        validarNombre(nuevoNombre);
-        this.nombre = nuevoNombre;
-    }
-
-    /** Mensaje del dominio para PATCH: un cambio de precio (balance de la tienda). */
-    public void cambiarPrecio(long nuevoPrecio) {
-        setPrecio(nuevoPrecio);
-    }
-
-    private static void validarNombre(String nombre) {
-        if (nombre == null || nombre.isBlank()) {
-            throw new ValorInvalidoException("el nombre no puede estar vacío");
-        }
+        setPrecio(modelo.getPrecio());
+        setDescripcion(modelo.getNombre());
     }
 
     /**
      * Regla de compra única para toda la jerarquía. final: ninguna subclase
-     * puede alterar cómo se valida o registra una compra.
+     * puede alterar cómo se compra.
      */
     public final String comprar(double dineroDisponible) {
         if (dineroDisponible < getPrecio()) {
-            return "No alcanza el dinero para comprar " + nombre + ", cuesta " + getPrecio();
+            return "No alcanza el dinero para comprar " + getNombre() + ": cuesta " + getPrecio();
         }
-        return nombre + " comprada por " + getPrecio() + ", equipo " + equipo;
+        return getNombre() + " comprada por " + getPrecio() + ", equipo " + equipo;
     }
 
     /**
-     * Contrato uniforme: el inventario llama esto sobre CUALQUIER Armas
-     * (de fuego o granada) sin saber el tipo concreto.
+     * Contrato uniforme: cualquier arma (de fuego o granada) responde a
+     * disparar() sin que quien la usa sepa el tipo concreto.
      */
     public abstract String disparar();
 
     /**
-     * Sobrecarga de disparar(): la misma acción con otro argumento. Indicando
-     * la distancia al objetivo, cada rama decide qué cambia (un arma de fuego
-     * pierde daño fuera de su alcance, una granada puede no llegar).
+     * Sobrecarga de disparar(): la misma acción contra un objetivo a esa
+     * distancia, en metros.
      */
     public abstract String disparar(double distanciaMetros);
 
-    public abstract String inspeccionar();
-
-    /** Volver a cargar el arma. Cada rama decide si puede hacerlo. */
-    public abstract String recargar();
-
-    /**
-     * Cuánto daño le hace esta arma a un objetivo que está a esa distancia.
-     * Lo usa la simulación de daño; cada rama lo calcula a su modo.
-     */
+    /** Cuánto daño le hace esta arma a un objetivo sin blindaje que está a esa distancia. */
     public abstract int danoA(double distanciaMetros);
 
-    /**
-     * Implementación única porque alcanza con los atributos comunes;
-     * las subclases pueden sobreescribirla si quieren agregar detalle,
-     * pero no están obligadas a hacerlo.
-     */
-    public String mostrarEnTienda() {
-        return String.format("%s | %d$ | equipo %s | %.2fkg", nombre, getPrecio(), equipo, peso);
+    public abstract String inspeccionar();
+
+    /** Ranura del inventario que ocupa: principal, secundaria o granadas. */
+    public abstract String ranura();
+
+    /** El apodo pasa a ser el que se indica; null lo quita. */
+    public void ponerApodo(String apodo) {
+        this.apodo = apodo;
     }
 
-    /** Regla común para cualquier disparo a distancia: no hay distancias negativas. */
-    protected static void validarDistancia(double distanciaMetros) {
-        if (Double.isNaN(distanciaMetros) || distanciaMetros < 0) {
-            throw new ValorInvalidoException("la distancia no puede ser negativa");
-        }
+    /**
+     * Implementación única porque alcanza con los atributos comunes; las
+     * subclases pueden sobreescribirla, pero no están obligadas.
+     */
+    public String mostrarEnTienda() {
+        return String.format("%s | %d $ | equipo %s | ranura %s", getNombre(), getPrecio(), equipo, ranura());
     }
 
     public Long getId() {
         return id;
     }
 
-    public int getDano() {
-        return dano;
+    /** El modelo del catálogo; en el JSON se ve su nombre ("nombre"). */
+    @JsonIgnore
+    public CatalogoArmas getModelo() {
+        return modelo;
     }
 
     public String getNombre() {
-        return nombre;
+        return modelo.getNombre();
+    }
+
+    public int getDano() {
+        return modelo.getDano();
     }
 
     public String getEquipo() {
         return equipo;
     }
 
-    public double getPeso() {
-        return peso;
+    public String getApodo() {
+        return apodo;
     }
 }

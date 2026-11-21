@@ -2,57 +2,40 @@ package py.edu.uc.lp3.domain;
 
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
+import py.edu.uc.lp3.constants.CatalogoArmas;
+import py.edu.uc.lp3.constants.ReglasJuego;
 
 @Entity
 @DiscriminatorValue("rifle")
 public class Rifle extends ArmasDeFuego {
 
-    private boolean modoRafaga;
-
     /**
-     * Constructor simple: un AK-47 de los terroristas, tiro a tiro. Es también
-     * el constructor sin argumentos que necesita JPA: deja un objeto legal y
+     * Constructor simple: un AK-47 de los terroristas. Es también el
+     * constructor sin argumentos que necesita JPA: deja un objeto completo y
      * después JPA le carga los valores de la fila.
      */
     public Rifle() {
-        this("AK-47");
+        this(CatalogoArmas.AK_47);
     }
 
-    /** Sobrecarga: otro nombre, mismos valores de un rifle de asalto, tiro a tiro. */
-    public Rifle(String nombre) {
-        this(nombre, false);
-    }
-
-    /** Sobrecarga: rifle de asalto eligiendo si dispara en ráfaga. */
-    public Rifle(String nombre, boolean modoRafaga) {
-        this(nombre, 2700, "TT", 3.6, 36, 30, 3, 0.75, 7.0, 2500, modoRafaga);
+    /** Sobrecarga: otro rifle del catálogo, para el único equipo que lo compra. */
+    public Rifle(CatalogoArmas modelo) {
+        this(modelo, modelo.equipoUnico().orElse("CT"));
     }
 
     /** Constructor completo: es el único que llama a super(...). */
-    public Rifle(String nombre, long precio, String equipo, double peso, int dano,
-                 int capacidadCargador, int cargadoresRestantes,
-                 double precision, double retroceso, long tiempoRecargaMs,
-                 boolean modoRafaga) {
-        super(nombre, precio, equipo, peso, dano, capacidadCargador, cargadoresRestantes,
-                precision, retroceso, tiempoRecargaMs, "rifle_inspect");
-        this.modoRafaga = modoRafaga;
+    public Rifle(CatalogoArmas modelo, String equipo) {
+        super(modelo, equipo);
     }
 
-    public boolean automatico() {
-        return modoRafaga;
-    }
-
-    public boolean isModoRafaga() {
-        return modoRafaga;
+    /** La FAMAS en ráfaga gasta tres balas por disparo; el resto, una. */
+    @Override
+    public int balasPorDisparo() {
+        return isModoRafaga() ? ReglasJuego.BALAS_POR_RAFAGA : 1;
     }
 
     @Override
-    protected int balasPorDisparo() {
-        return modoRafaga ? 3 : 1;
-    }
-
-    @Override
-    protected int calcularDano() {
-        return modoRafaga ? (int) Math.round(getDano() * 0.8) : getDano();
+    public String ranura() {
+        return "principal";
     }
 }

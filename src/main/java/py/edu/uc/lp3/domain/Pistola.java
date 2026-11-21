@@ -2,68 +2,41 @@ package py.edu.uc.lp3.domain;
 
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
+import py.edu.uc.lp3.constants.CatalogoArmas;
+import py.edu.uc.lp3.constants.ReglasJuego;
 
 @Entity
 @DiscriminatorValue("pistola")
 public class Pistola extends ArmasDeFuego {
 
-    private boolean esArmaInicial;
-    private boolean modoRafaga;
-
-    /** Constructor simple: la Glock-18 con la que arrancan los terroristas. */
+    /** Constructor simple: la Glock-18 con la que empiezan los terroristas. */
     public Pistola() {
-        this("Glock-18");
+        this(CatalogoArmas.GLOCK_18);
     }
 
-    /** Sobrecarga: pistola inicial de los terroristas con otro nombre. */
-    public Pistola(String nombre) {
-        this(nombre, "TT");
-    }
-
-    /** Sobrecarga: pistola inicial del equipo indicado (CT o TT). */
-    public Pistola(String nombre, String equipo) {
-        this(nombre, 200, equipo, 1.0, 30, 20, 6, 0.6, 2.0, 2200, true, false);
+    /** Sobrecarga: otra pistola del catálogo, para el único equipo que la compra. */
+    public Pistola(CatalogoArmas modelo) {
+        this(modelo, modelo.equipoUnico().orElse("CT"));
     }
 
     /** Constructor completo: es el único que llama a super(...). */
-    public Pistola(String nombre, long precio, String equipo, double peso, int dano,
-                    int capacidadCargador, int cargadoresRestantes,
-                    double precision, double retroceso, long tiempoRecargaMs,
-                    boolean esArmaInicial, boolean modoRafaga) {
-        super(nombre, precio, equipo, peso, dano, capacidadCargador, cargadoresRestantes,
-                precision, retroceso, tiempoRecargaMs, "pistola_inspect");
-        this.esArmaInicial = esArmaInicial;
-        this.modoRafaga = modoRafaga;
+    public Pistola(CatalogoArmas modelo, String equipo) {
+        super(modelo, equipo);
     }
 
+    /** La pistola con la que se empieza la partida: Glock-18 (TT) o USP-S (CT). */
     public boolean esInicial() {
-        return esArmaInicial;
+        return getModelo() == CatalogoArmas.GLOCK_18 || getModelo() == CatalogoArmas.USP_S;
     }
 
-    public boolean disparoUnicoORafaga() {
-        return modoRafaga;
-    }
-
-    public boolean isEsArmaInicial() {
-        return esArmaInicial;
-    }
-
-    public boolean isModoRafaga() {
-        return modoRafaga;
+    /** La Glock-18 en ráfaga gasta tres balas por disparo; el resto, una. */
+    @Override
+    public int balasPorDisparo() {
+        return isModoRafaga() ? ReglasJuego.BALAS_POR_RAFAGA : 1;
     }
 
     @Override
-    protected double alcanceEfectivo() {
-        return 15.0;
-    }
-
-    @Override
-    protected int balasPorDisparo() {
-        return modoRafaga ? 3 : 1;
-    }
-
-    @Override
-    protected int calcularDano() {
-        return modoRafaga ? (int) Math.round(getDano() * 0.7) : getDano();
+    public String ranura() {
+        return "secundaria";
     }
 }

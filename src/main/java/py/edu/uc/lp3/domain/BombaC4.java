@@ -1,34 +1,25 @@
 package py.edu.uc.lp3.domain;
 
-import py.edu.uc.lp3.exceptions.ValorInvalidoException;
+import py.edu.uc.lp3.constants.ReglasJuego;
 
 /**
  * La C4 no es un Armas ni un Vendible: no se compra ni se dispara, es el
  * objetivo de la ronda. Es otra familia del modelo; lo único que comparte con
- * una Granada es que suena, y eso lo expresa la interfaz Audible.
+ * una Granada es que suena, y eso lo expresa la interfaz Audible. El sitio
+ * (A o B) y los segundos (0 a 40) los valida el servicio antes de crearla.
  */
 public class BombaC4 implements Audible {
-
-    /** Segundos que tarda en explotar desde que se planta. */
-    public static final int TIEMPO_TOTAL = 40;
-    /** Segundos que lleva desactivarla sin kit. */
-    private static final int DESACTIVAR_SIN_KIT = 10;
 
     private final String sitio;
     private final int segundosRestantes;
 
     /** Constructor simple: recién plantada en el sitio indicado. */
     public BombaC4(String sitio) {
-        this(sitio, TIEMPO_TOTAL);
+        this(sitio, ReglasJuego.SEGUNDOS_C4);
     }
 
+    /** Sobrecarga: plantada hace un rato, con esos segundos por delante. */
     public BombaC4(String sitio, int segundosRestantes) {
-        if (!"A".equals(sitio) && !"B".equals(sitio)) {
-            throw new ValorInvalidoException("el sitio debe ser A o B (recibido: " + sitio + ")");
-        }
-        if (segundosRestantes < 0 || segundosRestantes > TIEMPO_TOTAL) {
-            throw new ValorInvalidoException("los segundos restantes deben estar entre 0 y " + TIEMPO_TOTAL);
-        }
         this.sitio = sitio;
         this.segundosRestantes = segundosRestantes;
     }
@@ -39,9 +30,9 @@ public class BombaC4 implements Audible {
         if (segundosRestantes == 0) {
             return "¡BOOM! La C4 explotó en el sitio " + sitio;
         }
-        if (segundosRestantes <= DESACTIVAR_SIN_KIT) {
+        if (segundosRestantes <= ReglasJuego.SEGUNDOS_DESACTIVAR_SIN_KIT) {
             return "bip-bip-bip-bip: quedan " + segundosRestantes + " s en el sitio " + sitio
-                    + ", sin kit ya no llega a desactivarse";
+                    + "; sin kit ya no llega a desactivarse";
         }
         return "bip... bip...: la C4 del sitio " + sitio + " marca " + segundosRestantes + " s";
     }

@@ -1,29 +1,9 @@
 package py.edu.uc.lp3.service.dto;
 
 /**
- * Cuerpo JSON para crear un arma. No lleva id: lo genera la base. "tipo"
- * elige la clase hija; los campos que falten toman los valores del
- * constructor simple de ese tipo (AK-47, Glock-18, AWP o HE).
- * El JSON nunca llega directo a la entidad: el servicio llama al constructor,
- * que es el que valida.
+ * Cuerpo JSON para crear un arma. No lleva id: lo genera la base. "modelo" es
+ * un arma del catálogo de CS2 ("AK-47", "AWP", "HE"...) y elige la clase hija;
+ * "equipo" es CT o TT y se puede omitir si el arma es de un solo equipo. Las
+ * estadísticas no se mandan: salen del catálogo.
  */
-public record ArmaRequest(
-        String tipo,
-        String nombre,
-        Long precio,
-        String equipo,
-        Double peso,
-        Integer dano,
-        Integer capacidadCargador,
-        Integer cargadoresRestantes,
-        Double precision,
-        Double retroceso,
-        Long tiempoRecargaMs,
-        Boolean modoRafaga,
-        Boolean esArmaInicial,
-        Double radioExplosion,
-        Double distanciaLanzamiento,
-        Boolean aturde,
-        Double visibilidadReducida,
-        Long cooldownMs
-) {}
+public record ArmaRequest(String modelo, String equipo) {}

@@ -1,5 +1,6 @@
 package py.edu.uc.lp3.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -8,21 +9,19 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import py.edu.uc.lp3.exceptions.JugadorEliminadoException;
-import py.edu.uc.lp3.exceptions.ValorInvalidoException;
+import py.edu.uc.lp3.constants.ReglasJuego;
 
 /**
  * El objetivo de un disparo en la simulación de daño. Se guarda en la tabla
  * "jugador", así la vida que dejó la simulación se ve en un GET posterior.
  *
- * La vida solo cambia con recibirDano(), que sostiene la regla: siempre entre
- * 0 y 100, y un jugador eliminado no recibe más daño. No hay setters.
+ * Como en cada ronda de CS2, empieza con 100 de vida. No hay setters: la vida
+ * y el blindaje solo cambian con recibirImpacto(). Cuánto se pierde y si el
+ * impacto es posible lo decide la regla de vida en el servicio.
  */
 @Entity
 @Table(name = "jugador")
 public class Jugador {
-
-    public static final int VIDA_MAXIMA = 100;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,41 +37,31 @@ public class Jugador {
 
     /**
      * Solo para JPA, que necesita un constructor sin argumentos para armar el
-     * objeto desde la fila. Es protected: desde afuera del paquete nadie puede
+     * objeto desde la fila. Es protected: fuera del paquete domain nadie puede
      * hacer new Jugador() y quedarse con un jugador sin nombre. JPA completa
-     * los campos por reflexión con valores que ya pasaron la validación.
+     * los campos por reflexión con lo que se guardó.
      */
     protected Jugador() {
     }
 
-    /** Constructor simple: vida completa y sin chaleco. */
+    /** Constructor simple: empieza la ronda sin chaleco. */
     public Jugador(String nombre) {
-        this(nombre, VIDA_MAXIMA, null);
+        this(nombre, null);
     }
 
-    public Jugador(String nombre, int vida, Chaleco chaleco) {
-        if (nombre == null || nombre.isBlank()) {
-            throw new ValorInvalidoException("el jugador necesita un nombre");
-        }
-        if (vida < 0 || vida > VIDA_MAXIMA) {
-            throw new ValorInvalidoException("la vida debe estar entre 0 y " + VIDA_MAXIMA);
-        }
+    /** Sobrecarga: empieza la ronda con el chaleco que compró. */
+    public Jugador(String nombre, Chaleco chaleco) {
         this.nombre = nombre;
-        this.vida = vida;
+        this.vida = ReglasJuego.VIDA_INICIAL;
         this.chaleco = chaleco;
     }
 
-    /** Aplica el daño (primero pasa por el chaleco) y devuelve cuánto llegó a la vida. */
-    public int recibirDano(int dano) {
-        if (dano < 0) {
-            throw new ValorInvalidoException("el daño no puede ser negativo");
+    /** Aplica un impacto ya calculado: lo que pierde la vida y lo que pierde el chaleco. */
+    public void recibirImpacto(int vidaPerdida, int blindajePerdido) {
+        vida -= vidaPerdida;
+        if (chaleco != null) {
+            chaleco.gastar(blindajePerdido);
         }
-        if (estaEliminado()) {
-            throw new JugadorEliminadoException(nombre);
-        }
-        int recibido = chaleco == null ? dano : chaleco.absorber(dano);
-        vida = Math.max(0, vida - recibido);
-        return recibido;
     }
 
     public boolean estaEliminado() {
@@ -98,5 +87,11 @@ public class Jugador {
     /** Para el JSON: "eliminado": true cuando la vida llegó a 0. */
     public boolean isEliminado() {
         return estaEliminado();
+    }
+
+    /** El JSON muestra el blindaje ("blindaje"), no el objeto chaleco. */
+    @JsonIgnore
+    public Chaleco getChaleco() {
+        return chaleco;
     }
 }

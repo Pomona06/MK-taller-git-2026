@@ -2,55 +2,108 @@ package py.edu.uc.lp3.service.impl;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import py.edu.uc.lp3.constants.CatalogoArmas;
 import py.edu.uc.lp3.domain.Armas;
-import py.edu.uc.lp3.domain.Audible;
+import py.edu.uc.lp3.domain.ArmasDeFuego;
 import py.edu.uc.lp3.domain.Granada;
 import py.edu.uc.lp3.domain.Pistola;
 import py.edu.uc.lp3.domain.Rifle;
 import py.edu.uc.lp3.domain.Sniper;
+import py.edu.uc.lp3.exceptions.MunicionInsuficienteException;
 import py.edu.uc.lp3.exceptions.RecursoNoEncontradoException;
 import py.edu.uc.lp3.exceptions.ValorInvalidoException;
 import py.edu.uc.lp3.repository.ArmaRepository;
-import py.edu.uc.lp3.repository.GranadaRepository;
 import py.edu.uc.lp3.service.ArmaService;
 import py.edu.uc.lp3.service.dto.ArmaPatchRequest;
 import py.edu.uc.lp3.service.dto.ArmaRequest;
 import py.edu.uc.lp3.service.dto.DisparoResponse;
+import py.edu.uc.lp3.service.dto.ModeloCatalogoResponse;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
- * Habla con el repositorio (interfaz) y con el dominio. Las reglas las
- * validan los constructores y los mensajes de las armas; acá se decide qué
- * mensaje mandar, se guarda el resultado y se informa si el id no existe.
- * Cada método es una transacción: si el dominio lanza una excepción, no
- * queda nada a medio guardar.
+ * Acá viven las validaciones y las reglas de las armas: qué modelo existe en
+ * CS2, qué equipo lo puede comprar, qué apodo es válido, qué arma tiene modo
+ * ráfaga y cuándo se puede disparar o recargar. Recién cuando todo se cumple
+ * se le manda el mensaje al dominio y se guarda. Cada método es una
+ * transacción: si se lanza una excepción, no queda nada a medio guardar.
  */
 @Service
 @Transactional
 public class ArmaServiceImpl implements ArmaService {
 
-    private final ArmaRepository armaRepository;
-    private final GranadaRepository granadaRepository;
+    /** Límite propio del servicio para el Name Tag. */
+    static final int LARGO_MAXIMO_APODO = 20;
 
-    public ArmaServiceImpl(ArmaRepository armaRepository, GranadaRepository granadaRepository) {
+    private final ArmaRepository armaRepository;
+
+    public ArmaServiceImpl(ArmaRepository armaRepository) {
         this.armaRepository = armaRepository;
-        this.granadaRepository = granadaRepository;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ModeloCatalogoResponse> catalogo() {
+        return Arrays.stream(CatalogoArmas.values()).map(ModeloCatalogoResponse::de).toList();
     }
 
     @Override
     public Armas crear(ArmaRequest pedido) {
-        return armaRepository.save(construir(pedido));
+        if (pedido == null || pedido.modelo() == null || pedido.modelo().isBlank()) {
+            throw new ValorInvalidoException("falta el modelo; el catálogo tiene: " + nombresDelCatalogo());
+        }
+        CatalogoArmas modelo = CatalogoArmas.buscar(pedido.modelo())
+                .orElseThrow(() -> new ValorInvalidoException("no existe el arma \"" + pedido.modelo()
+                        + "\" en el catálogo de CS2; el catálogo tiene: " + nombresDelCatalogo()));
+        String equipo = equipoDelPedido(modelo, pedido.equipo());
+        Armas arma = switch (modelo.getCategoria()) {
+            case RIFLE -> new Rifle(modelo, equipo);
+            case PISTOLA -> new Pistola(modelo, equipo);
+            case SNIPER -> new Sniper(modelo, equipo);
+            case GRANADA -> new Granada(modelo, equipo);
+        };
+        return armaRepository.save(arma);
+    }
+
+    /** El equipo tiene que ser CT o TT y tiene que poder comprar ese modelo. */
+    private String equipoDelPedido(CatalogoArmas modelo, String pedido) {
+        if (pedido == null) {
+            return modelo.equipoUnico().orElseThrow(() -> new ValorInvalidoException(modelo.getNombre()
+                    + " es para los dos equipos: indicá \"equipo\": \"CT\" o \"TT\""));
+        }
+        String equipo = validarEquipo(pedido);
+        if (!modelo.loPuedeComprar(equipo)) {
+            String dueno = modelo.isTerroristas() ? "TT (terroristas)" : "CT (antiterroristas)";
+            throw new ValorInvalidoException("en CS2, " + modelo.getNombre() + " es solo para el equipo " + dueno);
+        }
+        return equipo;
+    }
+
+    private static String validarEquipo(String texto) {
+        String equipo = texto.strip().toUpperCase();
+        if (!"CT".equals(equipo) && !"TT".equals(equipo)) {
+            throw new ValorInvalidoException("el equipo debe ser CT o TT (recibido: " + texto + ")");
+        }
+        return equipo;
+    }
+
+    private static String nombresDelCatalogo() {
+        return Arrays.stream(CatalogoArmas.values()).map(CatalogoArmas::getNombre).collect(Collectors.joining(", "));
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Armas> listar(String equipo, Long precioMaximo) {
         if (equipo != null) {
-            return armaRepository.findByEquipo(equipo);
+            return armaRepository.findByEquipo(validarEquipo(equipo));
         }
         if (precioMaximo != null) {
+            if (precioMaximo < 0) {
+                throw new ValorInvalidoException("el precio máximo no puede ser negativo");
+            }
             return armaRepository.findByPrecioLessThanEqual(precioMaximo);
         }
         return armaRepository.findAll();
@@ -63,16 +116,39 @@ public class ArmaServiceImpl implements ArmaService {
                 .orElseThrow(() -> new RecursoNoEncontradoException("un arma", id));
     }
 
+    /** Se valida todo antes de cambiar algo: si un campo es ilegal, el arma queda igual. */
     @Override
     public Armas actualizar(Long id, ArmaPatchRequest cambios) {
-        Armas arma = buscar(id);
-        if (cambios.nombre() != null) {
-            arma.renombrar(cambios.nombre());
+        if (cambios == null || (cambios.apodo() == null && cambios.modoRafaga() == null)) {
+            throw new ValorInvalidoException("el PATCH acepta \"apodo\" y \"modoRafaga\"");
         }
-        if (cambios.precio() != null) {
-            arma.cambiarPrecio(cambios.precio());
+        Armas arma = buscar(id);
+        if (cambios.apodo() != null && arma instanceof Granada) {
+            throw new ValorInvalidoException("en CS2 las granadas no llevan Name Tag: " + arma.getNombre() + " no acepta apodo");
+        }
+        String apodo = cambios.apodo() == null ? null : validarApodo(cambios.apodo());
+        if (cambios.modoRafaga() != null && !arma.getModelo().isTieneRafaga()) {
+            throw new ValorInvalidoException(arma.getNombre()
+                    + " no tiene modo ráfaga: en CS2 solo lo tienen la Glock-18 y la FAMAS");
+        }
+        if (apodo != null) {
+            arma.ponerApodo(apodo);
+        }
+        if (cambios.modoRafaga() != null) {
+            ((ArmasDeFuego) arma).cambiarModoRafaga(cambios.modoRafaga());
         }
         return armaRepository.save(arma);
+    }
+
+    private static String validarApodo(String texto) {
+        String apodo = texto.strip();
+        if (apodo.isEmpty()) {
+            throw new ValorInvalidoException("el apodo no puede estar vacío");
+        }
+        if (apodo.length() > LARGO_MAXIMO_APODO) {
+            throw new ValorInvalidoException("el apodo puede tener hasta " + LARGO_MAXIMO_APODO + " caracteres");
+        }
+        return apodo;
     }
 
     @Override
@@ -86,81 +162,37 @@ public class ArmaServiceImpl implements ArmaService {
         return armaRepository.count();
     }
 
+    /** Simulación de munición: primero la regla, después el mensaje al dominio y por último se guarda. */
     @Override
-    public DisparoResponse disparar(Long id, Double distancia) {
+    public DisparoResponse disparar(Long id, Double distancia, Integer veces) {
         Armas arma = buscar(id);
-        String resultado = distancia == null ? arma.disparar() : arma.disparar(distancia);
-        return new DisparoResponse(resultado, armaRepository.save(arma));
-    }
-
-    @Override
-    public DisparoResponse recargar(Long id) {
-        Armas arma = buscar(id);
-        String resultado = arma.recargar();
-        return new DisparoResponse(resultado, armaRepository.save(arma));
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<Audible> audiblesGuardados() {
-        return new ArrayList<>(granadaRepository.findAll());
+        double metros = ReglasDeArmas.distancia(distancia);
+        int cantidad = veces == null ? 1 : veces;
+        ReglasDeArmas.verificarQuePuedeDisparar(arma, cantidad);
+        List<String> resultados = new ArrayList<>();
+        for (int i = 0; i < cantidad; i++) {
+            resultados.add(distancia == null ? arma.disparar() : arma.disparar(metros));
+        }
+        return new DisparoResponse(resultados, armaRepository.save(arma));
     }
 
     /**
-     * Fábrica: elige la clase hija según "tipo" y llama a su constructor
-     * completo. Lo que no venga en el JSON se toma del constructor simple de
-     * ese tipo, así cualquier combinación pasa por las mismas validaciones.
+     * Una granada no se recarga. Con el cargador lleno no pasa nada (como en el
+     * juego); sin cargadores de reserva, es la regla de munición.
      */
-    private Armas construir(ArmaRequest p) {
-        if (p.tipo() == null) {
-            throw new ValorInvalidoException("falta el tipo: rifle, pistola, sniper o granada");
+    @Override
+    public DisparoResponse recargar(Long id) {
+        Armas arma = buscar(id);
+        if (!(arma instanceof ArmasDeFuego deFuego)) {
+            throw new ValorInvalidoException(arma.getNombre() + " es una granada: no se recarga");
         }
-        return switch (p.tipo().toLowerCase()) {
-            case "rifle" -> {
-                Rifle d = new Rifle();
-                yield new Rifle(o(p.nombre(), d.getNombre()), o(p.precio(), d.getPrecio()),
-                        o(p.equipo(), d.getEquipo()), o(p.peso(), d.getPeso()), o(p.dano(), d.getDano()),
-                        o(p.capacidadCargador(), d.getCapacidadCargador()),
-                        o(p.cargadoresRestantes(), d.getCargadoresRestantes()),
-                        o(p.precision(), d.getPrecision()), o(p.retroceso(), d.getRetroceso()),
-                        o(p.tiempoRecargaMs(), d.getTiempoRecargaMs()), o(p.modoRafaga(), d.isModoRafaga()));
-            }
-            case "pistola" -> {
-                Pistola d = new Pistola();
-                yield new Pistola(o(p.nombre(), d.getNombre()), o(p.precio(), d.getPrecio()),
-                        o(p.equipo(), d.getEquipo()), o(p.peso(), d.getPeso()), o(p.dano(), d.getDano()),
-                        o(p.capacidadCargador(), d.getCapacidadCargador()),
-                        o(p.cargadoresRestantes(), d.getCargadoresRestantes()),
-                        o(p.precision(), d.getPrecision()), o(p.retroceso(), d.getRetroceso()),
-                        o(p.tiempoRecargaMs(), d.getTiempoRecargaMs()),
-                        o(p.esArmaInicial(), d.isEsArmaInicial()), o(p.modoRafaga(), d.isModoRafaga()));
-            }
-            case "sniper" -> {
-                Sniper d = new Sniper();
-                yield new Sniper(o(p.nombre(), d.getNombre()), o(p.precio(), d.getPrecio()),
-                        o(p.equipo(), d.getEquipo()), o(p.peso(), d.getPeso()), o(p.dano(), d.getDano()),
-                        o(p.capacidadCargador(), d.getCapacidadCargador()),
-                        o(p.cargadoresRestantes(), d.getCargadoresRestantes()),
-                        o(p.precision(), d.getPrecision()), o(p.retroceso(), d.getRetroceso()),
-                        o(p.tiempoRecargaMs(), d.getTiempoRecargaMs()));
-            }
-            case "granada" -> {
-                boolean aturde = o(p.aturde(), false);
-                Granada d = new Granada(o(p.nombre(), aturde ? "Flashbang" : "HE"), aturde);
-                yield new Granada(d.getNombre(), o(p.precio(), d.getPrecio()),
-                        o(p.equipo(), d.getEquipo()), o(p.peso(), d.getPeso()), o(p.dano(), d.getDano()),
-                        o(p.radioExplosion(), d.getRadioExplosion()),
-                        o(p.distanciaLanzamiento(), d.getDistanciaLanzamiento()), d.isAturde(),
-                        o(p.visibilidadReducida(), d.getVisibilidadReducida()),
-                        o(p.cooldownMs(), d.getCooldownMs()));
-            }
-            default -> throw new ValorInvalidoException(
-                    "tipo debe ser rifle, pistola, sniper o granada (recibido: " + p.tipo() + ")");
-        };
-    }
-
-    /** El valor del JSON si vino; si no, el valor por defecto del tipo. */
-    private static <T> T o(T valor, T porDefecto) {
-        return valor != null ? valor : porDefecto;
+        if (deFuego.getCarga() == deFuego.getCapacidadCargador()) {
+            return new DisparoResponse(List.of(deFuego.getNombre() + " ya tiene el cargador lleno"), deFuego);
+        }
+        if (deFuego.getCargadoresRestantes() == 0) {
+            throw new MunicionInsuficienteException(deFuego.getNombre() + " no tiene cargadores de reserva");
+        }
+        String resultado = deFuego.recargar();
+        return new DisparoResponse(List.of(resultado), armaRepository.save(deFuego));
     }
 }
