@@ -1,5 +1,12 @@
 package py.edu.uc.lp3.rest.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,6 +28,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/jugadores")
+@Tag(name = "Jugadores")
 public class JugadorController {
 
     private final JugadorService jugadorService;
@@ -30,17 +38,31 @@ public class JugadorController {
     }
 
     @PostMapping
+    @Operation(summary = "Crear un jugador",
+            description = "Empieza con 100 de vida, como en cada ronda. Con \"chaleco\": true, compró Kevlar (100 de blindaje).")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = {
+            @ExampleObject(name = "Con chaleco", value = "{\"nombre\": \"Enemigo\", \"chaleco\": true}"),
+            @ExampleObject(name = "Sin chaleco", value = "{\"nombre\": \"Bot\"}")}))
+    @ApiResponse(responseCode = "201", description = "Creado; el cuerpo trae el id")
+    @ApiResponse(responseCode = "400", description = "Nombre vacío o de más de 32 caracteres",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     public ResponseEntity<Jugador> crear(@RequestBody JugadorRequest pedido) {
         Jugador creado = jugadorService.crear(pedido);
         return ResponseEntity.created(URI.create("/api/jugadores/" + creado.getId())).body(creado);
     }
 
     @GetMapping
-    public List<Jugador> listar(@RequestParam(required = false) Boolean vivos) {
+    @Operation(summary = "Listar los jugadores guardados")
+    public List<Jugador> listar(@Parameter(description = "true: solo los que tienen vida mayor que 0")
+                                @RequestParam(required = false) Boolean vivos) {
         return jugadorService.listar(vivos);
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Leer un jugador", description = "Con la vida y el blindaje que dejó la última simulación.")
+    @ApiResponse(responseCode = "200", description = "El jugador")
+    @ApiResponse(responseCode = "404", description = "RecursoNoEncontradoException: no hay un jugador con ese id",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     public Jugador buscar(@PathVariable Long id) {
         return jugadorService.buscar(id);
     }

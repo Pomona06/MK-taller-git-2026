@@ -11,7 +11,6 @@ import py.edu.uc.lp3.exceptions.MunicionInsuficienteException;
 import py.edu.uc.lp3.exceptions.RecursoNoEncontradoException;
 import py.edu.uc.lp3.exceptions.ValorInvalidoException;
 
-import java.util.Map;
 
 /**
  * Un handler por cada tipo de la jerarquía JuegoException. Las reglas viven en
@@ -23,35 +22,35 @@ public class ManejadorErrores {
 
     @ExceptionHandler(ValorInvalidoException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Map<String, String> valorInvalido(ValorInvalidoException e) {
+    public ErrorResponse valorInvalido(ValorInvalidoException e) {
         return cuerpo(e);
     }
 
     @ExceptionHandler(RecursoNoEncontradoException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public Map<String, String> noEncontrado(RecursoNoEncontradoException e) {
+    public ErrorResponse noEncontrado(RecursoNoEncontradoException e) {
         return cuerpo(e);
     }
 
     @ExceptionHandler(MunicionInsuficienteException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public Map<String, String> municionInsuficiente(MunicionInsuficienteException e) {
+    public ErrorResponse municionInsuficiente(MunicionInsuficienteException e) {
         return cuerpo(e);
     }
 
     @ExceptionHandler(JugadorEliminadoException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public Map<String, String> jugadorEliminado(JugadorEliminadoException e) {
+    public ErrorResponse jugadorEliminado(JugadorEliminadoException e) {
         return cuerpo(e);
     }
 
     @ExceptionHandler(GranadaUsadaException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public Map<String, String> granadaUsada(GranadaUsadaException e) {
+    public ErrorResponse granadaUsada(GranadaUsadaException e) {
         return cuerpo(e);
     }
 
-    private Map<String, String> cuerpo(JuegoException e) {
-        return Map.of("error", e.getMessage(), "excepcion", e.getClass().getSimpleName());
+    private ErrorResponse cuerpo(JuegoException e) {
+        return new ErrorResponse(e.getMessage(), e.getClass().getSimpleName());
     }
 }

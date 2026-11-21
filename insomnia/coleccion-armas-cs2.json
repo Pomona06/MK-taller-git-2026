@@ -1,7 +1,7 @@
 {
   "_type": "export",
   "__export_format": 4,
-  "__export_date": "2026-11-21T12:00:00.000Z",
+  "__export_date": "2026-11-22T12:00:00.000Z",
   "__export_source": "insomnia.desktop.app:v10.3.0",
   "resources": [
     {
@@ -9,7 +9,7 @@
       "_type": "workspace",
       "parentId": null,
       "name": "MK CS2 Armas (POO-08)",
-      "description": "CRUD REST sobre H2 con el catálogo de CS2, simulaciones y errores. Correr las carpetas 0 a 4 en orden, con la base vacía.",
+      "description": "CRUD REST sobre H2 con el catálogo de CS2, simulaciones y errores (carpetas 0 a 4, en orden y con la base vacía), y el OpenAPI y la consulta de reglas de POO-09 (carpeta 5).",
       "scope": "collection"
     },
     {
@@ -90,6 +90,16 @@
       "environment": {},
       "environmentPropertyOrder": null,
       "metaSortKey": 500
+    },
+    {
+      "_id": "fld_mk_5",
+      "_type": "request_group",
+      "parentId": "wrk_mk_cs2",
+      "name": "5. POO-09: OpenAPI y consulta de reglas",
+      "description": "Para los compañeros del grupo. No usan la base: se pueden correr en cualquier momento.",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 600
     },
     {
       "_id": "req_mk_01",
@@ -1189,6 +1199,260 @@
       "settingEncodeUrl": true,
       "settingRebuildPath": true,
       "body": {}
+    },
+    {
+      "_id": "req_mk_50",
+      "_type": "request",
+      "parentId": "fld_mk_5",
+      "name": "GET OpenAPI (JSON)",
+      "description": "200: el documento OpenAPI 3 de este servicio. También se ve en /swagger-ui.html.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/v3/api-docs",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 500,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {}
+    },
+    {
+      "_id": "req_mk_51",
+      "_type": "request",
+      "parentId": "fld_mk_5",
+      "name": "GET las dos reglas en una frase",
+      "description": "200: la regla de munición y la de vida, cómo consultarlas y con qué error rechazan.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/reglas",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 510,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {}
+    },
+    {
+      "_id": "req_mk_52",
+      "_type": "request",
+      "parentId": "fld_mk_5",
+      "name": "POST disparo: AK-47 con una bala (acepta)",
+      "description": "200: puede disparar; queda con 0.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/reglas/disparo",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 520,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"modelo\": \"AK-47\",\n  \"carga\": 1\n}"
+      }
+    },
+    {
+      "_id": "req_mk_53",
+      "_type": "request",
+      "parentId": "fld_mk_5",
+      "name": "409 disparo: AK-47 sin balas (MunicionInsuficienteException)",
+      "description": "409: el cargador tiene 0 balas.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/reglas/disparo",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 530,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"modelo\": \"AK-47\",\n  \"carga\": 0\n}"
+      }
+    },
+    {
+      "_id": "req_mk_54",
+      "_type": "request",
+      "parentId": "fld_mk_5",
+      "name": "409 disparo: HE ya lanzada (GranadaUsadaException)",
+      "description": "409: cada granada se usa una sola vez.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/reglas/disparo",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 540,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"modelo\": \"HE\",\n  \"lanzada\": true\n}"
+      }
+    },
+    {
+      "_id": "req_mk_55",
+      "_type": "request",
+      "parentId": "fld_mk_5",
+      "name": "POST recarga: AWP vacío con un cargador de reserva (acepta)",
+      "description": "200: queda con 5 balas y 0 cargadores.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/reglas/recarga",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 550,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"modelo\": \"AWP\",\n  \"carga\": 0,\n  \"cargadoresRestantes\": 1\n}"
+      }
+    },
+    {
+      "_id": "req_mk_56",
+      "_type": "request",
+      "parentId": "fld_mk_5",
+      "name": "409 recarga: AWP sin reserva (MunicionInsuficienteException)",
+      "description": "409: no tiene cargadores de reserva.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/reglas/recarga",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 560,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"modelo\": \"AWP\",\n  \"carga\": 0,\n  \"cargadoresRestantes\": 0\n}"
+      }
+    },
+    {
+      "_id": "req_mk_57",
+      "_type": "request",
+      "parentId": "fld_mk_5",
+      "name": "POST impacto: AK-47 a 10 m contra un jugador con chaleco (acepta)",
+      "description": "200: vida 73 y blindaje 97, lo mismo que la simulación.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/reglas/impacto",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 570,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"modelo\": \"AK-47\",\n  \"distancia\": 10,\n  \"vida\": 100,\n  \"blindaje\": 100\n}"
+      }
+    },
+    {
+      "_id": "req_mk_58",
+      "_type": "request",
+      "parentId": "fld_mk_5",
+      "name": "409 impacto: jugador ya eliminado (JugadorEliminadoException)",
+      "description": "409: un jugador con vida 0 no recibe más daño.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/reglas/impacto",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 580,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"modelo\": \"AK-47\",\n  \"vida\": 0\n}"
+      }
+    },
+    {
+      "_id": "req_mk_59",
+      "_type": "request",
+      "parentId": "fld_mk_5",
+      "name": "400 impacto: vida 150 (ValorInvalidoException)",
+      "description": "400: la vida va de 0 a 100.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/reglas/impacto",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 590,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"modelo\": \"AK-47\",\n  \"vida\": 150\n}"
+      }
     }
   ]
 }
