@@ -8,7 +8,7 @@
 | **Dominio** | Counter-Strike 2: armas del inventario, jugadores y chalecos |
 | **Usuario de GitHub** | `Pomona06` |
 | **Repositorio** | https://github.com/Pomona06/MK-taller-git-2026 |
-| **Enlace al commit de la corrección** | Al final de este documento y al principio del README |
+| **Enlace al commit de la corrección** | https://github.com/Pomona06/MK-taller-git-2026/commit/4198ec615bf7dd930a3b04c835b04f962877418d |
 | **Colección de Insomnia** | [`insomnia/coleccion-armas-cs2.json`](../insomnia/coleccion-armas-cs2.json) |
 
 ---
@@ -180,4 +180,4 @@ reparto del daño entre la vida y el chaleco. Usan una base H2 en memoria aparte
 
 ## 6. Enlace al commit
 
-Se escribe acá en el commit siguiente, que solo agrega este enlace.
+https://github.com/Pomona06/MK-taller-git-2026/commit/4198ec615bf7dd930a3b04c835b04f962877418d
