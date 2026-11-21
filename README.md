@@ -32,6 +32,24 @@ descarga las dependencias y tarda un poco. Los tests se corren con `./mvnw test`
 Si tenés una base de una versión anterior en la carpeta `data/`, frená el servicio y borrá esa carpeta: las
 tablas cambiaron.
 
+## Situación de POO-08
+
+La corrección de POO-08 tuvo **observaciones y descuentos**: 17 de 24 (nota 7,1). Están **todas cerradas**.
+Esta tabla lista cada observación del documento de corrección y cómo se cerró:
+
+| Criterio | Observación | Cómo se cerró | Commit |
+|---|---|---|---|
+| 2. Paquetes (−1) | El dominio lanzaba excepciones: `Armas`, `ArmasDeFuego`, `BombaC4`, `Chaleco`, `Granada` y `Jugador` lanzaban `ValorInvalidoException`, `ArmasDeFuego` lanzaba `MunicionInsuficienteException` y `Jugador`, `JugadorEliminadoException`. | Ninguna clase de `domain` valida ni lanza excepciones. Las validaciones, las reglas y sus excepciones están en `ArmaServiceImpl`, `JugadorServiceImpl`, `SimulacionServiceImpl`, `SonidoServiceImpl` y `ReglasDeArmas`. | [`03df705`](https://github.com/Pomona06/MK-taller-git-2026/commit/03df7054101e4b1ca863316efca59ac276323a94) |
+| 3. Ocultamiento (0) | La misma granada guardada se podía usar en la simulación todas las veces que se quisiera, aunque en CS2 es de un solo uso. | `Granada` guarda en la base que ya se lanzó (`lanzada`). Un segundo uso, por disparo o en la simulación, responde 409 con `GranadaUsadaException` y no cambia nada. Una granada lanzada no suena ni acepta apodo. | [`03df705`](https://github.com/Pomona06/MK-taller-git-2026/commit/03df7054101e4b1ca863316efca59ac276323a94) |
+| 3. Ocultamiento | Las validaciones de los constructores, `setPrecio`, `renombrar()`, `cambiarPrecio()` y `recibirDano()` tenían que ir en los servicios. | Pasaron a los servicios. `renombrar()` y `cambiarPrecio()` se quitaron: el precio lo fija el catálogo del juego y lo que se cambia con `PATCH` es el apodo y el modo ráfaga. Además, el `POST` solo acepta armas del catálogo de CS2 (por ejemplo, rechaza un AK-47 para los CT). | [`b0be054`](https://github.com/Pomona06/MK-taller-git-2026/commit/b0be054ccaac5ec9edbb344b2c7dbd958a780504), [`03df705`](https://github.com/Pomona06/MK-taller-git-2026/commit/03df7054101e4b1ca863316efca59ac276323a94) |
+| 6. Observable | Las dos reglas vivían en `ArmasDeFuego.disparar` y `Jugador.recibirDano` (con `Chaleco.absorber`) y tenían que ir en `SimulacionService`. | La regla de munición está en `ReglasDeArmas` y la regla de vida en `SimulacionServiceImpl.calcularImpacto()`. El dominio solo aplica lo que el servicio ya calculó. | [`03df705`](https://github.com/Pomona06/MK-taller-git-2026/commit/03df7054101e4b1ca863316efca59ac276323a94) |
+| 8. Documentación (−0,5) | En «Por qué es así» quedaba una frase de POO-06 que decía que la clase lanzaba `IllegalArgumentException`. | La sección se reescribió con el código actual. El documento de especificaciones de POO-06 quedó marcado como histórico. | [`8472f18`](https://github.com/Pomona06/MK-taller-git-2026/commit/8472f18e2b249b8d68671c20df187854e6ca2b5e) |
+| 8. Documentación (0) | Más de tres errores de ortografía y gramática: «me di cuenta que», «descripcion», «realizacion», «deje». | Se corrigieron esos cuatro y los demás que encontró un corrector de español (diccionario es_ES de LibreOffice) y una lectura completa del README, la bitácora, las especificaciones, el Javadoc y los comentarios. | [`8472f18`](https://github.com/Pomona06/MK-taller-git-2026/commit/8472f18e2b249b8d68671c20df187854e6ca2b5e), [`4198ec6`](https://github.com/Pomona06/MK-taller-git-2026/commit/4198ec615bf7dd930a3b04c835b04f962877418d) |
+| 7. Git (mejora, no restaba) | Usar prefijos de *semantic commits* (`feat:`, `docs:`, `test:`). | Los commits desde la corrección los usan. | [`b0be054`](https://github.com/Pomona06/MK-taller-git-2026/commit/b0be054ccaac5ec9edbb344b2c7dbd958a780504) en adelante |
+
+Se puede comprobar con la colección de Insomnia: los pedidos 3.17 y 3.18 provocan `GranadaUsadaException`, y
+`./mvnw test` corre los tests de cada regla.
+
 ## POO-08: CRUD REST, H2 e Insomnia
 
 ### Las dos reglas
