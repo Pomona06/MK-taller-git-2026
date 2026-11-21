@@ -18,7 +18,8 @@ import java.util.Optional;
  * - game/csgo/pak01_dir/scripts/items/items_game.txt: qué equipo puede
  *   comprarla (used_by_classes).
  *
- * El M4A4 figura en esos archivos como weapon_m4a1.
+ * El M4A4 figura en esos archivos como weapon_m4a1. Consultados el 21 de
+ * noviembre de 2026; algunos valores cambiaron respecto de CS:GO.
  */
 public enum CatalogoArmas {
 
