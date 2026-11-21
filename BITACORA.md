@@ -1,11 +1,11 @@
 # Bitácora de asistencia de IA
 
 Alumno: Marcelo Kropff (Y43819)
-Ejercicios: POO-06 (revisión, paquetes, constructores y sobrecarga), interfaces y POO-08 (CRUD REST, H2 e Insomnia, con su corrección), sobre Counter-Strike 2
+Ejercicios: POO-06 (revisión, paquetes, constructores y sobrecarga), interfaces y POO-08 (CRUD REST, H2 e Insomnia, con su corrección) y POO-09 (APIs cruzadas), sobre Counter-Strike 2
 
 ## Asistente y modelo
 
-Usé el mismo asistente y el mismo modelo en todos los chats: taller de Git, ejercicio POO-06, revisión final, ejercicio de interfaces, POO-08 y su corrección.
+Usé el mismo asistente y el mismo modelo en todos los chats: taller de Git, ejercicio POO-06, revisión final, ejercicio de interfaces, POO-08, su corrección y POO-09.
 
 | Dato | Valor |
 |---|---|
@@ -89,3 +89,18 @@ Usé el mismo asistente y el mismo modelo en todos los chats: taller de Git, eje
   excepciones en los servicios; la granada de un solo uso; los tests; la colección de Insomnia y la
   documentación. Recorrió la colección completa contra el servicio y revisó la ortografía antes de darme el
   resultado.
+
+### POO-09 (APIs cruzadas): preparación antes de armar el grupo
+
+- Le pasé la consigna de POO-09 con los enlaces al enunciado, a los grupos y al ejemplo UNO, y le pregunté
+  qué hacía falta, si necesitaba compañeros para empezar y si era el último trabajo. Leyó los tres
+  documentos: sin grupo no se puede entregar, la corrección de POO-08 vale 3 de los 15 puntos y en el
+  repositorio de la cátedra POO-09 es el último publicado, pero ningún documento dice que sea el final.
+- Le pregunté si se recuperaban los puntos de POO-08. Me mostró que el enunciado dice que POO-08 no se
+  vuelve a calificar con la rúbrica de 24, y que la corrección vale esos 3 puntos dentro de POO-09.
+- Le pedí que hiciera lo que no depende de los compañeros: la sección del README con cada observación de
+  POO-08 y cómo se cerró, el OpenAPI publicado y lo que tengo que pasarles a mis compañeros.
+- Agregó endpoints para consultar mis dos reglas sin tocar la base, así un compañero me consulta sin
+  modificar mis datos. Publicó el OpenAPI con springdoc (eligió la versión 3.2.0 porque la 3.2.1, de un día
+  antes, era para otra versión de Spring Boot), lo validó y revisó que cada operación muestre solo sus
+  errores. Escribió la ficha docs/PARA-COMPANEROS.md y probó que el servicio arranca en otro puerto.
