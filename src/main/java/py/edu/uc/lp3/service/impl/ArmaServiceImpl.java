@@ -6,9 +6,6 @@ import py.edu.uc.lp3.constants.CatalogoArmas;
 import py.edu.uc.lp3.domain.Armas;
 import py.edu.uc.lp3.domain.ArmasDeFuego;
 import py.edu.uc.lp3.domain.Granada;
-import py.edu.uc.lp3.domain.Pistola;
-import py.edu.uc.lp3.domain.Rifle;
-import py.edu.uc.lp3.domain.Sniper;
 import py.edu.uc.lp3.exceptions.MunicionInsuficienteException;
 import py.edu.uc.lp3.exceptions.RecursoNoEncontradoException;
 import py.edu.uc.lp3.exceptions.ValorInvalidoException;
@@ -59,13 +56,7 @@ public class ArmaServiceImpl implements ArmaService {
                 .orElseThrow(() -> new ValorInvalidoException("no existe el arma \"" + pedido.modelo()
                         + "\" en el catálogo de CS2; el catálogo tiene: " + nombresDelCatalogo()));
         String equipo = equipoDelPedido(modelo, pedido.equipo());
-        Armas arma = switch (modelo.getCategoria()) {
-            case RIFLE -> new Rifle(modelo, equipo);
-            case PISTOLA -> new Pistola(modelo, equipo);
-            case SNIPER -> new Sniper(modelo, equipo);
-            case GRANADA -> new Granada(modelo, equipo);
-        };
-        return armaRepository.save(arma);
+        return armaRepository.save(ReglasDeArmas.construir(modelo, equipo));
     }
 
     /** El equipo tiene que ser CT o TT y tiene que poder comprar ese modelo. */

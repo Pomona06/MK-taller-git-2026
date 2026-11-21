@@ -1,8 +1,12 @@
 package py.edu.uc.lp3.service.impl;
 
+import py.edu.uc.lp3.constants.CatalogoArmas;
 import py.edu.uc.lp3.domain.Armas;
 import py.edu.uc.lp3.domain.ArmasDeFuego;
 import py.edu.uc.lp3.domain.Granada;
+import py.edu.uc.lp3.domain.Pistola;
+import py.edu.uc.lp3.domain.Rifle;
+import py.edu.uc.lp3.domain.Sniper;
 import py.edu.uc.lp3.exceptions.GranadaUsadaException;
 import py.edu.uc.lp3.exceptions.MunicionInsuficienteException;
 import py.edu.uc.lp3.exceptions.ValorInvalidoException;
@@ -41,6 +45,16 @@ final class ReglasDeArmas {
                         + deFuego.getCarga() + " balas y hacen falta " + necesarias);
             }
         }
+    }
+
+    /** Fábrica: el modelo del catálogo decide la clase hija. Quien llama ya validó modelo y equipo. */
+    static Armas construir(CatalogoArmas modelo, String equipo) {
+        return switch (modelo.getCategoria()) {
+            case RIFLE -> new Rifle(modelo, equipo);
+            case PISTOLA -> new Pistola(modelo, equipo);
+            case SNIPER -> new Sniper(modelo, equipo);
+            case GRANADA -> new Granada(modelo, equipo);
+        };
     }
 
     /** La distancia en metros: omitida vale 10; negativa o no numérica es un error. */
