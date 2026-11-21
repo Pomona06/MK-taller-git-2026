@@ -56,6 +56,7 @@ Las propiedades están en `src/main/resources/application.properties`:
 |---|---|
 | `springdoc.api-docs.path=/v3/api-docs` | Dónde se publica el documento JSON. |
 | `springdoc.swagger-ui.path=/swagger-ui.html` | Dónde se publica la página para probarlo. |
+| `springdoc.api-docs.version=openapi_3_0` | Publica el documento en OpenAPI 3.0, la versión que importan más herramientas. |
 | `springdoc.override-with-generic-response=false` | Cada operación documenta solo sus propios errores, no los de todos los handlers. |
 | `springdoc.default-produces-media-type=application/json` | Las respuestas se documentan como JSON. |
 
