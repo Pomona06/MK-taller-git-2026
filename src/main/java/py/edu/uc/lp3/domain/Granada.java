@@ -2,157 +2,92 @@ package py.edu.uc.lp3.domain;
 
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Transient;
-
-import py.edu.uc.lp3.exceptions.ValorInvalidoException;
+import py.edu.uc.lp3.constants.CatalogoArmas;
+import py.edu.uc.lp3.constants.ReglasJuego;
 
 /**
  * Granada extiende Armas directamente, no ArmasDeFuego, porque no dispara
  * balas ni se recarga. Sigue respondiendo a disparar() como cualquier otra
- * Arma — acá disparar() y disparar(double) delegan en lanzar(), que es privado.
+ * arma: para una granada, disparar es lanzarla.
+ *
+ * En CS2 una granada es de un solo uso: se lanza y desaparece. Por eso
+ * "lanzada" se guarda en la base. Que no se lance dos veces lo controla la
+ * capa service antes de mandar el mensaje.
  */
 @Entity
 @DiscriminatorValue("granada")
 public class Granada extends Armas implements Audible {
 
-    private double radioExplosion;
-    private double distanciaLanzamiento;
-    private boolean aturde;
-    private double visibilidadReducida;
-    private long cooldownMs;
-    /** Estado de la partida en curso: no se guarda en la base. */
-    @Transient
-    private long ultimoLanzamiento;
-    @Transient
-    private boolean explotada;
+    private boolean lanzada;
 
-    /** Constructor simple: una granada explosiva (HE). */
+    /** Constructor simple: una HE, del equipo CT (la compran los dos equipos). */
     public Granada() {
-        this("HE");
+        this(CatalogoArmas.HE);
     }
 
-    /** Sobrecarga: granada explosiva con otro nombre. */
-    public Granada(String nombre) {
-        this(nombre, false);
-    }
-
-    /**
-     * Sobrecarga: si aturde es una flashbang (sin daño, ciega por completo),
-     * si no es una explosiva.
-     */
-    public Granada(String nombre, boolean aturde) {
-        this(nombre, aturde ? 200 : 300, "CT", 0.5, aturde ? 0 : 57,
-                aturde ? 4.0 : 5.0, 20.0, aturde, aturde ? 100 : 0, 1000);
+    /** Sobrecarga: otra granada del catálogo, del equipo CT. */
+    public Granada(CatalogoArmas modelo) {
+        this(modelo, "CT");
     }
 
     /** Constructor completo: es el único que llama a super(...). */
-    public Granada(String nombre, long precio, String equipo, double peso, int dano,
-                    double radioExplosion, double distanciaLanzamiento,
-                    boolean aturde, double visibilidadReducida, long cooldownMs) {
-        super(nombre, precio, equipo, peso, dano);
-        if (radioExplosion <= 0 || distanciaLanzamiento <= 0) {
-            throw new ValorInvalidoException("radio de explosión y distancia de lanzamiento deben ser positivos");
-        }
-        if (visibilidadReducida < 0 || visibilidadReducida > 100) {
-            throw new ValorInvalidoException("la visibilidad reducida debe estar entre 0 y 100");
-        }
-        if (cooldownMs < 0) {
-            throw new ValorInvalidoException("el cooldown no puede ser negativo");
-        }
-        this.radioExplosion = radioExplosion;
-        this.distanciaLanzamiento = distanciaLanzamiento;
-        this.aturde = aturde;
-        this.visibilidadReducida = visibilidadReducida;
-        this.cooldownMs = cooldownMs;
-        this.ultimoLanzamiento = 0L;
-        this.explotada = false;
+    public Granada(CatalogoArmas modelo, String equipo) {
+        super(modelo, equipo);
+        this.lanzada = false;
     }
 
+    /** Lanzarla a los pies: explota cerca de quien la tira. */
     @Override
     public String disparar() {
-        return lanzar(distanciaLanzamiento);
+        return lanzar("a los pies");
     }
 
-    /** Sobrecarga: lanzar a una distancia concreta, que no puede pasar del máximo. */
+    /** Sobrecarga: lanzarla hacia un objetivo a esa distancia. */
     @Override
     public String disparar(double distanciaMetros) {
-        validarDistancia(distanciaMetros);
-        if (distanciaMetros > distanciaLanzamiento) {
-            return getNombre() + " no llega a " + distanciaMetros
-                    + "m: el alcance máximo es " + distanciaLanzamiento + "m";
-        }
-        return lanzar(distanciaMetros);
-    }
-
-    /** Una flashbang no hace daño; una explosiva daña solo dentro de su radio. */
-    @Override
-    public int danoA(double distanciaMetros) {
-        validarDistancia(distanciaMetros);
-        if (aturde) {
-            return 0;
-        }
-        return distanciaMetros <= radioExplosion ? getDano() : 0;
-    }
-
-    /** Una granada no tiene cargador: se usa una vez y se compra otra. */
-    @Override
-    public String recargar() {
-        throw new ValorInvalidoException(getNombre() + " es una granada y no se recarga");
-    }
-
-    private String lanzar(double distanciaMetros) {
-        long ahora = System.currentTimeMillis();
-        long transcurrido = ahora - ultimoLanzamiento;
-        if (transcurrido < cooldownMs) {
-            return getNombre() + " en cooldown, faltan " + (cooldownMs - transcurrido) + "ms";
-        }
-        ultimoLanzamiento = ahora;
-        explotada = false;
-        return "Lanzada a " + distanciaMetros + "m. " + explotar();
-    }
-
-    private String explotar() {
-        explotada = true;
-        String efecto = aturde
-                ? "aturde y reduce visibilidad " + visibilidadReducida + "%"
-                : "causa " + getDano() + " de daño";
-        return getNombre() + " explotó (radio " + radioExplosion + "m, " + efecto + ")";
+        return lanzar("a " + distanciaMetros + " m");
     }
 
     /**
-     * Implementación de Audible. Usa el alcance por defecto de la interfaz:
-     * una granada se escucha solo cerca.
+     * La flashbang no quita vida. La HE hace su daño completo dentro del radio
+     * del modelo y nada fuera de él (simplificación: en el juego baja con la
+     * distancia).
      */
     @Override
+    public int danoA(double distanciaMetros) {
+        return distanciaMetros <= ReglasJuego.RADIO_HE_METROS ? getDano() : 0;
+    }
+
+    private String lanzar(String destino) {
+        lanzada = true;
+        String efecto = isAturde() ? "ciega a quien la mira" : "hace hasta " + getDano() + " de daño";
+        return getNombre() + " lanzada " + destino + ": explotó y " + efecto + ". Ya no se puede volver a usar.";
+    }
+
+    /** Implementación de Audible. Usa el alcance por defecto: una granada se escucha solo cerca. */
+    @Override
     public String sonido() {
-        return aturde
+        return isAturde()
                 ? getNombre() + ": ¡pum! seco y después un pitido agudo en los oídos"
                 : getNombre() + ": ¡BOOM! grave que retumba";
     }
 
-    public double getRadioExplosion() {
-        return radioExplosion;
-    }
-
-    public double getDistanciaLanzamiento() {
-        return distanciaLanzamiento;
-    }
-
-    public boolean isAturde() {
-        return aturde;
-    }
-
-    public double getVisibilidadReducida() {
-        return visibilidadReducida;
-    }
-
-    public long getCooldownMs() {
-        return cooldownMs;
+    @Override
+    public String inspeccionar() {
+        return "Granada " + getNombre() + (lanzada ? " (ya lanzada)" : " (sin usar)");
     }
 
     @Override
-    public String inspeccionar() {
-        return "Animación de inspección: granada " + getNombre()
-                + (explotada ? " (ya usada)" : "");
+    public String ranura() {
+        return "granadas";
+    }
+
+    public boolean isLanzada() {
+        return lanzada;
+    }
+
+    /** La flashbang ciega en lugar de hacer daño. */
+    public boolean isAturde() {
+        return getModelo() == CatalogoArmas.FLASHBANG;
     }
 }

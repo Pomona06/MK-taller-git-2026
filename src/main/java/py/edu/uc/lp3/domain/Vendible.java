@@ -2,20 +2,20 @@ package py.edu.uc.lp3.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.MappedSuperclass;
-import py.edu.uc.lp3.exceptions.ValorInvalidoException;
 import py.edu.uc.lp3.interfaces.Avatar;
 import py.edu.uc.lp3.interfaces.Cotizable;
 import py.edu.uc.lp3.interfaces.Posicion;
 import py.edu.uc.lp3.interfaces.VideoJuegoPosicionable;
 
 /**
- * Los campos pasan a private y los setters a protected: antes cualquier
- * clase (por ejemplo un controller) podía hacer arma.setPrecio(-500L) y
- * dejar el objeto en un estado imposible. Ahora solo la jerarquía puede
- * fijar el precio, y siempre pasa por la validación.
+ * Los campos son private y los setters protected: fuera del paquete domain
+ * solo las clases hijas pueden cambiar el precio; un controller o un
+ * servicio no. En las armas y el chaleco el precio sale del catálogo del
+ * juego.
  *
- * @MappedSuperclass: no tiene tabla propia; precio y descripcion se guardan
- * como columnas de la tabla de cada entidad que la extiende (arma).
+ * Es @MappedSuperclass: no tiene tabla propia. {@code precio} y
+ * {@code descripcion} se guardan como columnas de la tabla de cada entidad
+ * que la extiende (arma y chaleco).
  */
 @MappedSuperclass
 public class Vendible  implements VideoJuegoPosicionable, Cotizable {
@@ -27,9 +27,6 @@ public class Vendible  implements VideoJuegoPosicionable, Cotizable {
     }
 
     protected void setPrecio(Long precio) {
-        if (precio == null || precio < 0) {
-            throw new ValorInvalidoException("el precio no puede ser nulo ni negativo");
-        }
         this.precio = precio;
     }
 

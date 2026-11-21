@@ -16,22 +16,27 @@ import java.util.List;
 @Transactional
 public class JugadorServiceImpl implements JugadorService {
 
+    /** Límite propio del servicio para el nombre del jugador. */
+    static final int LARGO_MAXIMO_NOMBRE = 32;
+
     private final JugadorRepository jugadorRepository;
 
     public JugadorServiceImpl(JugadorRepository jugadorRepository) {
         this.jugadorRepository = jugadorRepository;
     }
 
+    /** Un jugador nuevo empieza la ronda con 100 de vida y, si compró Kevlar, con 100 de blindaje. */
     @Override
-    public Jugador crear(JugadorRequest p) {
-        if (p == null) {
-            throw new ValorInvalidoException("falta el cuerpo con nombre, vida y blindaje");
+    public Jugador crear(JugadorRequest pedido) {
+        if (pedido == null || pedido.nombre() == null || pedido.nombre().isBlank()) {
+            throw new ValorInvalidoException("el jugador necesita un nombre");
         }
-        int blindaje = p.blindaje() == null ? 0 : p.blindaje();
-        // 0 = no compró chaleco; cualquier otro valor lo valida el constructor de Chaleco.
-        Chaleco chaleco = blindaje == 0 ? null : new Chaleco(blindaje);
-        Jugador jugador = new Jugador(p.nombre(), p.vida() == null ? Jugador.VIDA_MAXIMA : p.vida(), chaleco);
-        return jugadorRepository.save(jugador);
+        String nombre = pedido.nombre().strip();
+        if (nombre.length() > LARGO_MAXIMO_NOMBRE) {
+            throw new ValorInvalidoException("el nombre puede tener hasta " + LARGO_MAXIMO_NOMBRE + " caracteres");
+        }
+        Chaleco chaleco = Boolean.TRUE.equals(pedido.chaleco()) ? new Chaleco() : null;
+        return jugadorRepository.save(new Jugador(nombre, chaleco));
     }
 
     @Override

@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import py.edu.uc.lp3.exceptions.GranadaUsadaException;
 import py.edu.uc.lp3.exceptions.JugadorEliminadoException;
 import py.edu.uc.lp3.exceptions.JuegoException;
 import py.edu.uc.lp3.exceptions.MunicionInsuficienteException;
@@ -14,8 +15,8 @@ import java.util.Map;
 
 /**
  * Un handler por cada tipo de la jerarquía JuegoException. Las reglas viven en
- * el dominio y en el servicio; acá solo se elige el código HTTP y se devuelve
- * el mensaje de la excepción junto con su tipo.
+ * los servicios; acá solo se elige el código HTTP y se devuelve el mensaje de
+ * la excepción junto con su tipo.
  */
 @RestControllerAdvice
 public class ManejadorErrores {
@@ -41,6 +42,12 @@ public class ManejadorErrores {
     @ExceptionHandler(JugadorEliminadoException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public Map<String, String> jugadorEliminado(JugadorEliminadoException e) {
+        return cuerpo(e);
+    }
+
+    @ExceptionHandler(GranadaUsadaException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public Map<String, String> granadaUsada(GranadaUsadaException e) {
         return cuerpo(e);
     }
 

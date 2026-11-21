@@ -1,9 +1,8 @@
 package py.edu.uc.lp3.domain;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import py.edu.uc.lp3.exceptions.MunicionInsuficienteException;
-import py.edu.uc.lp3.exceptions.ValorInvalidoException;
+import py.edu.uc.lp3.constants.CatalogoArmas;
+import py.edu.uc.lp3.constants.ReglasJuego;
 
 /**
  * El profesor había dejado acá un solo atributo:
@@ -12,126 +11,91 @@ import py.edu.uc.lp3.exceptions.ValorInvalidoException;
  *
  * Lo cambié a private. Un campo protected sigue siendo modificable
  * directamente por cualquier subclase, sin pasar por recargar() ni por
- * disparar() — eso viola justo lo que pide la consigna, que el control de
- * munición no se pise desde afuera (ni siquiera desde una hija descuidada).
- * Se accede a él solo a través de un getter protegido.
+ * disparar(), y eso rompe lo que pide la consigna: que la munición no se pise
+ * desde afuera, ni siquiera desde una hija descuidada. Desde afuera se lee
+ * con getCarga() y solo cambia con disparar() y recargar().
  *
- * Se agregaron el resto de los atributos que hacían falta para que
- * disparar()/recargar() tengan una lógica real (capacidad de cargador,
- * cargadores de repuesto, precisión, retroceso, tiempo de recarga) — no
- * estaban en el esqueleto original porque ahí "carga" era el único campo,
- * sin ningún método que lo usara todavía.
+ * La reserva se cuenta en cargadores, como en los datos de CS2
+ * (m_bReserveAmmoAsClips). Simplificación: al recargar se descartan las
+ * balas que quedaban en el cargador.
  *
  * disparar() y recargar() están implementados una sola vez acá, como final
- * (Template Method). Rifle, Pistola y Sniper solo sobreescriben dos métodos
- * gancho chicos: balasPorDisparo() y calcularDano().
+ * (Template Method). Las hijas sobreescriben métodos gancho chicos:
+ * balasPorDisparo(), ranura() y, el Sniper, despuesDeDisparar().
  *
  * Es @Entity abstracta para que sus campos (munición incluida) se guarden en
- * la tabla "arma". La carga persistida solo cambia con disparar() y recargar().
+ * la tabla "arma". Qué disparo es posible lo decide la capa service antes de
+ * mandar el mensaje; acá solo se aplica.
  */
 @Entity
 public abstract class ArmasDeFuego extends Armas {
 
     private int carga;
     private int cargadoresRestantes;
-    private int capacidadCargador;
-    @Column(name = "precision_tiro")
-    private double precision;
-    private double retroceso;
-    private long tiempoRecargaMs;
-    private String animacion;
+    private boolean modoRafaga;
 
-    protected ArmasDeFuego(String nombre, long precio, String equipo, double peso, int dano,
-                           int capacidadCargador, int cargadoresRestantes,
-                           double precision, double retroceso, long tiempoRecargaMs,
-                           String animacion) {
-        super(nombre, precio, equipo, peso, dano);
-        if (capacidadCargador <= 0 || cargadoresRestantes < 0) {
-            throw new ValorInvalidoException("capacidad/cargadores inválidos");
-        }
-        if (precision < 0 || precision > 1) {
-            throw new ValorInvalidoException("la precisión debe estar entre 0 y 1");
-        }
-        if (retroceso < 0 || tiempoRecargaMs < 0) {
-            throw new ValorInvalidoException("retroceso y tiempo de recarga no pueden ser negativos");
-        }
-        this.capacidadCargador = capacidadCargador;
-        this.carga = capacidadCargador;
-        this.cargadoresRestantes = cargadoresRestantes;
-        this.precision = precision;
-        this.retroceso = retroceso;
-        this.tiempoRecargaMs = tiempoRecargaMs;
-        this.animacion = animacion;
+    protected ArmasDeFuego(CatalogoArmas modelo, String equipo) {
+        super(modelo, equipo);
+        this.carga = modelo.getCargador();
+        this.cargadoresRestantes = modelo.getCargadoresDeReserva();
+        this.modoRafaga = false;
     }
 
     @Override
     public final String disparar() {
-        return efectuarDisparo(calcularDano(), "");
+        return efectuarDisparo(getDano(), "");
     }
 
-    /** Sobrecarga: fuera del alcance efectivo el daño se reduce a la mitad. */
+    /** Sobrecarga: el daño baja con la distancia según el modificador de alcance del modelo. */
     @Override
     public final String disparar(double distanciaMetros) {
-        int dano = danoA(distanciaMetros);
-        String detalle = " a " + distanciaMetros + "m";
-        if (distanciaMetros > alcanceEfectivo()) {
-            detalle += " (fuera del alcance efectivo de " + alcanceEfectivo() + "m, daño a la mitad)";
-        }
-        return efectuarDisparo(dano, detalle);
-    }
-
-    @Override
-    public final int danoA(double distanciaMetros) {
-        validarDistancia(distanciaMetros);
-        int dano = calcularDano();
-        return distanciaMetros > alcanceEfectivo() ? (int) Math.round(dano * 0.5) : dano;
-    }
-
-    /** Única forma de gastar munición: ambas versiones de disparar pasan por acá. */
-    private String efectuarDisparo(int dano, String detalle) {
-        int balasNecesarias = balasPorDisparo();
-        if (carga < balasNecesarias) {
-            throw new MunicionInsuficienteException(getNombre() + " no puede disparar: cargador insuficiente ("
-                    + carga + " balas, necesita " + balasNecesarias + ")");
-        }
-        carga -= balasNecesarias;
-        return getNombre() + " disparó" + detalle + " (" + balasNecesarias + " balas, precisión "
-                + precision + ") causando " + dano + " de daño. Quedan "
-                + carga + "/" + capacidadCargador + " balas.";
+        return efectuarDisparo(danoA(distanciaMetros), " a " + distanciaMetros + " m");
     }
 
     /**
-     * Distancia en metros hasta la que el arma conserva todo su daño. Un rifle
-     * de asalto usa este valor; Pistola y Sniper lo sobreescriben.
+     * Daño en el cuerpo a esa distancia, sin blindaje: el daño base se
+     * multiplica por el modificador de alcance una vez cada 500 unidades.
      */
-    protected double alcanceEfectivo() {
-        return 30.0;
+    @Override
+    public final int danoA(double distanciaMetros) {
+        double unidades = distanciaMetros * ReglasJuego.UNIDADES_POR_METRO;
+        double tramos = unidades / ReglasJuego.UNIDADES_POR_TRAMO_DE_ALCANCE;
+        return (int) (getDano() * Math.pow(getModelo().getModificadorAlcance(), tramos));
     }
 
-    @Override
+    /** Única forma de gastar munición: las dos versiones de disparar pasan por acá. */
+    private String efectuarDisparo(int dano, String detalle) {
+        int balas = balasPorDisparo();
+        carga -= balas;
+        despuesDeDisparar();
+        return getNombre() + " disparó" + detalle + " (" + balas + (balas == 1 ? " bala" : " balas")
+                + ", " + dano + " de daño por bala). Quedan " + carga + "/" + getCapacidadCargador() + ".";
+    }
+
+    /** Usa un cargador de la reserva y deja el cargador lleno. */
     public final String recargar() {
-        if (carga == capacidadCargador) {
-            return getNombre() + " ya tiene el cargador lleno";
-        }
-        if (cargadoresRestantes <= 0) {
-            throw new MunicionInsuficienteException(getNombre() + " no tiene cargadores de repuesto");
-        }
         cargadoresRestantes--;
-        carga = capacidadCargador;
-        return getNombre() + " recargada en " + tiempoRecargaMs
-                + "ms. Cargadores restantes: " + cargadoresRestantes;
+        carga = getCapacidadCargador();
+        return getNombre() + " recargada. Cargadores de reserva: " + cargadoresRestantes;
+    }
+
+    /** Cambia entre tiro normal y ráfaga (solo la Glock-18 y la FAMAS la tienen). */
+    public void cambiarModoRafaga(boolean rafaga) {
+        this.modoRafaga = rafaga;
     }
 
     @Override
     public String inspeccionar() {
-        return "Animación de inspección: " + animacion + " (retroceso " + retroceso + ")";
+        return "Inspección de " + getNombre() + ": " + carga + "/" + getCapacidadCargador()
+                + " balas y " + cargadoresRestantes + " cargadores de reserva";
     }
 
-    /** Método gancho: cuántas balas consume UN disparo de esta arma concreta. */
-    protected abstract int balasPorDisparo();
+    /** Método gancho: cuántas balas gasta UN disparo de esta arma. */
+    public abstract int balasPorDisparo();
 
-    /** Método gancho: cómo esta arma concreta deriva el daño a partir del daño base. */
-    protected abstract int calcularDano();
+    /** Método gancho: lo que cambia en el arma después de cada disparo. Por defecto, nada. */
+    protected void despuesDeDisparar() {
+    }
 
     public int getCarga() {
         return carga;
@@ -142,18 +106,14 @@ public abstract class ArmasDeFuego extends Armas {
     }
 
     public int getCapacidadCargador() {
-        return capacidadCargador;
+        return getModelo().getCargador();
     }
 
-    public double getPrecision() {
-        return precision;
+    public boolean isModoRafaga() {
+        return modoRafaga;
     }
 
-    public double getRetroceso() {
-        return retroceso;
-    }
-
-    public long getTiempoRecargaMs() {
-        return tiempoRecargaMs;
+    public boolean isAutomatica() {
+        return getModelo().isAutomatica();
     }
 }

@@ -23,16 +23,12 @@ public class IndexController {
                 "estado", "vivo",
                 "armasGuardadas", armaService.contar(),
                 "endpoints", List.of(
+                        "GET /api/catalogo (armas de CS2 que se pueden crear)",
                         "POST|GET /api/armas, GET|PATCH|DELETE /api/armas/{id} (CRUD sobre H2)",
-                        "POST /api/armas/{id}/disparos[?distancia=...] y /api/armas/{id}/recargas (munición)",
+                        "POST /api/armas/{id}/disparos[?distancia=...&veces=...] y /api/armas/{id}/recargas (munición)",
                         "POST|GET /api/jugadores, GET /api/jugadores/{id} (jugadores y su chaleco en H2)",
                         "POST /api/simulaciones/dano {armaId, jugadorId, distancia} (arma + Jugador + Chaleco)",
-                        "GET /api/sonidos[?sitio=A|B&segundos=0..40] (granadas guardadas y C4 como Audible)",
-                        "GET /armas/crear?tipo=rifle|pistola|sniper|granada&... (constructor completo)",
-                        "GET /armas/crear-simple?tipo=...&nombre=... (constructores sobrecargados)",
-                        "GET /armas/comparar[?distancia=...] (disparar() en cada clase hija)",
-                        "GET /sonidos[?sitio=A|B&segundos=0..40] (sonido() a través de la interfaz Audible)",
-                        "Parámetro opcional distancia: usa la sobrecarga disparar(double)")
+                        "GET /api/sonidos[?sitio=A|B&segundos=0..40] (granadas guardadas y C4 como Audible)")
         );
     }
 }

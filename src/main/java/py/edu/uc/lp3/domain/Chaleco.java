@@ -1,26 +1,24 @@
 package py.edu.uc.lp3.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import py.edu.uc.lp3.exceptions.ValorInvalidoException;
+import py.edu.uc.lp3.constants.ReglasJuego;
 
 /**
  * Kevlar: se compra en la tienda (es un Vendible) pero no es un arma. Absorbe
- * parte del daño mientras le quede durabilidad.
+ * parte del daño y en eso se gasta.
  *
- * Se guarda en la tabla "chaleco" (precio y descripcion vienen de Vendible,
- * que es @MappedSuperclass). La durabilidad solo baja con absorber(). El
- * constructor sin argumentos que pide JPA es el constructor simple: un
- * chaleco nuevo y legal.
+ * Se guarda en la tabla "chaleco" ({@code precio} y {@code descripcion} vienen
+ * de Vendible, que es @MappedSuperclass). El constructor sin argumentos que
+ * pide JPA es el constructor simple: un Kevlar nuevo.
  */
 @Entity
 @Table(name = "chaleco")
 public class Chaleco extends Vendible {
-
-    public static final int DURABILIDAD_MAXIMA = 100;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,30 +26,24 @@ public class Chaleco extends Vendible {
 
     private int durabilidad;
 
-    /** Constructor simple: un chaleco nuevo. */
+    /** Constructor simple: un Kevlar recién comprado, con 100 de blindaje. */
     public Chaleco() {
-        this(DURABILIDAD_MAXIMA);
+        this(ReglasJuego.BLINDAJE_KEVLAR);
     }
 
+    /** Sobrecarga: un chaleco que ya recibió daño en una ronda anterior. */
     public Chaleco(int durabilidad) {
-        if (durabilidad < 0 || durabilidad > DURABILIDAD_MAXIMA) {
-            throw new ValorInvalidoException("la durabilidad del chaleco debe estar entre 0 y " + DURABILIDAD_MAXIMA);
-        }
         this.durabilidad = durabilidad;
-        setPrecio(650L);
+        setPrecio(ReglasJuego.PRECIO_KEVLAR);
         setDescripcion("Kevlar");
     }
 
-    /**
-     * Absorbe la mitad del daño, sin pasar de la durabilidad que le queda, y
-     * se gasta en lo que absorbió. Devuelve el daño que llega al jugador.
-     */
-    public int absorber(int dano) {
-        int absorbido = Math.min(dano / 2, durabilidad);
-        durabilidad -= absorbido;
-        return dano - absorbido;
+    /** Pierde el blindaje que absorbió. Cuánto es lo calcula la regla de vida del servicio. */
+    public void gastar(int blindajePerdido) {
+        durabilidad -= blindajePerdido;
     }
 
+    @JsonIgnore
     public Long getId() {
         return id;
     }

@@ -2,6 +2,7 @@ package py.edu.uc.lp3.domain;
 
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
+import py.edu.uc.lp3.constants.CatalogoArmas;
 
 @Entity
 @DiscriminatorValue("sniper")
@@ -9,36 +10,28 @@ public class Sniper extends ArmasDeFuego {
 
     private boolean conMira;
 
-    /** Constructor simple: el AWP de los antiterroristas. */
+    /** Constructor simple: el AWP, que lo compran los dos equipos; acá, del equipo CT. */
     public Sniper() {
-        this("AWP");
+        this(CatalogoArmas.AWP);
     }
 
-    /** Sobrecarga: francotirador de los antiterroristas con otro nombre. */
-    public Sniper(String nombre) {
-        this(nombre, "CT");
-    }
-
-    /** Sobrecarga: francotirador para el equipo indicado (CT o TT). */
-    public Sniper(String nombre, String equipo) {
-        this(nombre, 4750, equipo, 6.5, 115, 5, 6, 0.95, 9.0, 3700);
+    /** Sobrecarga: otro francotirador del catálogo, del equipo CT. */
+    public Sniper(CatalogoArmas modelo) {
+        this(modelo, modelo.equipoUnico().orElse("CT"));
     }
 
     /** Constructor completo: es el único que llama a super(...). */
-    public Sniper(String nombre, long precio, String equipo, double peso, int dano,
-                  int capacidadCargador, int cargadoresRestantes,
-                  double precision, double retroceso, long tiempoRecargaMs) {
-        super(nombre, precio, equipo, peso, dano, capacidadCargador, cargadoresRestantes,
-                precision, retroceso, tiempoRecargaMs, "sniper_inspect");
+    public Sniper(CatalogoArmas modelo, String equipo) {
+        super(modelo, equipo);
         this.conMira = false;
     }
 
+    /**
+     * Apuntar con la mira. En CS2 cambia la precisión, no el daño; el modelo
+     * no simula la precisión, así que solo se guarda el estado.
+     */
     public void apuntarConMira() {
         this.conMira = true;
-    }
-
-    public void bajarMira() {
-        this.conMira = false;
     }
 
     public boolean isConMira() {
@@ -46,17 +39,18 @@ public class Sniper extends ArmasDeFuego {
     }
 
     @Override
-    protected double alcanceEfectivo() {
-        return 200.0;
-    }
-
-    @Override
-    protected int balasPorDisparo() {
+    public int balasPorDisparo() {
         return 1;
     }
 
+    /** El AWP y el SSG 08 bajan la mira después de cada disparo (m_bUnzoomsAfterShot). */
     @Override
-    protected int calcularDano() {
-        return conMira ? getDano() : (int) Math.round(getDano() * 0.4);
+    protected void despuesDeDisparar() {
+        this.conMira = false;
+    }
+
+    @Override
+    public String ranura() {
+        return "principal";
     }
 }

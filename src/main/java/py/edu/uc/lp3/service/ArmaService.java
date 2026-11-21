@@ -1,15 +1,17 @@
 package py.edu.uc.lp3.service;
 
 import py.edu.uc.lp3.domain.Armas;
-import py.edu.uc.lp3.domain.Audible;
 import py.edu.uc.lp3.service.dto.ArmaPatchRequest;
 import py.edu.uc.lp3.service.dto.ArmaRequest;
 import py.edu.uc.lp3.service.dto.DisparoResponse;
+import py.edu.uc.lp3.service.dto.ModeloCatalogoResponse;
 
 import java.util.List;
 
-/** Capa de negocio de las armas: CRUD sobre H2 y simulación de munición. */
+/** Capa de negocio de las armas: catálogo, CRUD sobre H2 y simulación de munición. */
 public interface ArmaService {
+
+    List<ModeloCatalogoResponse> catalogo();
 
     Armas crear(ArmaRequest pedido);
 
@@ -23,9 +25,7 @@ public interface ArmaService {
 
     long contar();
 
-    DisparoResponse disparar(Long id, Double distancia);
+    DisparoResponse disparar(Long id, Double distancia, Integer veces);
 
     DisparoResponse recargar(Long id);
-
-    List<Audible> audiblesGuardados();
 }
