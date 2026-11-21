@@ -1,12 +1,13 @@
 # MK-taller-git-2026 — Modelado de armas de CS2 con Spring Boot (Marcelo Kropff Y43819)
 
-Trabajo práctico POO-08 (CRUD REST, H2, reglas de juego y excepciones) de Lenguaje de Programación 3,
-construido sobre los ejercicios POO-06 e interfaces. Es un servicio HTTP en Spring Boot sobre el modelado
+Trabajos prácticos POO-08 (CRUD REST, H2, reglas de juego y excepciones) y POO-09 (APIs cruzadas) de
+Lenguaje de Programación 3, construidos sobre los ejercicios POO-06 e interfaces. Es un servicio HTTP en Spring Boot sobre el modelado
 de Counter-Strike 2 (opción B), con herencia, sobreescritura, sobrecarga, ocultamiento de información y
 paquetes según el template de la cátedra. Las armas, los jugadores y sus chalecos se guardan en una base
 **H2**. Solo se pueden crear armas que existen en el juego, con sus valores reales.
 
-- Enunciados: [POO-06](https://github.com/alefq/afq-taller-git-2024/blob/main/docs/ejercicio-poo-06-revision-paquetes-constructores-2026-09-30.md) · [POO-08](https://github.com/alefq/afq-taller-git-2024/blob/main/docs/ejercicio-poo-08-crud-h2-insomnia-2026-10-28.md)
+- Enunciados: [POO-06](https://github.com/alefq/afq-taller-git-2024/blob/main/docs/ejercicio-poo-06-revision-paquetes-constructores-2026-09-30.md) · [POO-08](https://github.com/alefq/afq-taller-git-2024/blob/main/docs/ejercicio-poo-08-crud-h2-insomnia-2026-10-28.md) · [POO-09](https://github.com/alefq/afq-taller-git-2024/blob/main/docs/ejercicio-poo-09-apis-cruzadas-2026-11-16.md)
+- Para los compañeros del grupo de POO-09: [docs/PARA-COMPANEROS.md](docs/PARA-COMPANEROS.md)
 - Bitácora de IA: [BITACORA.md](BITACORA.md)
 - Especificaciones aplicadas a CS2: [POO-08](docs/ESPECIFICACIONES-POO-08.md) · [POO-06](docs/ESPECIFICACIONES.md)
 - Colección de Insomnia: [`insomnia/coleccion-armas-cs2.json`](insomnia/coleccion-armas-cs2.json)
@@ -32,6 +33,73 @@ descarga las dependencias y tarda un poco. Los tests se corren con `./mvnw test`
 Si tenés una base de una versión anterior en la carpeta `data/`, frená el servicio y borrá esa carpeta: las
 tablas cambiaron.
 
+## POO-09: APIs cruzadas (en curso)
+
+**Hecho:** la corrección de POO-08 (ver [Situación de POO-08](#situación-de-poo-08)), el OpenAPI publicado y la
+consulta de las dos reglas sin tocar la base, para que los compañeros del grupo las usen.
+**Pendiente:** armar el grupo (A2 y A3), los clientes HTTP hacia sus APIs, el endpoint de escenario y su
+colección de Insomnia.
+
+### OpenAPI
+
+El servicio publica un documento OpenAPI 3 con [springdoc-openapi](https://springdoc.org/) (dependencia
+`springdoc-openapi-starter-webmvc-ui` 3.2.0, la versión para Spring Boot 4.1):
+
+| URL | Qué es |
+|---|---|
+| http://localhost:8080/v3/api-docs | El documento OpenAPI en JSON: se importa en Insomnia (**Import** → **URL**) o se le pasa a un cliente. |
+| http://localhost:8080/swagger-ui.html | La misma documentación en el navegador, con **Try it out** para probar cada operación. |
+
+Las propiedades están en `src/main/resources/application.properties`:
+
+| Propiedad | Qué hace |
+|---|---|
+| `springdoc.api-docs.path=/v3/api-docs` | Dónde se publica el documento JSON. |
+| `springdoc.swagger-ui.path=/swagger-ui.html` | Dónde se publica la página para probarlo. |
+| `springdoc.override-with-generic-response=false` | Cada operación documenta solo sus propios errores, no los de todos los handlers. |
+| `springdoc.default-produces-media-type=application/json` | Las respuestas se documentan como JSON. |
+
+La descripción general del documento (`OpenApiConfig`) explica las dos reglas, cómo consultarlas desde otro
+servicio y el formato de error. Cada operación tiene un resumen, sus parámetros, ejemplos de cuerpo y los
+códigos de error que puede devolver, con el tipo de excepción: el CRUD de armas, los jugadores, la
+simulación, los sonidos, el catálogo y las consultas de reglas. El documento pasa la validación de
+`openapi-spec-validator`.
+
+### Mis reglas, para el grupo
+
+Las dos reglas son las de POO-08 ([Las dos reglas](#las-dos-reglas)). Para que un compañero las consulte sin
+cambiar mi base, hay tres endpoints que reciben el estado en el JSON y no usan los repositorios:
+
+| Endpoint | Regla | Acepta | Rechaza |
+|---|---|---|---|
+| `GET /api/reglas` | Las dos, en una frase | 200 | |
+| `POST /api/reglas/disparo` | Munición: ¿puede disparar? | 200 | 409 `MunicionInsuficienteException` o `GranadaUsadaException` |
+| `POST /api/reglas/recarga` | Munición: ¿puede recargar? | 200 | 409 `MunicionInsuficienteException` |
+| `POST /api/reglas/impacto` | Vida: ¿qué le hace el disparo al jugador? | 200 | 409 `JugadorEliminadoException` |
+
+Usan las mismas reglas que la simulación: por ejemplo, el AK-47 a 10 m contra un jugador con chaleco da
+vida 73 y blindaje 97 en los dos casos. Un dato imposible en el juego responde 400 (`ValorInvalidoException`).
+Todo lo que un compañero necesita (cómo arrancar mi servicio, ejemplos y qué le pido a cambio) está en
+[docs/PARA-COMPANEROS.md](docs/PARA-COMPANEROS.md).
+
+### Arrancar en otro puerto
+
+Si los tres servicios del grupo corren en la misma máquina, cada uno necesita su puerto:
+
+```bash
+./mvnw spring-boot:run -Dspring-boot.run.arguments=--server.port=8082
+```
+
+El OpenAPI toma la URL del puerto en el que arrancó.
+
+### Grupo (round robin)
+
+| Rol | Nombre | URL base | OpenAPI | Sus dos reglas |
+|---|---|---|---|---|
+| A1 (yo) | Marcelo Kropff | http://localhost:8080 | http://localhost:8080/v3/api-docs | Munición y vida (arriba) |
+| A2 | pendiente | | | |
+| A3 | pendiente | | | |
+
 ## Situación de POO-08
 
 La corrección de POO-08 tuvo **observaciones y descuentos**: 17 de 24 (nota 7,1). Están **todas cerradas**.
@@ -44,7 +112,7 @@ Esta tabla lista cada observación del documento de corrección y cómo se cerr�
 | 3. Ocultamiento | Las validaciones de los constructores, `setPrecio`, `renombrar()`, `cambiarPrecio()` y `recibirDano()` tenían que ir en los servicios. | Pasaron a los servicios. `renombrar()` y `cambiarPrecio()` se quitaron: el precio lo fija el catálogo del juego y lo que se cambia con `PATCH` es el apodo y el modo ráfaga. Además, el `POST` solo acepta armas del catálogo de CS2 (por ejemplo, rechaza un AK-47 para los CT). | [`b0be054`](https://github.com/Pomona06/MK-taller-git-2026/commit/b0be054ccaac5ec9edbb344b2c7dbd958a780504), [`03df705`](https://github.com/Pomona06/MK-taller-git-2026/commit/03df7054101e4b1ca863316efca59ac276323a94) |
 | 6. Observable | Las dos reglas vivían en `ArmasDeFuego.disparar` y `Jugador.recibirDano` (con `Chaleco.absorber`) y tenían que ir en `SimulacionService`. | La regla de munición está en `ReglasDeArmas` y la regla de vida en `SimulacionServiceImpl.calcularImpacto()`. El dominio solo aplica lo que el servicio ya calculó. | [`03df705`](https://github.com/Pomona06/MK-taller-git-2026/commit/03df7054101e4b1ca863316efca59ac276323a94) |
 | 8. Documentación (−0,5) | En «Por qué es así» quedaba una frase de POO-06 que decía que la clase lanzaba `IllegalArgumentException`. | La sección se reescribió con el código actual. El documento de especificaciones de POO-06 quedó marcado como histórico. | [`8472f18`](https://github.com/Pomona06/MK-taller-git-2026/commit/8472f18e2b249b8d68671c20df187854e6ca2b5e) |
-| 8. Documentación (0) | Más de tres errores de ortografía y gramática: «me di cuenta que», «descripcion», «realizacion», «deje». | Se corrigieron esos cuatro y los demás que encontró un corrector de español (diccionario es_ES de LibreOffice) y una lectura completa del README, la bitácora, las especificaciones, el Javadoc y los comentarios. | [`8472f18`](https://github.com/Pomona06/MK-taller-git-2026/commit/8472f18e2b249b8d68671c20df187854e6ca2b5e), [`4198ec6`](https://github.com/Pomona06/MK-taller-git-2026/commit/4198ec615bf7dd930a3b04c835b04f962877418d) |
+| 8. Documentación (0) | Más de tres errores de ortografía y gramática. Los cuatro citados: faltaba el «de» en «me di cuenta de que» y faltaban las tildes de «descripción», «realización» y «dejé». | Se corrigieron esos cuatro y los demás que encontró un corrector de español (diccionario es_ES de LibreOffice) y una lectura completa del README, la bitácora, las especificaciones, el Javadoc y los comentarios. | [`8472f18`](https://github.com/Pomona06/MK-taller-git-2026/commit/8472f18e2b249b8d68671c20df187854e6ca2b5e), [`4198ec6`](https://github.com/Pomona06/MK-taller-git-2026/commit/4198ec615bf7dd930a3b04c835b04f962877418d) |
 | 7. Git (mejora, no restaba) | Usar prefijos de *semantic commits* (`feat:`, `docs:`, `test:`). | Los commits desde la corrección los usan. | [`b0be054`](https://github.com/Pomona06/MK-taller-git-2026/commit/b0be054ccaac5ec9edbb344b2c7dbd958a780504) en adelante |
 
 Se puede comprobar con la colección de Insomnia: los pedidos 3.17 y 3.18 provocan `GranadaUsadaException`, y
@@ -153,6 +221,9 @@ Mientras el servicio corre, la base está bloqueada por él: la consola tiene qu
 | Método y ruta | Qué hace | Éxito | Errores |
 |---|---|---|---|
 | `GET /` | Confirma que el servicio está vivo y lista los endpoints. | 200 | |
+| `GET /v3/api-docs` y `/swagger-ui.html` | El OpenAPI en JSON y la página para probarlo. | 200 | |
+| `GET /api/reglas` | Las dos reglas en una frase. | 200 | |
+| `POST /api/reglas/disparo`, `/recarga`, `/impacto` | Consultar las reglas con el estado en el JSON, sin tocar la base. | 200 | 400, 409 |
 | `GET /api/catalogo` | Las armas de CS2 que se pueden crear, con sus valores. | 200 | |
 | `POST /api/armas` | Crea un arma: `{"modelo", "equipo"}`. El equipo se puede omitir si el arma es de un solo equipo. No lleva `id`. | 201 + `id` + `Location` | 400 |
 | `GET /api/armas` | Lista lo guardado. Filtros opcionales: `?equipo=CT` o `?precioMaximo=3000`. | 200 | 400 |
@@ -268,6 +339,11 @@ classDiagram
     class SonidoController {
         +sonidos(sitio, segundos)
     }
+    class ReglasController {
+        +disparo(ConsultaDisparoRequest)
+        +recarga(ConsultaRecargaRequest)
+        +impacto(ConsultaImpactoRequest)
+    }
     class ManejadorErrores {
         <<RestControllerAdvice>>
         +valorInvalido() 400
@@ -286,6 +362,9 @@ classDiagram
         <<interface>>
     }
     class SonidoService {
+        <<interface>>
+    }
+    class ReglasService {
         <<interface>>
     }
     class CatalogoArmas {
@@ -360,6 +439,9 @@ classDiagram
     SimulacionController ..> SimulacionService : usa
     SonidoController ..> SonidoService : usa
     SonidoController ..> Audible : usa
+    ReglasController ..> ReglasService : usa
+    ReglasService ..> CatalogoArmas : consulta
+    ReglasService ..> JuegoException : lanza
     ArmaService ..> CatalogoArmas : consulta
     ArmaService ..> ArmaRepository : usa
     JugadorService ..> JugadorRepository : usa
@@ -413,7 +495,7 @@ El diagrama completo de la familia de armas está en [El modelo](#el-modelo).
 
 ### Colección de Insomnia
 
-El archivo es `insomnia/coleccion-armas-cs2.json` y tiene 49 pedidos.
+El archivo es `insomnia/coleccion-armas-cs2.json` y tiene 59 pedidos.
 
 1. Si ya habías usado el servicio, frenalo y borrá la carpeta `data/` para empezar con la base vacía.
 2. Arrancá el servicio con `./mvnw spring-boot:run`.
@@ -435,6 +517,9 @@ El archivo es `insomnia/coleccion-armas-cs2.json` y tiene 49 pedidos.
      409 por volver a usar la HE (`GranadaUsadaException`). Los `GET` intercalados muestran que los
      pedidos rechazados no guardaron nada.
    - **4. Borrar:** `DELETE` del AK-47 (204) y el `GET` posterior (404).
+   - **5. POO-09: OpenAPI y consulta de reglas:** el documento OpenAPI, las dos reglas en una frase y cada
+     consulta de regla con un caso que acepta y otro que rechaza. No usan la base, así que se pueden correr en
+     cualquier momento.
 
 Con la base vacía, los ids que se crean coinciden con los del entorno. Si no, copiá el `id` de cada `POST`
 a la variable que indica su descripción (**Manage Environments**, o el engranaje del entorno).
@@ -535,19 +620,25 @@ src/main/java/py/edu/uc/lp3/
 │   └── JugadorRepository.java
 ├── service/                      capa de negocio (interfaces)
 │   ├── ArmaService.java · JugadorService.java · SimulacionService.java · SonidoService.java
+│   ├── ReglasService.java
 │   ├── dto/                      pedidos y respuestas JSON
 │   └── impl/                     validaciones, reglas y excepciones
 │       ├── ArmaServiceImpl.java · JugadorServiceImpl.java
 │       ├── SimulacionServiceImpl.java · SonidoServiceImpl.java
-│       └── ReglasDeArmas.java    regla de munición compartida
-└── rest/controller/              entrada HTTP
-    ├── IndexController.java      GET /
-    ├── CatalogoController.java   /api/catalogo
-    ├── ArmaCrudController.java   /api/armas (CRUD y munición)
-    ├── JugadorController.java    /api/jugadores
-    ├── SimulacionController.java /api/simulaciones/dano
-    ├── SonidoController.java     /api/sonidos
-    └── ManejadorErrores.java     un @ExceptionHandler por tipo de excepción
+│       ├── ReglasServiceImpl.java   consulta de reglas sin tocar la base
+│       └── ReglasDeArmas.java    regla de munición y fábrica de armas
+└── rest/
+    ├── OpenApiConfig.java        datos generales del OpenAPI
+    └── controller/               entrada HTTP
+        ├── IndexController.java      GET /
+        ├── ReglasController.java     /api/reglas
+        ├── CatalogoController.java   /api/catalogo
+        ├── ArmaCrudController.java   /api/armas (CRUD y munición)
+        ├── JugadorController.java    /api/jugadores
+        ├── SimulacionController.java /api/simulaciones/dano
+        ├── SonidoController.java     /api/sonidos
+        ├── ErrorResponse.java        cuerpo de error
+        └── ManejadorErrores.java     un @ExceptionHandler por tipo de excepción
 ```
 
 El dominio no conoce nada de HTTP ni de la base, los repositorios son solo interfaces, los servicios
