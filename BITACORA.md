@@ -121,3 +121,7 @@ Usé el mismo asistente y el mismo modelo en todos los chats: taller de Git, eje
 - Lo probó con servidores falsos que responden como cada compañero. Así encontró que el cliente mandaba el
   JSON por partes y lo cambió para que vaya con su largo, y que los nombres con acento de
   `application.properties` salían mal porque Spring lee ese archivo en ISO-8859-1.
+- Matías me avisó que arranca en el 8080, no en el 8084 (Joaquín ya lo había corregido en su README). Le pedí
+  que lo cambie en todo el repositorio. Antes confirmó los contratos de los dos con sus OpenAPI reales, que
+  Joaquín guardó junto con las respuestas de su prueba con los tres servicios: los campos que manda mi
+  cliente coinciden.
