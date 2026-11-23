@@ -20,7 +20,7 @@ Trío de Counter-Strike 2. En mi entrega:
 |---|---|---|---|---|---|
 | **A1** (yo) | Marcelo Kropff (`Pomona06`) | [MK-taller-git-2026](https://github.com/Pomona06/MK-taller-git-2026) | `http://localhost:8082` | `/v3/api-docs` · `/swagger-ui.html` | — |
 | **A2** | Matías Jara (`Vanzfranhait`) | [mj-taller-git-2026](https://github.com/Vanzfranhait/mj-taller-git-2026) (commit `c2ac475`) | `http://localhost:8080` | `/v3/api-docs` | Disparo rápido de francotirador: `POST /api/reglas/disparo-rapido` |
-| **A3** | Joaquín Benegas (`joaquinBenegas0`) | [jb-taller-git-2026](https://github.com/joaquinBenegas0/jb-taller-git-2026) | `http://localhost:8083` | `/v3/api-docs` · `/swagger-ui.html` | Daño con blindaje: `POST /api/reglas/danio` |
+| **A3** | Joaquín Benegas (`joaquinBenegas0`) | [jb-taller-git-2026](https://github.com/joaquinBenegas0/jb-taller-git-2026) (commit `ecba4ed`) | `http://localhost:8083` | `/v3/api-docs` · `/swagger-ui.html` | Daño con blindaje: `POST /api/reglas/danio` |
 
 Las reglas que consulto, en una frase cada una:
 
@@ -84,6 +84,18 @@ Importar `insomnia/coleccion-armas-cs2.json`, elegir el subentorno **«Grupo POO
 
 Con los tres prendidos, `./insomnia/capturar-respuestas.sh` guarda las respuestas reales en
 `insomnia/respuestas/`.
+
+**Prueba real con los tres servicios** (23 de noviembre de 2026, 16:35; Matías en `c2ac475`, Joaquín en
+`ecba4ed` y este servicio en `5de6e65`): los 14 pedidos de `capturar-respuestas.sh` dieron lo esperado y las
+respuestas están en [`insomnia/respuestas/`](../insomnia/respuestas/) ([resumen](../insomnia/respuestas/resumen.md)):
+
+| Pedido | HTTP | Qué respondió |
+|---|---|---|
+| Escenario feliz: AWP con mira contra Halcón a 40 m | 201 | A2: `{"permitido":true,"municionDespues":3,"estabilidadDespues":0.5}`. A3: 222 de daño, el blindaje absorbe 100 y Halcón queda con vida 0 (eliminado). La jugada quedó guardada y el AWP con 3 balas. |
+| Rechazo de A2: sin mira | 409 | `RechazoDeA2Exception`; Matías respondió 400 «El francotirador no está estabilizado». |
+| Rechazo de A3: contra Aliado | 409 | `RechazoDeA3Exception`; Joaquín respondió 422 «Fuego amigo: Sombra y Aliado son del mismo equipo (ANTITERRORISTAS)». |
+| Después de los rechazos | 200 | Sigue una sola jugada y el AWP con 3 balas: los rechazos no cambiaron nada. |
+
 
 ### 3.3 Tests
 

@@ -47,7 +47,7 @@ objetivo es un enemigo vivo y calcula cómo queda.
 |---|---|---|---|---|---|
 | **A1** | Marcelo Kropff (`Pomona06`) | [MK-taller-git-2026](https://github.com/Pomona06/MK-taller-git-2026) | `http://localhost:8082` | `/v3/api-docs` · `/swagger-ui.html` | Munición y vida ([Las dos reglas](#las-dos-reglas)) |
 | **A2** | Matías Jara (`Vanzfranhait`) | [mj-taller-git-2026](https://github.com/Vanzfranhait/mj-taller-git-2026) (commit [`c2ac475`](https://github.com/Vanzfranhait/mj-taller-git-2026/commit/c2ac475)) | `http://localhost:8080` | `/v3/api-docs` | Explosión de granada y recarga (disparo) rápida de francotirador |
-| **A3** | Joaquín Benegas (`joaquinBenegas0`) | [jb-taller-git-2026](https://github.com/joaquinBenegas0/jb-taller-git-2026) | `http://localhost:8083` | `/v3/api-docs` · `/swagger-ui.html` | Munición por modo de disparo y daño con blindaje |
+| **A3** | Joaquín Benegas (`joaquinBenegas0`) | [jb-taller-git-2026](https://github.com/joaquinBenegas0/jb-taller-git-2026) (commit [`ecba4ed`](https://github.com/joaquinBenegas0/jb-taller-git-2026/commit/ecba4ed)) | `http://localhost:8083` | `/v3/api-docs` · `/swagger-ui.html` | Munición por modo de disparo y daño con blindaje |
 
 Puertos acordados en el grupo para correr los tres en una sola máquina: Matías 8080, Marcelo 8082 y Joaquín
 8083. Como 8080 también es el puerto por defecto de este servicio, en la prueba del grupo este servicio se
@@ -208,14 +208,29 @@ En la colección, elegí el subentorno **«Grupo POO-09 (este servicio en 8082)�
 las carpetas 0 a 4: los OpenAPI de A1, A2 y A3, el escenario feliz, el rechazo de A2 (sin mira), el rechazo de
 A3 (fuego amigo) y los `GET` que muestran que los rechazos no cambiaron nada.
 
-Con los tres prendidos y la base vacía, `./insomnia/capturar-respuestas.sh` guarda las respuestas reales en
+Con los tres prendidos, `./insomnia/capturar-respuestas.sh` guarda las respuestas reales en
 `insomnia/respuestas/` (con un `resumen.md`), para que la corrección las vea aunque un compañero esté apagado.
+
+**Prueba real con los tres servicios** (23 de noviembre de 2026, 16:35; Matías en `c2ac475`, Joaquín en
+`ecba4ed` y este servicio en `5de6e65`): los 14 pedidos de `capturar-respuestas.sh` dieron lo esperado y las
+respuestas están en [`insomnia/respuestas/`](insomnia/respuestas/) ([resumen](insomnia/respuestas/resumen.md)):
+
+| Pedido | HTTP | Qué respondió |
+|---|---|---|
+| Escenario feliz: AWP con mira contra Halcón a 40 m | 201 | A2: `{"permitido":true,"municionDespues":3,"estabilidadDespues":0.5}`. A3: 222 de daño, el blindaje absorbe 100 y Halcón queda con vida 0 (eliminado). La jugada quedó guardada y el AWP con 3 balas. |
+| Rechazo de A2: sin mira | 409 | `RechazoDeA2Exception`; Matías respondió 400 «El francotirador no está estabilizado». |
+| Rechazo de A3: contra Aliado | 409 | `RechazoDeA3Exception`; Joaquín respondió 422 «Fuego amigo: Sombra y Aliado son del mismo equipo (ANTITERRORISTAS)». |
+| Después de los rechazos | 200 | Sigue una sola jugada y el AWP con 3 balas: los rechazos no cambiaron nada. |
 
 ### Si un compañero no responde
 
 El escenario devuelve 503 con `rechazadoPor` y no guarda nada. Mi cliente está en el código, las URL están en
-este README y las respuestas reales quedan guardadas en `insomnia/respuestas/`. Lo que hice cuando un
-compañero no respondía se anota acá.
+este README y las respuestas reales quedan guardadas en `insomnia/respuestas/`.
+
+En la prueba real no hubo compañeros caídos: los tres servicios corrieron en mi máquina y respondieron en el
+primer intento. Coordinamos por WhatsApp: Matías agregó su consulta sin estado
+(`/api/reglas/disparo-rapido`) y aclaró que arranca en el 8080 (yo lo tenía en el 8084), y confirmé los
+contratos de los dos con sus OpenAPI.
 
 ### Qué hay que pensar (POO-09)
 
