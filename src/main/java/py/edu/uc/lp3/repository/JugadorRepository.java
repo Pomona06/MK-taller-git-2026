@@ -10,4 +10,7 @@ public interface JugadorRepository extends JpaRepository<Jugador, Long> {
 
     /** Los jugadores que ya quedaron con vida 0 (o los que siguen vivos). */
     List<Jugador> findByVidaGreaterThan(int vida);
+
+    /** Cuántos jugadores tiene un equipo (CT o TT), vivos o eliminados: todos siguen en la partida. */
+    long countByEquipo(String equipo);
 }

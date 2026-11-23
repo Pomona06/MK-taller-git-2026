@@ -1,10 +1,13 @@
 package py.edu.uc.lp3.rest.controller;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import py.edu.uc.lp3.exceptions.CompaneroNoDisponibleException;
+import py.edu.uc.lp3.exceptions.EquipoCompletoException;
 import py.edu.uc.lp3.exceptions.GranadaUsadaException;
 import py.edu.uc.lp3.exceptions.JugadorEliminadoException;
 import py.edu.uc.lp3.exceptions.JuegoException;
@@ -45,6 +48,12 @@ public class ManejadorErrores {
     @ExceptionHandler(JugadorEliminadoException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse jugadorEliminado(JugadorEliminadoException e) {
+        return cuerpo(e);
+    }
+
+    @ExceptionHandler(EquipoCompletoException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse equipoCompleto(EquipoCompletoException e) {
         return cuerpo(e);
     }
 

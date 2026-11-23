@@ -5,6 +5,8 @@ public final class ReglasJuego {
 
     /** Vida con la que empieza cada ronda. */
     public static final int VIDA_INICIAL = 100;
+    /** Jugadores por equipo en una partida competitiva (Premier y Competitivo: 5 contra 5). */
+    public static final int JUGADORES_POR_EQUIPO = 5;
     /** Blindaje de un Kevlar nuevo. */
     public static final int BLINDAJE_KEVLAR = 100;
     /** Precio del Kevlar (item_kevlar, m_nPrice en weapons.vdata). */
