@@ -90,7 +90,7 @@ public class ReglasController {
                     value = "{\"modelo\": \"AK-47\", \"distancia\": 10, \"vida\": 100, \"blindaje\": 100}"),
             @ExampleObject(name = "Jugador eliminado (409)", value = "{\"modelo\": \"AK-47\", \"vida\": 0}")}))
     @ApiResponse(responseCode = "200", description = "La regla lo permite; el cuerpo trae el resultado del impacto")
-    @ApiResponse(responseCode = "400", description = "Modelo inexistente, distancia negativa, vida o blindaje fuera de 0 a 100",
+    @ApiResponse(responseCode = "400", description = "Modelo inexistente, distancia negativa o mayor al alcance del arma, vida o blindaje fuera de 0 a 100",
             content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "409", description = "JugadorEliminadoException: el jugador ya tiene vida 0",
             content = @Content(schema = @Schema(implementation = ErrorResponse.class)))

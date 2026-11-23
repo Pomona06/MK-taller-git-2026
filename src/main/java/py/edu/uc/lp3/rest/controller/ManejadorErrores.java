@@ -1,10 +1,13 @@
 package py.edu.uc.lp3.rest.controller;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import py.edu.uc.lp3.exceptions.CompaneroNoDisponibleException;
+import py.edu.uc.lp3.exceptions.EquipoCompletoException;
 import py.edu.uc.lp3.exceptions.GranadaUsadaException;
 import py.edu.uc.lp3.exceptions.JugadorEliminadoException;
 import py.edu.uc.lp3.exceptions.JuegoException;
@@ -15,9 +18,10 @@ import py.edu.uc.lp3.exceptions.RechazoDeA3Exception;
 import py.edu.uc.lp3.exceptions.RechazoDeCompaneroException;
 import py.edu.uc.lp3.exceptions.ValorInvalidoException;
 
-
 /**
- * Un handler por cada tipo de la jerarquía JuegoException. Las reglas viven en
+ * Un handler por cada tipo de la jerarquía JuegoException, y dos para los
+ * pedidos que Spring no puede leer (JSON mal escrito o un parámetro de otro
+ * tipo), así todos los errores tienen el mismo formato. Las reglas viven en
  * los servicios; acá solo se elige el código HTTP y se devuelve el mensaje de
  * la excepción junto con su tipo.
  */
@@ -48,6 +52,12 @@ public class ManejadorErrores {
         return cuerpo(e);
     }
 
+    @ExceptionHandler(EquipoCompletoException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse equipoCompleto(EquipoCompletoException e) {
+        return cuerpo(e);
+    }
+
     @ExceptionHandler(GranadaUsadaException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse granadaUsada(GranadaUsadaException e) {
@@ -74,6 +84,22 @@ public class ManejadorErrores {
     public ErrorDeCompaneroResponse companeroNoDisponible(CompaneroNoDisponibleException e) {
         return new ErrorDeCompaneroResponse(e.getMessage(), e.getClass().getSimpleName(), e.getRol(),
                 e.getCompanero(), null, null);
+    }
+
+    /** El cuerpo no es un JSON válido o un campo trae otro tipo (un texto donde va un número). */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse jsonIlegible(HttpMessageNotReadableException e) {
+        return new ErrorResponse("el cuerpo no es un JSON válido o un campo tiene otro tipo "
+                + "(por ejemplo, un texto donde va un número)", e.getClass().getSimpleName());
+    }
+
+    /** Un id de la ruta o un parámetro de la URL no es del tipo esperado (/api/armas/abc). */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse parametroIlegible(MethodArgumentTypeMismatchException e) {
+        return new ErrorResponse("el parámetro " + e.getName() + " no es válido: " + e.getValue(),
+                e.getClass().getSimpleName());
     }
 
     private ErrorDeCompaneroResponse rechazo(RechazoDeCompaneroException e) {

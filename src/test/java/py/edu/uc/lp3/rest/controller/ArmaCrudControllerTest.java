@@ -125,6 +125,16 @@ class ArmaCrudControllerTest {
         patchJson("/api/armas/" + id, "{\"modoRafaga\":true}").andExpect(status().isOk());
         mvc.perform(post("/api/armas/" + id + "/disparos")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.arma.carga").value(22));
+        // 3 balas × 715827883 ráfagas no entra en un int: antes se desbordaba, pasaba la regla y el
+        // servidor intentaba disparar 715 millones de veces. Ahora es munición insuficiente.
+        mvc.perform(post("/api/armas/" + id + "/disparos").param("veces", "715827883"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.excepcion").value("MunicionInsuficienteException"));
+        mvc.perform(post("/api/armas/" + id + "/disparos").param("distancia", "300"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(get("/api/armas/" + id)).andExpect(jsonPath("$.carga").value(22));
+        mvc.perform(get("/api/armas/abc")).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.excepcion").value("MethodArgumentTypeMismatchException"));
     }
 
     @Test
@@ -202,6 +212,18 @@ class ArmaCrudControllerTest {
         mvc.perform(get("/api/jugadores/" + enemigo)).andExpect(jsonPath("$.vida").value(41));
     }
 
+    /** ¿Esto puede pasar en el juego? No: en CS2 se juega cinco contra cinco. */
+    @Test
+    void unEquipoTieneHastaCincoJugadores() throws Exception {
+        for (int i = 1; i <= 5; i++) {
+            crearJugador("{\"nombre\":\"CT " + i + "\",\"equipo\":\"CT\"}");
+        }
+        postJson("/api/jugadores", "{\"nombre\":\"Sexto\",\"equipo\":\"CT\"}").andExpect(status().isConflict())
+                .andExpect(jsonPath("$.excepcion").value("EquipoCompletoException"));
+        assertEquals(5, jugadorRepository.count());
+        crearJugador("{\"nombre\":\"Primer TT\",\"equipo\":\"TT\"}");
+    }
+
     @Test
     void datosIlegalesOInexistentesEnJugadoresYSimulacion() throws Exception {
         postJson("/api/jugadores", "{\"nombre\":\"  \"}").andExpect(status().isBadRequest())
@@ -217,6 +239,9 @@ class ArmaCrudControllerTest {
         simular(ak, 9999L, 10).andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error", containsString("jugador")));
         simular(ak, enemigo, -1).andExpect(status().isBadRequest());
+        // La bala del AK-47 llega hasta 208 m: a 500 m no le pega a nadie.
+        simular(ak, enemigo, 500).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error", containsString("llega hasta 208 m")));
         postJson("/api/simulaciones/dano", "{\"armaId\":" + ak + "}").andExpect(status().isBadRequest());
         mvc.perform(get("/api/jugadores/9999")).andExpect(status().isNotFound());
         mvc.perform(get("/api/armas/" + ak)).andExpect(jsonPath("$.carga").value(30));

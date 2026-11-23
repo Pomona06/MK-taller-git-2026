@@ -55,6 +55,7 @@ public class SimulacionServiceImpl implements SimulacionService {
         if (jugador.estaEliminado()) {
             throw new JugadorEliminadoException(jugador.getNombre());          // regla de vida
         }
+        ReglasDeArmas.verificarAlcance(arma.getModelo(), distancia);            // la bala tiene que llegar
         ReglasDeArmas.verificarQuePuedeDisparar(arma, 1);                       // regla de munición
 
         int vidaAntes = jugador.getVida();

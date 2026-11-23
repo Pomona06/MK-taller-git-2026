@@ -40,9 +40,9 @@ public class ReglasServiceImpl implements ReglasService {
                         "POST /api/reglas/disparo y POST /api/reglas/recarga",
                         "409 MunicionInsuficienteException o GranadaUsadaException"),
                 new ReglaResponse("Regla de vida",
-                        "El daño baja con la distancia, el chaleco desvía una parte según la relación de "
-                                + "blindaje del arma, la vida queda entre 0 y 100 y un jugador eliminado no recibe "
-                                + "más daño.",
+                        "El daño baja con la distancia (la bala llega hasta el alcance del arma), el chaleco "
+                                + "desvía una parte según la relación de blindaje del arma, la vida queda entre 0 y "
+                                + "100 y un jugador eliminado no recibe más daño.",
                         "POST /api/reglas/impacto",
                         "409 JugadorEliminadoException"));
     }
@@ -70,12 +70,13 @@ public class ReglasServiceImpl implements ReglasService {
             throw new ValorInvalidoException(modelo.getNombre()
                     + " no tiene modo ráfaga: en CS2 solo lo tienen la Glock-18 y la FAMAS");
         }
-        int necesarias = (rafaga ? ReglasJuego.BALAS_POR_RAFAGA : 1) * veces;
+        // long: con un int, 3 balas × 715 millones de ráfagas se desborda y da un número negativo.
+        long necesarias = (long) (rafaga ? ReglasJuego.BALAS_POR_RAFAGA : 1) * veces;
         if (carga < necesarias) {
             throw new MunicionInsuficienteException(modelo.getNombre() + " no puede disparar: el cargador tiene "
                     + carga + " balas y hacen falta " + necesarias);
         }
-        return new ConsultaDisparoResponse(true, modelo.getNombre(), necesarias, carga - necesarias,
+        return new ConsultaDisparoResponse(true, modelo.getNombre(), (int) necesarias, carga - (int) necesarias,
                 modelo.getNombre() + " puede disparar " + veces + (veces == 1 ? " vez" : " veces"));
     }
 
@@ -106,6 +107,7 @@ public class ReglasServiceImpl implements ReglasService {
     public ConsultaImpactoResponse consultarImpacto(ConsultaImpactoRequest p) {
         CatalogoArmas modelo = modeloDel(p == null ? null : p.modelo());
         double distancia = ReglasDeArmas.distancia(p.distancia());
+        ReglasDeArmas.verificarAlcance(modelo, distancia);
         int vida = p.vida() == null ? ReglasJuego.VIDA_INICIAL : p.vida();
         int blindaje = p.blindaje() == null ? 0 : p.blindaje();
         if (vida < 0 || vida > ReglasJuego.VIDA_INICIAL) {

@@ -29,7 +29,8 @@
         "a3_url": "http://localhost:8083",
         "escenarioArmaId": 6,
         "escenarioObjetivoId": 3,
-        "aliadoId": 4
+        "aliadoId": 4,
+        "escenarioTiradorId": 5
       },
       "dataPropertyOrder": {
         "&": [
@@ -44,7 +45,8 @@
           "a3_url",
           "escenarioArmaId",
           "escenarioObjetivoId",
-          "aliadoId"
+          "aliadoId",
+          "escenarioTiradorId"
         ]
       },
       "color": null,
@@ -1633,10 +1635,10 @@
       "_id": "req_mk_66",
       "_type": "request",
       "parentId": "fld_mk_6",
-      "name": "POST escenario feliz: disparo rápido con mira contra Halcón",
-      "description": "201: A2 acepta (con mira, estabilidad 1.0, 5 balas) y A3 acepta (enemigo vivo). El AWP gasta 2 balas y Halcón queda con la vida y el blindaje que calculó A3. Se guarda la jugada.",
+      "name": "POST crear tirador Sombra (CT), del equipo del AWP",
+      "description": "201: id 5. Copiar el id a escenarioTiradorId. Es quien dispara: un jugador guardado, vivo y del mismo equipo que el arma.",
       "method": "POST",
-      "url": "{{ _.base_url }}/api/escenarios/disparos-rapidos",
+      "url": "{{ _.base_url }}/api/jugadores",
       "parameters": [],
       "headers": [
         {
@@ -1653,19 +1655,24 @@
       "settingRebuildPath": true,
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"armaId\": {{ _.escenarioArmaId }},\n  \"objetivoId\": {{ _.escenarioObjetivoId }},\n  \"tirador\": \"Sombra\",\n  \"distancia\": 40,\n  \"conMira\": true\n}"
+        "text": "{\n  \"nombre\": \"Sombra\",\n  \"equipo\": \"CT\"\n}"
       }
     },
     {
       "_id": "req_mk_67",
       "_type": "request",
       "parentId": "fld_mk_6",
-      "name": "GET jugadas guardadas",
-      "description": "200: una jugada, con lo que respondió cada compañero.",
-      "method": "GET",
+      "name": "POST escenario feliz: disparo rápido con mira contra Halcón",
+      "description": "201: A2 acepta (con mira, estabilidad 1.0, 5 balas) y A3 acepta (enemigo vivo). El AWP gasta 2 balas y Halcón queda con la vida y el blindaje que calculó A3. Se guarda la jugada.",
+      "method": "POST",
       "url": "{{ _.base_url }}/api/escenarios/disparos-rapidos",
       "parameters": [],
-      "headers": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
       "authentication": {},
       "metaSortKey": 670,
       "settingStoreCookies": true,
@@ -1673,16 +1680,19 @@
       "settingFollowRedirects": "global",
       "settingEncodeUrl": true,
       "settingRebuildPath": true,
-      "body": {}
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"armaId\": {{ _.escenarioArmaId }},\n  \"tiradorId\": {{ _.escenarioTiradorId }},\n  \"objetivoId\": {{ _.escenarioObjetivoId }},\n  \"distancia\": 40,\n  \"conMira\": true\n}"
+      }
     },
     {
       "_id": "req_mk_68",
       "_type": "request",
       "parentId": "fld_mk_6",
-      "name": "GET AWP después del escenario",
-      "description": "200: carga 3 de 5.",
+      "name": "GET jugadas guardadas",
+      "description": "200: una jugada, con lo que respondió cada compañero.",
       "method": "GET",
-      "url": "{{ _.base_url }}/api/armas/{{ _.escenarioArmaId }}",
+      "url": "{{ _.base_url }}/api/escenarios/disparos-rapidos",
       "parameters": [],
       "headers": [],
       "authentication": {},
@@ -1698,10 +1708,10 @@
       "_id": "req_mk_69",
       "_type": "request",
       "parentId": "fld_mk_6",
-      "name": "GET Halcón después del escenario",
-      "description": "200: la vida y el blindaje que calculó A3.",
+      "name": "GET AWP después del escenario",
+      "description": "200: carga 3 de 5.",
       "method": "GET",
-      "url": "{{ _.base_url }}/api/jugadores/{{ _.escenarioObjetivoId }}",
+      "url": "{{ _.base_url }}/api/armas/{{ _.escenarioArmaId }}",
       "parameters": [],
       "headers": [],
       "authentication": {},
@@ -1717,17 +1727,12 @@
       "_id": "req_mk_70",
       "_type": "request",
       "parentId": "fld_mk_6",
-      "name": "409 rechazo de A2: disparo rápido sin mira (RechazoDeA2Exception)",
-      "description": "409: sin mira la estabilidad es 0.5 y la regla de Matías pide más de 0.7. No se consulta a A3 y no cambia nada.",
-      "method": "POST",
-      "url": "{{ _.base_url }}/api/escenarios/disparos-rapidos",
+      "name": "GET Halcón después del escenario",
+      "description": "200: la vida y el blindaje que calculó A3.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/jugadores/{{ _.escenarioObjetivoId }}",
       "parameters": [],
-      "headers": [
-        {
-          "name": "Content-Type",
-          "value": "application/json"
-        }
-      ],
+      "headers": [],
       "authentication": {},
       "metaSortKey": 700,
       "settingStoreCookies": true,
@@ -1735,17 +1740,14 @@
       "settingFollowRedirects": "global",
       "settingEncodeUrl": true,
       "settingRebuildPath": true,
-      "body": {
-        "mimeType": "application/json",
-        "text": "{\n  \"armaId\": {{ _.escenarioArmaId }},\n  \"objetivoId\": {{ _.escenarioObjetivoId }},\n  \"tirador\": \"Sombra\",\n  \"distancia\": 40,\n  \"conMira\": false\n}"
-      }
+      "body": {}
     },
     {
       "_id": "req_mk_71",
       "_type": "request",
       "parentId": "fld_mk_6",
-      "name": "409 rechazo de A3: fuego amigo contra Aliado (RechazoDeA3Exception)",
-      "description": "409: Aliado es del mismo equipo que el AWP (CT) y la regla de Joaquín no permite fuego amigo. No cambia nada.",
+      "name": "409 rechazo de A2: disparo rápido sin mira (RechazoDeA2Exception)",
+      "description": "409: sin mira la estabilidad es 0.5 y la regla de Matías pide más de 0.7. No se consulta a A3 y no cambia nada.",
       "method": "POST",
       "url": "{{ _.base_url }}/api/escenarios/disparos-rapidos",
       "parameters": [],
@@ -1764,21 +1766,102 @@
       "settingRebuildPath": true,
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"armaId\": {{ _.escenarioArmaId }},\n  \"objetivoId\": {{ _.aliadoId }},\n  \"tirador\": \"Sombra\",\n  \"distancia\": 40,\n  \"conMira\": true\n}"
+        "text": "{\n  \"armaId\": {{ _.escenarioArmaId }},\n  \"tiradorId\": {{ _.escenarioTiradorId }},\n  \"objetivoId\": {{ _.escenarioObjetivoId }},\n  \"distancia\": 40,\n  \"conMira\": false\n}"
       }
     },
     {
       "_id": "req_mk_72",
       "_type": "request",
       "parentId": "fld_mk_6",
+      "name": "409 rechazo de A3: fuego amigo contra Aliado (RechazoDeA3Exception)",
+      "description": "409: Aliado es del mismo equipo que el AWP (CT) y la regla de Joaquín no permite fuego amigo. No cambia nada.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/escenarios/disparos-rapidos",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 720,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"armaId\": {{ _.escenarioArmaId }},\n  \"tiradorId\": {{ _.escenarioTiradorId }},\n  \"objetivoId\": {{ _.aliadoId }},\n  \"distancia\": 40,\n  \"conMira\": true\n}"
+      }
+    },
+    {
+      "_id": "req_mk_73",
+      "_type": "request",
+      "parentId": "fld_mk_6",
+      "name": "400 Halcón (TT) no usa el AWP de los CT (ValorInvalidoException)",
+      "description": "400: el tirador tiene que ser del equipo del arma. Se rechaza antes de consultar a A2 y A3.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/escenarios/disparos-rapidos",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 730,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"armaId\": {{ _.escenarioArmaId }},\n  \"tiradorId\": {{ _.escenarioObjetivoId }},\n  \"objetivoId\": {{ _.aliadoId }},\n  \"distancia\": 40,\n  \"conMira\": true\n}"
+      }
+    },
+    {
+      "_id": "req_mk_74",
+      "_type": "request",
+      "parentId": "fld_mk_6",
+      "name": "400 a 300 m la bala del AWP no llega (ValorInvalidoException)",
+      "description": "400: en CS2 la bala del AWP llega hasta 208 m (m_flRange). Se rechaza antes de consultar a A2 y A3.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/escenarios/disparos-rapidos",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 740,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"armaId\": {{ _.escenarioArmaId }},\n  \"tiradorId\": {{ _.escenarioTiradorId }},\n  \"objetivoId\": {{ _.escenarioObjetivoId }},\n  \"distancia\": 300,\n  \"conMira\": true\n}"
+      }
+    },
+    {
+      "_id": "req_mk_75",
+      "_type": "request",
+      "parentId": "fld_mk_6",
       "name": "GET jugadas después de los rechazos (sigue 1)",
-      "description": "200: sigue habiendo una sola jugada.",
+      "description": "200: sigue habiendo una sola jugada: ningún rechazo guardó nada.",
       "method": "GET",
       "url": "{{ _.base_url }}/api/escenarios/disparos-rapidos",
       "parameters": [],
       "headers": [],
       "authentication": {},
-      "metaSortKey": 720,
+      "metaSortKey": 750,
       "settingStoreCookies": true,
       "settingSendCookies": true,
       "settingFollowRedirects": "global",
@@ -1787,7 +1870,7 @@
       "body": {}
     },
     {
-      "_id": "req_mk_73",
+      "_id": "req_mk_76",
       "_type": "request",
       "parentId": "fld_mk_6",
       "name": "GET AWP después de los rechazos (sigue con 3)",
@@ -1797,13 +1880,94 @@
       "parameters": [],
       "headers": [],
       "authentication": {},
-      "metaSortKey": 730,
+      "metaSortKey": 760,
       "settingStoreCookies": true,
       "settingSendCookies": true,
       "settingFollowRedirects": "global",
       "settingEncodeUrl": true,
       "settingRebuildPath": true,
       "body": {}
+    },
+    {
+      "_id": "req_mk_77",
+      "_type": "request",
+      "parentId": "fld_mk_6",
+      "name": "POST crear Relevo 1 (CT): el cuarto CT",
+      "description": "201: los CT son Enemigo, Aliado, Sombra y Relevo 1.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/jugadores",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 770,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nombre\": \"Relevo 1\",\n  \"equipo\": \"CT\"\n}"
+      }
+    },
+    {
+      "_id": "req_mk_78",
+      "_type": "request",
+      "parentId": "fld_mk_6",
+      "name": "POST crear Relevo 2 (CT): el quinto CT",
+      "description": "201: el equipo CT queda completo con 5.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/jugadores",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 780,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nombre\": \"Relevo 2\",\n  \"equipo\": \"CT\"\n}"
+      }
+    },
+    {
+      "_id": "req_mk_79",
+      "_type": "request",
+      "parentId": "fld_mk_6",
+      "name": "409 un sexto CT (EquipoCompletoException)",
+      "description": "409: en CS2 se juega 5 contra 5. No se crea el jugador.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/jugadores",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 790,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nombre\": \"Sexto\",\n  \"equipo\": \"CT\"\n}"
+      }
     }
   ]
 }

@@ -95,8 +95,8 @@ Rechazo: `{"modelo":"AWP","carga":0,"cargadoresRestantes":0}` responde 409.
 
 ### Regla de vida: impacto
 
-Campos: `modelo`, `distancia` en metros (omitida = 10), `vida` (omitida = 100) y `blindaje` (omitido = 0,
-sin chaleco).
+Campos: `modelo`, `distancia` en metros (omitida = 10; hasta el alcance del arma en CS2: 208 m los rifles y
+francotiradores, 104 m las pistolas), `vida` (omitida = 100) y `blindaje` (omitido = 0, sin chaleco).
 
 ```bash
 curl -X POST localhost:8082/api/reglas/impacto -H "Content-Type: application/json" \
@@ -106,7 +106,8 @@ curl -X POST localhost:8082/api/reglas/impacto -H "Content-Type: application/jso
 {"permitido":true,"modelo":"AK-47","danoSinBlindaje":35,"vidaPerdida":27,"blindajePerdido":3,"vidaDespues":73,"blindajeDespues":97,"eliminado":false}
 ```
 
-Rechazo: `{"modelo":"AK-47","vida":0}` (jugador ya eliminado) responde 409.
+Rechazo: `{"modelo":"AK-47","vida":0}` (jugador ya eliminado) responde 409. Una distancia mayor al alcance
+del arma (por ejemplo, la USP-S a 150 m) responde 400: en el juego la bala no llega.
 
 ## Qué te pido a cambio
 

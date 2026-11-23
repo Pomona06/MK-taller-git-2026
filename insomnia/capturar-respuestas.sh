@@ -12,6 +12,7 @@ A2="${A2_URL:-http://localhost:8080}"   # Matías: disparo rápido
 A3="${A3_URL:-http://localhost:8083}"   # Joaquín: daño con blindaje
 DIR="$(cd "$(dirname "$0")" && pwd)/respuestas"
 mkdir -p "$DIR"
+rm -f "$DIR"/[0-9][0-9]-*.json   # las de una captura anterior
 RESUMEN="$DIR/resumen.md"
 
 {
@@ -52,14 +53,17 @@ pedir 03 openapi-a3 GET "$A3/v3/api-docs"
 pedir 04 crear-awp POST "$A1/api/armas" '{"modelo":"AWP","equipo":"CT"}';                 AWP=$(id_de_la_ultima)
 pedir 05 crear-halcon POST "$A1/api/jugadores" '{"nombre":"Halcón","equipo":"TT","chaleco":true}'; HALCON=$(id_de_la_ultima)
 pedir 06 crear-aliado POST "$A1/api/jugadores" '{"nombre":"Aliado","equipo":"CT"}';         ALIADO=$(id_de_la_ultima)
-pedir 07 escenario-feliz POST "$A1/api/escenarios/disparos-rapidos" "{\"armaId\":$AWP,\"objetivoId\":$HALCON,\"tirador\":\"Sombra\",\"distancia\":40,\"conMira\":true}"
-pedir 08 jugadas GET "$A1/api/escenarios/disparos-rapidos"
-pedir 09 awp-despues GET "$A1/api/armas/$AWP"
-pedir 10 halcon-despues GET "$A1/api/jugadores/$HALCON"
-pedir 11 rechazo-a2-sin-mira POST "$A1/api/escenarios/disparos-rapidos" "{\"armaId\":$AWP,\"objetivoId\":$HALCON,\"tirador\":\"Sombra\",\"distancia\":40,\"conMira\":false}"
-pedir 12 rechazo-a3-fuego-amigo POST "$A1/api/escenarios/disparos-rapidos" "{\"armaId\":$AWP,\"objetivoId\":$ALIADO,\"tirador\":\"Sombra\",\"distancia\":40,\"conMira\":true}"
-pedir 13 jugadas-despues-de-los-rechazos GET "$A1/api/escenarios/disparos-rapidos"
-pedir 14 awp-despues-de-los-rechazos GET "$A1/api/armas/$AWP"
+pedir 07 crear-sombra POST "$A1/api/jugadores" '{"nombre":"Sombra","equipo":"CT"}';         SOMBRA=$(id_de_la_ultima)
+pedir 08 escenario-feliz POST "$A1/api/escenarios/disparos-rapidos" "{\"armaId\":$AWP,\"tiradorId\":$SOMBRA,\"objetivoId\":$HALCON,\"distancia\":40,\"conMira\":true}"
+pedir 09 jugadas GET "$A1/api/escenarios/disparos-rapidos"
+pedir 10 awp-despues GET "$A1/api/armas/$AWP"
+pedir 11 halcon-despues GET "$A1/api/jugadores/$HALCON"
+pedir 12 rechazo-a2-sin-mira POST "$A1/api/escenarios/disparos-rapidos" "{\"armaId\":$AWP,\"tiradorId\":$SOMBRA,\"objetivoId\":$HALCON,\"distancia\":40,\"conMira\":false}"
+pedir 13 rechazo-a3-fuego-amigo POST "$A1/api/escenarios/disparos-rapidos" "{\"armaId\":$AWP,\"tiradorId\":$SOMBRA,\"objetivoId\":$ALIADO,\"distancia\":40,\"conMira\":true}"
+pedir 14 rechazo-propio-tirador-de-otro-equipo POST "$A1/api/escenarios/disparos-rapidos" "{\"armaId\":$AWP,\"tiradorId\":$HALCON,\"objetivoId\":$ALIADO,\"distancia\":40,\"conMira\":true}"
+pedir 15 rechazo-propio-fuera-de-alcance POST "$A1/api/escenarios/disparos-rapidos" "{\"armaId\":$AWP,\"tiradorId\":$SOMBRA,\"objetivoId\":$HALCON,\"distancia\":300,\"conMira\":true}"
+pedir 16 jugadas-despues-de-los-rechazos GET "$A1/api/escenarios/disparos-rapidos"
+pedir 17 awp-despues-de-los-rechazos GET "$A1/api/armas/$AWP"
 
 echo
 echo "Listo: respuestas en $DIR (resumen en $RESUMEN)."

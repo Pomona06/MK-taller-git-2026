@@ -10,6 +10,7 @@ import py.edu.uc.lp3.domain.Jugada;
 import py.edu.uc.lp3.domain.Jugador;
 import py.edu.uc.lp3.domain.Sniper;
 import py.edu.uc.lp3.exceptions.CompaneroNoDisponibleException;
+import py.edu.uc.lp3.exceptions.JugadorEliminadoException;
 import py.edu.uc.lp3.exceptions.RecursoNoEncontradoException;
 import py.edu.uc.lp3.exceptions.ValorInvalidoException;
 import py.edu.uc.lp3.repository.ArmaRepository;
@@ -22,9 +23,12 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * POO-09. El escenario: un jugador hace un disparo rápido (dos balas de una
- * vez) con un francotirador guardado contra un jugador guardado. Es legal solo
- * si lo aceptan las reglas de los dos compañeros:
+ * POO-09. El escenario: un jugador guardado hace un disparo rápido (dos balas
+ * de una vez) con un francotirador de su equipo contra otro jugador guardado.
+ * Antes de consultar a nadie se controla lo propio: que existan, que el arma
+ * sea un francotirador de su equipo, que la bala llegue a esa distancia, que
+ * el tirador esté vivo y que no se dispare a sí mismo. Es legal solo si lo
+ * aceptan las reglas de los dos compañeros:
  *
  * 1. A2 (Matías), disparo rápido: el francotirador tiene que estar estable
  *    (con mira = 1.0, sin mira = 0.5; su regla pide más de 0.7) y tener al
@@ -45,7 +49,6 @@ public class EscenarioServiceImpl implements EscenarioService {
     static final int BALAS_DEL_DISPARO_RAPIDO = 2;
     static final double ESTABILIDAD_CON_MIRA = 1.0;
     static final double ESTABILIDAD_SIN_MIRA = 0.5;
-    private static final int LARGO_MAXIMO_TIRADOR = 32;
 
     private final ArmaRepository armaRepository;
     private final JugadorRepository jugadorRepository;
@@ -67,11 +70,13 @@ public class EscenarioServiceImpl implements EscenarioService {
 
     @Override
     public Jugada disparoRapido(DisparoRapidoRequest p) {
-        if (p == null || p.armaId() == null || p.objetivoId() == null) {
-            throw new ValorInvalidoException("el escenario necesita armaId y objetivoId");
+        if (p == null || p.armaId() == null || p.tiradorId() == null || p.objetivoId() == null) {
+            throw new ValorInvalidoException("el escenario necesita armaId, tiradorId y objetivoId");
+        }
+        if (p.tiradorId().equals(p.objetivoId())) {
+            throw new ValorInvalidoException("el tirador y el objetivo son el mismo jugador: nadie se dispara a sí mismo");
         }
         double distancia = ReglasDeArmas.distancia(p.distancia());
-        String tirador = nombreDelTirador(p.tirador());
         boolean conMira = Boolean.TRUE.equals(p.conMira());
 
         Armas arma = armaRepository.findById(p.armaId())
@@ -80,10 +85,16 @@ public class EscenarioServiceImpl implements EscenarioService {
             throw new ValorInvalidoException(arma.getNombre()
                     + " no es un francotirador: el disparo rápido es con AWP o SSG 08");
         }
-        Jugador objetivo = jugadorRepository.findById(p.objetivoId())
-                .orElseThrow(() -> new RecursoNoEncontradoException("un jugador", p.objetivoId()));
-        if (objetivo.getEquipo() == null) {
-            throw new ValorInvalidoException(objetivo.getNombre() + " no tiene equipo: creá el jugador con CT o TT");
+        ReglasDeArmas.verificarAlcance(sniper.getModelo(), distancia);
+        Jugador tirador = jugadorConEquipo(p.tiradorId());
+        Jugador objetivo = jugadorConEquipo(p.objetivoId());
+        if (!tirador.getEquipo().equals(sniper.getEquipo())) {
+            throw new ValorInvalidoException(tirador.getNombre() + " es del equipo " + tirador.getEquipo() + " y el "
+                    + sniper.getNombre() + " (id " + sniper.getId() + ") es del equipo " + sniper.getEquipo()
+                    + ": solo lo usa un jugador de su equipo");
+        }
+        if (tirador.estaEliminado()) {
+            throw new JugadorEliminadoException(tirador.getNombre(), "disparar");
         }
 
         // 1. A2: ¿el disparo rápido es posible?
@@ -92,7 +103,7 @@ public class EscenarioServiceImpl implements EscenarioService {
 
         // 2. A3: ¿qué le hacen las dos balas al objetivo?
         int danio = sniper.danoA(distancia) * BALAS_DEL_DISPARO_RAPIDO;
-        ResultadoDanioA3 resultadoA3 = a3.consultar(tirador, sniper.getEquipo(), objetivo.getNombre(),
+        ResultadoDanioA3 resultadoA3 = a3.consultar(tirador.getNombre(), tirador.getEquipo(), objetivo.getNombre(),
                 objetivo.getEquipo(), objetivo.getVida(), objetivo.getBlindaje(), danio);
         if (resultadoA3.vidaFinal() < 0 || resultadoA3.vidaFinal() > objetivo.getVida()
                 || resultadoA3.blindajeFinal() < 0 || resultadoA3.blindajeFinal() > objetivo.getBlindaje()) {
@@ -101,19 +112,18 @@ public class EscenarioServiceImpl implements EscenarioService {
         }
 
         // 3. Los dos aceptaron: recién ahora se toca la base.
-        return registro.guardar(new JugadaAceptada(sniper.getId(), objetivo.getId(), tirador, distancia, conMira,
+        return registro.guardar(new JugadaAceptada(sniper.getId(), tirador.getId(), objetivo.getId(), distancia, conMira,
                 estabilidad, danio, respuestaA2, resultadoA3));
     }
 
-    private static String nombreDelTirador(String texto) {
-        if (texto == null || texto.isBlank()) {
-            return "Tirador";
+    /** Un jugador guardado que tiene equipo (los guardados antes de POO-09 pueden no tenerlo). */
+    private Jugador jugadorConEquipo(Long id) {
+        Jugador jugador = jugadorRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("un jugador", id));
+        if (jugador.getEquipo() == null) {
+            throw new ValorInvalidoException(jugador.getNombre() + " no tiene equipo: creá el jugador con CT o TT");
         }
-        String nombre = texto.strip();
-        if (nombre.length() > LARGO_MAXIMO_TIRADOR) {
-            throw new ValorInvalidoException("el nombre del tirador puede tener hasta " + LARGO_MAXIMO_TIRADOR + " caracteres");
-        }
-        return nombre;
+        return jugador;
     }
 
     @Override

@@ -32,7 +32,7 @@ public class SimulacionController {
     @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = @ExampleObject(
             name = "AK-47 contra el jugador 1 a 10 m", value = "{\"armaId\": 1, \"jugadorId\": 1, \"distancia\": 10}")))
     @ApiResponse(responseCode = "200", description = "Qué pasó; el arma y el jugador ya quedaron guardados así")
-    @ApiResponse(responseCode = "400", description = "Faltan armaId o jugadorId, o la distancia es negativa",
+    @ApiResponse(responseCode = "400", description = "Faltan armaId o jugadorId, o la distancia es negativa o mayor al alcance del arma",
             content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "404", description = "RecursoNoEncontradoException: no existe el arma o el jugador",
             content = @Content(schema = @Schema(implementation = ErrorResponse.class)))

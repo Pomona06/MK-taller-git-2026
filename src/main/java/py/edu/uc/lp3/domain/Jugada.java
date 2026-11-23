@@ -23,6 +23,7 @@ public class Jugada {
     private Long id;
 
     private LocalDateTime momento;
+    private Long tiradorId;
     private String tirador;
     private String equipoTirador;
     private Long armaId;
@@ -50,12 +51,13 @@ public class Jugada {
     protected Jugada() {
     }
 
-    public Jugada(LocalDateTime momento, String tirador, String equipoTirador, Long armaId, String arma,
+    public Jugada(LocalDateTime momento, Long tiradorId, String tirador, String equipoTirador, Long armaId, String arma,
                   Long objetivoId, String objetivo, String equipoObjetivo, double distancia, boolean conMira,
                   double estabilidad, int balasGastadas, int cargaDespues, int danio, int vidaAntes,
                   int vidaDespues, int blindajeAntes, int blindajeDespues, boolean eliminado,
                   String respuestaA2, String respuestaA3) {
         this.momento = momento;
+        this.tiradorId = tiradorId;
         this.tirador = tirador;
         this.equipoTirador = equipoTirador;
         this.armaId = armaId;
@@ -80,6 +82,7 @@ public class Jugada {
 
     public Long getId() { return id; }
     public LocalDateTime getMomento() { return momento; }
+    public Long getTiradorId() { return tiradorId; }
     public String getTirador() { return tirador; }
     public String getEquipoTirador() { return equipoTirador; }
     public Long getArmaId() { return armaId; }

@@ -42,5 +42,9 @@ class CatalogoArmasTest {
         assertEquals(5, CatalogoArmas.AWP.getCargador());
         assertEquals(30, CatalogoArmas.AK_47.getCargador());
         assertEquals(0, CatalogoArmas.FLASHBANG.getDano());
+        // m_flRange: 8192 unidades (208 m) los rifles y francotiradores, 4096 (104 m) las pistolas.
+        assertEquals(208, (int) CatalogoArmas.AWP.getAlcanceMetros());
+        assertEquals(104, (int) CatalogoArmas.USP_S.getAlcanceMetros());
+        assertEquals(0, CatalogoArmas.HE.getAlcanceMetros());
     }
 }
