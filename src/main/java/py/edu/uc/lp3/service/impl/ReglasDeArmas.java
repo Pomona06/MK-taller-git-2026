@@ -39,7 +39,8 @@ final class ReglasDeArmas {
                 throw new ValorInvalidoException("una granada se lanza una sola vez: veces debe ser 1");
             }
         } else if (arma instanceof ArmasDeFuego deFuego) {
-            int necesarias = deFuego.balasPorDisparo() * veces;
+            // long: con un int, 3 balas × 715 millones de ráfagas se desborda y da un número negativo.
+            long necesarias = (long) deFuego.balasPorDisparo() * veces;
             if (deFuego.getCarga() < necesarias) {
                 throw new MunicionInsuficienteException(deFuego.getNombre() + " no puede disparar: el cargador tiene "
                         + deFuego.getCarga() + " balas y hacen falta " + necesarias);

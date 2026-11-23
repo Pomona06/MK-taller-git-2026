@@ -70,12 +70,13 @@ public class ReglasServiceImpl implements ReglasService {
             throw new ValorInvalidoException(modelo.getNombre()
                     + " no tiene modo ráfaga: en CS2 solo lo tienen la Glock-18 y la FAMAS");
         }
-        int necesarias = (rafaga ? ReglasJuego.BALAS_POR_RAFAGA : 1) * veces;
+        // long: con un int, 3 balas × 715 millones de ráfagas se desborda y da un número negativo.
+        long necesarias = (long) (rafaga ? ReglasJuego.BALAS_POR_RAFAGA : 1) * veces;
         if (carga < necesarias) {
             throw new MunicionInsuficienteException(modelo.getNombre() + " no puede disparar: el cargador tiene "
                     + carga + " balas y hacen falta " + necesarias);
         }
-        return new ConsultaDisparoResponse(true, modelo.getNombre(), necesarias, carga - necesarias,
+        return new ConsultaDisparoResponse(true, modelo.getNombre(), (int) necesarias, carga - (int) necesarias,
                 modelo.getNombre() + " puede disparar " + veces + (veces == 1 ? " vez" : " veces"));
     }
 
