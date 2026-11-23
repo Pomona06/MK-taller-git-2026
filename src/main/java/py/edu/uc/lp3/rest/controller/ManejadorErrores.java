@@ -4,11 +4,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import py.edu.uc.lp3.exceptions.CompaneroNoDisponibleException;
 import py.edu.uc.lp3.exceptions.GranadaUsadaException;
 import py.edu.uc.lp3.exceptions.JugadorEliminadoException;
 import py.edu.uc.lp3.exceptions.JuegoException;
 import py.edu.uc.lp3.exceptions.MunicionInsuficienteException;
 import py.edu.uc.lp3.exceptions.RecursoNoEncontradoException;
+import py.edu.uc.lp3.exceptions.RechazoDeA2Exception;
+import py.edu.uc.lp3.exceptions.RechazoDeA3Exception;
+import py.edu.uc.lp3.exceptions.RechazoDeCompaneroException;
 import py.edu.uc.lp3.exceptions.ValorInvalidoException;
 
 
@@ -48,6 +52,33 @@ public class ManejadorErrores {
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse granadaUsada(GranadaUsadaException e) {
         return cuerpo(e);
+    }
+
+    /** POO-09: la regla de A2 rechazó la jugada del escenario. */
+    @ExceptionHandler(RechazoDeA2Exception.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorDeCompaneroResponse rechazoDeA2(RechazoDeA2Exception e) {
+        return rechazo(e);
+    }
+
+    /** POO-09: la regla de A3 rechazó la jugada del escenario. */
+    @ExceptionHandler(RechazoDeA3Exception.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorDeCompaneroResponse rechazoDeA3(RechazoDeA3Exception e) {
+        return rechazo(e);
+    }
+
+    /** POO-09: un compañero no respondió; la jugada no se pudo evaluar. */
+    @ExceptionHandler(CompaneroNoDisponibleException.class)
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    public ErrorDeCompaneroResponse companeroNoDisponible(CompaneroNoDisponibleException e) {
+        return new ErrorDeCompaneroResponse(e.getMessage(), e.getClass().getSimpleName(), e.getRol(),
+                e.getCompanero(), null, null);
+    }
+
+    private ErrorDeCompaneroResponse rechazo(RechazoDeCompaneroException e) {
+        return new ErrorDeCompaneroResponse(e.getMessage(), e.getClass().getSimpleName(), e.getRol(),
+                e.getCompanero(), e.getStatusDelCompanero(), e.getRespuestaDelCompanero());
     }
 
     private ErrorResponse cuerpo(JuegoException e) {
