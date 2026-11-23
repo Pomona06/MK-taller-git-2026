@@ -39,12 +39,13 @@ public class JugadorController {
 
     @PostMapping
     @Operation(summary = "Crear un jugador",
-            description = "Empieza con 100 de vida, como en cada ronda. Con \"chaleco\": true, compró Kevlar (100 de blindaje).")
+            description = "Es de un equipo (CT o TT) y empieza con 100 de vida, como en cada ronda. Con \"chaleco\": true, "
+                    + "compró Kevlar (100 de blindaje).")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = {
-            @ExampleObject(name = "Con chaleco", value = "{\"nombre\": \"Enemigo\", \"chaleco\": true}"),
-            @ExampleObject(name = "Sin chaleco", value = "{\"nombre\": \"Bot\"}")}))
+            @ExampleObject(name = "CT con chaleco", value = "{\"nombre\": \"Enemigo\", \"equipo\": \"CT\", \"chaleco\": true}"),
+            @ExampleObject(name = "TT sin chaleco", value = "{\"nombre\": \"Bot\", \"equipo\": \"TT\"}")}))
     @ApiResponse(responseCode = "201", description = "Creado; el cuerpo trae el id")
-    @ApiResponse(responseCode = "400", description = "Nombre vacío o de más de 32 caracteres",
+    @ApiResponse(responseCode = "400", description = "Nombre vacío o de más de 32 caracteres, o equipo distinto de CT o TT",
             content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     public ResponseEntity<Jugador> crear(@RequestBody JugadorRequest pedido) {
         Jugador creado = jugadorService.crear(pedido);

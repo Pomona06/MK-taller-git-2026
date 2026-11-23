@@ -104,3 +104,24 @@ Usé el mismo asistente y el mismo modelo en todos los chats: taller de Git, eje
   modificar mis datos. Publicó el OpenAPI con springdoc (eligió la versión 3.2.0 porque la 3.2.1, de un día
   antes, era para otra versión de Spring Boot), lo validó y revisó que cada operación muestre solo sus
   errores. Escribió la ficha docs/PARA-COMPANEROS.md y probó que el servicio arranca en otro puerto.
+
+### POO-09: el escenario con el grupo
+
+- Le pasé los datos que me mandaron Joaquín y Matías. Revisó sus repositorios: el `main` de Joaquín todavía era
+  su POO-08 y el de Matías no tenía springdoc, así que les pedí que subieran POO-09. Quiso arrancar sus
+  servicios para leer el OpenAPI, pero el control de permisos de la sesión no lo dejó, y el enunciado pide
+  usar solo su OpenAPI y sus reglas escritas; quedé en pedirles el JSON de su OpenAPI.
+- Cuando subieron POO-09, leyó sus README: los puertos acordados (Marcelo 8082, Joaquín 8083, Matías 8084), el
+  contrato de daño de Joaquín y la regla de disparo rápido de Matías. Acepté el escenario que propuso:
+  disparo rápido con francotirador, con Matías como A2 y Joaquín como A3.
+- Lo hizo en commits separados: equipo (CT o TT) en los jugadores, que hace falta para el fuego amigo; los
+  clientes HTTP con las URL configurables; el escenario, que consulta a los dos antes de tocar la base y guarda
+  la jugada en una transacción aparte; la colección de Insomnia con un script para guardar las respuestas
+  reales; y la documentación.
+- Lo probó con servidores falsos que responden como cada compañero. Así encontró que el cliente mandaba el
+  JSON por partes y lo cambió para que vaya con su largo, y que los nombres con acento de
+  `application.properties` salían mal porque Spring lee ese archivo en ISO-8859-1.
+- Matías me avisó que arranca en el 8080, no en el 8084 (Joaquín ya lo había corregido en su README). Le pedí
+  que lo cambie en todo el repositorio. Antes confirmó los contratos de los dos con sus OpenAPI reales, que
+  Joaquín guardó junto con las respuestas de su prueba con los tres servicios: los campos que manda mi
+  cliente coinciden.

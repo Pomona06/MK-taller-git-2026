@@ -25,7 +25,10 @@ public class JugadorServiceImpl implements JugadorService {
         this.jugadorRepository = jugadorRepository;
     }
 
-    /** Un jugador nuevo empieza la ronda con 100 de vida y, si compró Kevlar, con 100 de blindaje. */
+    /**
+     * Un jugador nuevo es de un equipo (CT o TT), empieza la ronda con 100 de
+     * vida y, si compró Kevlar, con 100 de blindaje.
+     */
     @Override
     public Jugador crear(JugadorRequest pedido) {
         if (pedido == null || pedido.nombre() == null || pedido.nombre().isBlank()) {
@@ -35,8 +38,9 @@ public class JugadorServiceImpl implements JugadorService {
         if (nombre.length() > LARGO_MAXIMO_NOMBRE) {
             throw new ValorInvalidoException("el nombre puede tener hasta " + LARGO_MAXIMO_NOMBRE + " caracteres");
         }
+        String equipo = ReglasDeArmas.equipo(pedido.equipo());
         Chaleco chaleco = Boolean.TRUE.equals(pedido.chaleco()) ? new Chaleco() : null;
-        return jugadorRepository.save(new Jugador(nombre, chaleco));
+        return jugadorRepository.save(new Jugador(nombre, equipo, chaleco));
     }
 
     @Override

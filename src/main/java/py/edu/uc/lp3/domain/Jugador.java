@@ -28,6 +28,7 @@ public class Jugador {
     private Long id;
 
     private String nombre;
+    private String equipo; // "CT" o "TT"
     private int vida;
 
     /** null si no compró chaleco. Se guarda y se borra junto con el jugador. */
@@ -44,14 +45,15 @@ public class Jugador {
     protected Jugador() {
     }
 
-    /** Constructor simple: empieza la ronda sin chaleco. */
-    public Jugador(String nombre) {
-        this(nombre, null);
+    /** Constructor simple: empieza la ronda en su equipo, sin chaleco. */
+    public Jugador(String nombre, String equipo) {
+        this(nombre, equipo, null);
     }
 
     /** Sobrecarga: empieza la ronda con el chaleco que compró. */
-    public Jugador(String nombre, Chaleco chaleco) {
+    public Jugador(String nombre, String equipo, Chaleco chaleco) {
         this.nombre = nombre;
+        this.equipo = equipo;
         this.vida = ReglasJuego.VIDA_INICIAL;
         this.chaleco = chaleco;
     }
@@ -74,6 +76,10 @@ public class Jugador {
 
     public String getNombre() {
         return nombre;
+    }
+
+    public String getEquipo() {
+        return equipo;
     }
 
     public int getVida() {

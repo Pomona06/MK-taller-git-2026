@@ -93,7 +93,8 @@ class ArmasTest {
 
     @Test
     void elJugadorEmpiezaCon100YRecibeElImpactoCalculado() {
-        Jugador jugador = new Jugador("Enemigo", new Chaleco());
+        Jugador jugador = new Jugador("Enemigo", "CT", new Chaleco());
+        assertEquals("CT", jugador.getEquipo());
         assertEquals(100, jugador.getVida());
         assertEquals(100, jugador.getBlindaje());
         jugador.recibirImpacto(27, 3);

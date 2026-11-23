@@ -58,6 +58,7 @@ public class OpenApiConfig {
                         .license(new License().name("Apache 2.0")
                                 .url("https://www.apache.org/licenses/LICENSE-2.0")))
                 .tags(List.of(
+                        new Tag().name("Escenario").description("POO-09: disparo rápido que consulta las reglas de A2 y de A3"),
                         new Tag().name("Reglas").description("Consultar las dos reglas sin tocar la base (para otros servicios)"),
                         new Tag().name("Catálogo").description("Las armas de CS2 que se pueden crear"),
                         new Tag().name("Armas").description("CRUD de armas y regla de munición sobre armas guardadas"),
