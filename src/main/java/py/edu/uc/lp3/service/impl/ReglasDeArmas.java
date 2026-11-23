@@ -1,6 +1,7 @@
 package py.edu.uc.lp3.service.impl;
 
 import py.edu.uc.lp3.constants.CatalogoArmas;
+import py.edu.uc.lp3.constants.Categoria;
 import py.edu.uc.lp3.domain.Armas;
 import py.edu.uc.lp3.domain.ArmasDeFuego;
 import py.edu.uc.lp3.domain.Granada;
@@ -46,6 +47,23 @@ final class ReglasDeArmas {
                         + deFuego.getCarga() + " balas y hacen falta " + necesarias);
             }
         }
+    }
+
+    /**
+     * Regla de alcance: la bala de un arma de fuego no llega más lejos que el
+     * alcance de su modelo (m_flRange: 208 m los rifles y francotiradores,
+     * 104 m las pistolas). Las granadas no tiran balas: no se controla.
+     */
+    static void verificarAlcance(CatalogoArmas modelo, double metros) {
+        if (modelo.getCategoria() != Categoria.GRANADA && metros > modelo.getAlcanceMetros()) {
+            throw new ValorInvalidoException("en CS2 la bala de " + modelo.getNombre() + " llega hasta "
+                    + (int) modelo.getAlcanceMetros() + " m: a " + enMetros(metros) + " m no le pega a nadie");
+        }
+    }
+
+    /** 300.0 se escribe 300; 40.5 queda 40.5. */
+    private static String enMetros(double metros) {
+        return metros == Math.rint(metros) ? String.valueOf((long) metros) : String.valueOf(metros);
     }
 
     /** Fábrica: el modelo del catálogo decide la clase hija. Quien llama ya validó modelo y equipo. */

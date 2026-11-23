@@ -151,6 +151,7 @@ public class ArmaServiceImpl implements ArmaService {
         Armas arma = buscar(id);
         double metros = ReglasDeArmas.distancia(distancia);
         int cantidad = veces == null ? 1 : veces;
+        ReglasDeArmas.verificarAlcance(arma.getModelo(), metros);
         ReglasDeArmas.verificarQuePuedeDisparar(arma, cantidad);
         List<String> resultados = new ArrayList<>();
         for (int i = 0; i < cantidad; i++) {

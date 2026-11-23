@@ -109,7 +109,8 @@ public class ArmaCrudController {
             description = "Gasta las balas y guarda la munición; una granada queda lanzada. Si la regla no se "
                     + "cumple, no cambia nada.")
     @ApiResponse(responseCode = "200", description = "Qué pasó en cada disparo y cómo quedó el arma")
-    @ApiResponse(responseCode = "400", description = "Distancia negativa, veces menor que 1 o más de un lanzamiento de granada",
+    @ApiResponse(responseCode = "400", description = "Distancia negativa o mayor al alcance del arma, veces menor que 1 "
+            + "o más de un lanzamiento de granada",
             content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "404", description = "RecursoNoEncontradoException",
             content = @Content(schema = @Schema(implementation = ErrorResponse.class)))

@@ -14,7 +14,8 @@ import java.util.Optional;
  *   (m_nDamage), relación de blindaje (m_flArmorRatio), cargador
  *   (m_iMaxClip1), reserva en cargadores (m_nPrimaryReserveAmmoMax con
  *   m_bReserveAmmoAsClips), automática (m_bIsFullAuto), modo ráfaga
- *   (m_bHasBurstMode) y caída del daño con la distancia (m_flRangeModifier);
+ *   (m_bHasBurstMode), caída del daño con la distancia (m_flRangeModifier)
+ *   y hasta dónde llega la bala (m_flRange);
  * - game/csgo/pak01_dir/scripts/items/items_game.txt: qué equipo puede
  *   comprarla (used_by_classes).
  *
@@ -23,19 +24,19 @@ import java.util.Optional;
  */
 public enum CatalogoArmas {
 
-    AK_47("AK-47", Categoria.RIFLE, 2700, true, false, 36, 1.55, 30, 3, true, false, 0.98),
-    GALIL_AR("Galil AR", Categoria.RIFLE, 1800, true, false, 30, 1.55, 35, 4, true, false, 0.98),
-    M4A4("M4A4", Categoria.RIFLE, 2900, false, true, 33, 1.40, 30, 4, true, false, 0.97),
-    FAMAS("FAMAS", Categoria.RIFLE, 1950, false, true, 30, 1.40, 25, 4, true, true, 0.96),
-    GLOCK_18("Glock-18", Categoria.PISTOLA, 200, true, false, 30, 0.94, 20, 3, false, true, 0.85),
-    USP_S("USP-S", Categoria.PISTOLA, 200, false, true, 35, 1.01, 12, 2, false, false, 0.91),
-    DESERT_EAGLE("Desert Eagle", Categoria.PISTOLA, 700, true, true, 53, 1.864, 7, 3, false, false, 0.85),
-    AWP("AWP", Categoria.SNIPER, 4750, true, true, 115, 1.95, 5, 2, false, false, 0.99),
-    SSG_08("SSG 08", Categoria.SNIPER, 1700, true, true, 88, 1.70, 10, 2, false, false, 0.98),
+    AK_47("AK-47", Categoria.RIFLE, 2700, true, false, 36, 1.55, 30, 3, true, false, 0.98, 8192),
+    GALIL_AR("Galil AR", Categoria.RIFLE, 1800, true, false, 30, 1.55, 35, 4, true, false, 0.98, 8192),
+    M4A4("M4A4", Categoria.RIFLE, 2900, false, true, 33, 1.40, 30, 4, true, false, 0.97, 8192),
+    FAMAS("FAMAS", Categoria.RIFLE, 1950, false, true, 30, 1.40, 25, 4, true, true, 0.96, 8192),
+    GLOCK_18("Glock-18", Categoria.PISTOLA, 200, true, false, 30, 0.94, 20, 3, false, true, 0.85, 4096),
+    USP_S("USP-S", Categoria.PISTOLA, 200, false, true, 35, 1.01, 12, 2, false, false, 0.91, 4096),
+    DESERT_EAGLE("Desert Eagle", Categoria.PISTOLA, 700, true, true, 53, 1.864, 7, 3, false, false, 0.85, 4096),
+    AWP("AWP", Categoria.SNIPER, 4750, true, true, 115, 1.95, 5, 2, false, false, 0.99, 8192),
+    SSG_08("SSG 08", Categoria.SNIPER, 1700, true, true, 88, 1.70, 10, 2, false, false, 0.98, 8192),
     /** La HE no tiene cargador: se lanza una vez y se gasta. */
-    HE("HE", Categoria.GRANADA, 300, true, true, 99, 1.2, 0, 0, false, false, 1.0),
+    HE("HE", Categoria.GRANADA, 300, true, true, 99, 1.2, 0, 0, false, false, 1.0, 0),
     /** La flashbang ciega y no quita vida al explotar: en el modelo su daño es 0. */
-    FLASHBANG("Flashbang", Categoria.GRANADA, 200, true, true, 0, 1.0, 0, 0, false, false, 1.0);
+    FLASHBANG("Flashbang", Categoria.GRANADA, 200, true, true, 0, 1.0, 0, 0, false, false, 1.0, 0);
 
     private final String nombre;
     private final Categoria categoria;
@@ -49,11 +50,13 @@ public enum CatalogoArmas {
     private final boolean automatica;
     private final boolean tieneRafaga;
     private final double modificadorAlcance;
+    /** Unidades que recorre la bala (m_flRange); más lejos no le pega a nadie. 0 en las granadas: no tiran balas. */
+    private final int alcance;
 
     CatalogoArmas(String nombre, Categoria categoria, long precio, boolean terroristas,
                   boolean antiterroristas, int dano, double relacionBlindaje, int cargador,
                   int cargadoresDeReserva, boolean automatica, boolean tieneRafaga,
-                  double modificadorAlcance) {
+                  double modificadorAlcance, int alcance) {
         this.nombre = nombre;
         this.categoria = categoria;
         this.precio = precio;
@@ -66,6 +69,7 @@ public enum CatalogoArmas {
         this.automatica = automatica;
         this.tieneRafaga = tieneRafaga;
         this.modificadorAlcance = modificadorAlcance;
+        this.alcance = alcance;
     }
 
     /** Busca por el nombre que se ve en el juego ("AK-47") o por la constante ("AK_47"). */
@@ -141,5 +145,10 @@ public enum CatalogoArmas {
 
     public double getModificadorAlcance() {
         return modificadorAlcance;
+    }
+
+    /** Hasta dónde llega la bala, en metros (m_flRange pasado de unidades a metros); 0 en las granadas. */
+    public double getAlcanceMetros() {
+        return alcance / ReglasJuego.UNIDADES_POR_METRO;
     }
 }

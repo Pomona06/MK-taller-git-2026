@@ -5,7 +5,7 @@ import py.edu.uc.lp3.constants.CatalogoArmas;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Una fila del catálogo de CS2, como la muestra GET /api/catalogo. */
+/** Una fila del catálogo de CS2, como la muestra GET /api/catalogo. alcanceMetros es null en las granadas. */
 public record ModeloCatalogoResponse(
         String modelo,
         String categoria,
@@ -15,7 +15,8 @@ public record ModeloCatalogoResponse(
         int cargador,
         int cargadoresDeReserva,
         boolean automatica,
-        boolean tieneRafaga
+        boolean tieneRafaga,
+        Integer alcanceMetros
 ) {
     public static ModeloCatalogoResponse de(CatalogoArmas m) {
         List<String> equipos = new ArrayList<>();
@@ -27,6 +28,6 @@ public record ModeloCatalogoResponse(
         }
         return new ModeloCatalogoResponse(m.getNombre(), m.getCategoria().name().toLowerCase(), m.getPrecio(),
                 equipos, m.getDano(), m.getCargador(), m.getCargadoresDeReserva(), m.isAutomatica(),
-                m.isTieneRafaga());
+                m.isTieneRafaga(), m.getAlcanceMetros() == 0 ? null : (int) m.getAlcanceMetros());
     }
 }
