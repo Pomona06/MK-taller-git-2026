@@ -18,9 +18,10 @@ import py.edu.uc.lp3.exceptions.RechazoDeA3Exception;
 import py.edu.uc.lp3.exceptions.RechazoDeCompaneroException;
 import py.edu.uc.lp3.exceptions.ValorInvalidoException;
 
-
 /**
- * Un handler por cada tipo de la jerarquía JuegoException. Las reglas viven en
+ * Un handler por cada tipo de la jerarquía JuegoException, y dos para los
+ * pedidos que Spring no puede leer (JSON mal escrito o un parámetro de otro
+ * tipo), así todos los errores tienen el mismo formato. Las reglas viven en
  * los servicios; acá solo se elige el código HTTP y se devuelve el mensaje de
  * la excepción junto con su tipo.
  */
@@ -83,6 +84,22 @@ public class ManejadorErrores {
     public ErrorDeCompaneroResponse companeroNoDisponible(CompaneroNoDisponibleException e) {
         return new ErrorDeCompaneroResponse(e.getMessage(), e.getClass().getSimpleName(), e.getRol(),
                 e.getCompanero(), null, null);
+    }
+
+    /** El cuerpo no es un JSON válido o un campo trae otro tipo (un texto donde va un número). */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse jsonIlegible(HttpMessageNotReadableException e) {
+        return new ErrorResponse("el cuerpo no es un JSON válido o un campo tiene otro tipo "
+                + "(por ejemplo, un texto donde va un número)", e.getClass().getSimpleName());
+    }
+
+    /** Un id de la ruta o un parámetro de la URL no es del tipo esperado (/api/armas/abc). */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse parametroIlegible(MethodArgumentTypeMismatchException e) {
+        return new ErrorResponse("el parámetro " + e.getName() + " no es válido: " + e.getValue(),
+                e.getClass().getSimpleName());
     }
 
     private ErrorDeCompaneroResponse rechazo(RechazoDeCompaneroException e) {
