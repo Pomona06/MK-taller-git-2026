@@ -9,7 +9,7 @@ paquetes según el template de la cátedra. Las armas, los jugadores y sus chale
 - Enunciados: [POO-06](https://github.com/alefq/afq-taller-git-2024/blob/main/docs/ejercicio-poo-06-revision-paquetes-constructores-2026-09-30.md) · [POO-08](https://github.com/alefq/afq-taller-git-2024/blob/main/docs/ejercicio-poo-08-crud-h2-insomnia-2026-10-28.md) · [POO-09](https://github.com/alefq/afq-taller-git-2024/blob/main/docs/ejercicio-poo-09-apis-cruzadas-2026-11-16.md)
 - Para los compañeros del grupo de POO-09: [docs/PARA-COMPANEROS.md](docs/PARA-COMPANEROS.md)
 - Bitácora de IA: [BITACORA.md](BITACORA.md)
-- Especificaciones aplicadas a CS2: [POO-08](docs/ESPECIFICACIONES-POO-08.md) · [POO-06](docs/ESPECIFICACIONES.md)
+- Especificaciones aplicadas a CS2: [POO-09](docs/ESPECIFICACIONES-POO-09.md) · [POO-08](docs/ESPECIFICACIONES-POO-08.md) · [POO-06](docs/ESPECIFICACIONES.md)
 - Colección de Insomnia: [`insomnia/coleccion-armas-cs2.json`](insomnia/coleccion-armas-cs2.json)
 - Enlace al commit de la corrección de POO-08: https://github.com/Pomona06/MK-taller-git-2026/commit/4198ec615bf7dd930a3b04c835b04f962877418d
 - Enlace al commit entregado de POO-08 (antes de la corrección): https://github.com/Pomona06/MK-taller-git-2026/commit/e1f5309ec85711a4ed4cf5b854950a821bed5858
@@ -33,12 +33,105 @@ descarga las dependencias y tarda un poco. Los tests se corren con `./mvnw test`
 Si tenés una base de una versión anterior en la carpeta `data/`, frená el servicio y borrá esa carpeta: las
 tablas cambiaron.
 
-## POO-09: APIs cruzadas (en curso)
+## POO-09: APIs cruzadas
 
-**Hecho:** la corrección de POO-08 (ver [Situación de POO-08](#situación-de-poo-08)), el OpenAPI publicado y la
-consulta de las dos reglas sin tocar la base, para que los compañeros del grupo las usen.
-**Pendiente:** armar el grupo (A2 y A3), los clientes HTTP hacia sus APIs, el endpoint de escenario y su
-colección de Insomnia.
+**El escenario en una frase:** un jugador hace un **disparo rápido** (dos balas de una vez) con su
+francotirador contra un enemigo, y la jugada solo se guarda en mi H2 si la regla de disparo rápido de A2
+(Matías) dice que el arma está estable y tiene dos balas, y la regla de daño de A3 (Joaquín) dice que el
+objetivo es un enemigo vivo y calcula cómo queda.
+
+### Mapa del grupo (Counter-Strike 2, trío)
+
+| Rol en mi entrega | Integrante | Repositorio | URL base | OpenAPI | Sus dos reglas |
+|---|---|---|---|---|---|
+| **A1** | Marcelo Kropff (`Pomona06`) | [MK-taller-git-2026](https://github.com/Pomona06/MK-taller-git-2026) | `http://localhost:8082` | `/v3/api-docs` · `/swagger-ui.html` | Munición y vida ([Las dos reglas](#las-dos-reglas)) |
+| **A2** | Matías Jara (`Vanzfranhait`) | [mj-taller-git-2026](https://github.com/Vanzfranhait/mj-taller-git-2026) | `http://localhost:8084` | `/v3/api-docs` | Explosión de granada y recarga (disparo) rápida de francotirador |
+| **A3** | Joaquín Benegas (`joaquinBenegas0`) | [jb-taller-git-2026](https://github.com/joaquinBenegas0/jb-taller-git-2026) | `http://localhost:8083` | `/v3/api-docs` · `/swagger-ui.html` | Munición por modo de disparo y daño con blindaje |
+
+Puertos acordados en el grupo para correr los tres en una sola máquina: Marcelo 8082, Joaquín 8083 y Matías
+8084. Round robin: yo consulto a Matías (A2) y a Joaquín (A3); Matías consulta mi regla de munición y la
+regla de Joaquín; Joaquín consulta la regla de Matías y mi regla de vida.
+
+### Las reglas que consulto
+
+- **A2 · Matías, disparo rápido de francotirador.** En su README: «un francotirador con estabilidad > 0.7
+  puede disparar rápido (consume 2 de munición), pero queda inestable (estabilidad 0.5) después». Lo consulto
+  en `POST /api/reglas/disparo-rapido`, su consulta sin efectos en su base, con `estabilidad` y
+  `municionActual`. Acepta con 200; rechaza con 400 (`ReglaDeJuegoException`,
+  `{"error":"regla_de_juego","mensaje":...}`). *La ruta y los campos están tomados de su contrato escrito y
+  del README de Joaquín, que también lo consulta; se confirman con su OpenAPI.*
+- **A3 · Joaquín, daño con blindaje.** En su contrato: «solo se le dispara a un enemigo vivo (otro equipo,
+  vida mayor a 0); el blindaje absorbe hasta la mitad del daño y el resto baja la vida, que nunca queda por
+  debajo de 0». Lo consulto en `POST /api/reglas/danio` con `tirador`, `equipoTirador`, `objetivo`,
+  `equipoObjetivo` (`TERRORISTAS` o `ANTITERRORISTAS`), `vidaObjetivo`, `blindajeObjetivo` y `danio`. Acepta con
+  200 y devuelve `resultado.vidaFinal`, `blindajeFinal` y `eliminado`; rechaza con 422
+  (`DISPARO_NO_PERMITIDO`: objetivo eliminado o fuego amigo) o 400 (`VALOR_ILEGAL`). No cambia su base.
+
+### El escenario: `POST /api/escenarios/disparos-rapidos`
+
+Pedido: `{"armaId": 6, "objetivoId": 3, "tirador": "Sombra", "distancia": 40, "conMira": true}`.
+
+1. `EscenarioServiceImpl` valida el pedido y busca el arma y el objetivo en mi base. Si el arma no es un
+   francotirador (AWP o SSG 08), responde 400 sin consultar a nadie.
+2. **A2 primero (Matías):** ¿puede hacer el disparo rápido? La estabilidad sale de mi modelo: **con mira**
+   (`conMira: true`) el arma está estable, 1.0; **sin mira**, 0.5. La munición es la carga del cargador. Va
+   primero porque, si el disparo no puede ocurrir, no tiene sentido preguntar qué le haría al objetivo.
+3. **A3 después (Joaquín):** ¿qué le hacen las dos balas al objetivo? El daño que le mando es el de mi regla
+   de distancia (`danoA`) por dos balas; él decide si es un enemigo vivo y con cuánta vida y blindaje queda.
+4. **Si los dos aceptan**, `RegistroDeJugadas` abre una transacción, vuelve a verificar mis reglas (dos balas
+   en el cargador y objetivo no eliminado), gasta las dos balas, deja al objetivo con la vida y el blindaje que
+   calculó A3 y guarda una `Jugada` (tabla `jugada`) con lo que respondió cada compañero. Responde **201**, y
+   `GET /api/escenarios/disparos-rapidos` la muestra.
+5. **Si alguno rechaza**, no se llegó a tocar la base: las dos consultas van antes de la transacción. Responde
+   **409** diciendo quién fue.
+
+**Qué se ve en mi base después del éxito:** el francotirador con dos balas menos, el objetivo con la vida y el
+blindaje nuevos (eliminado, si llegó a 0) y una jugada nueva. **Si A2 acepta y A3 rechaza, todo queda igual:**
+el arma conserva sus balas, el objetivo su vida y no se crea la jugada. En Insomnia, «GET AWP después de los
+rechazos (sigue con 3)» y «GET jugadas después de los rechazos (sigue 1)» lo muestran.
+
+Ejemplo de rechazo de A3 (fuego amigo):
+
+```json
+{"error": "la jugada la rechazó A3 (Joaquín Benegas (joaquinBenegas0)) con HTTP 422",
+ "excepcion": "RechazoDeA3Exception", "rechazadoPor": "A3", "companero": "Joaquín Benegas (joaquinBenegas0)",
+ "statusDelCompanero": 422,
+ "respuestaDelCompanero": {"status": 422, "codigo": "DISPARO_NO_PERMITIDO", "mensaje": "..."}}
+```
+
+### Cliente HTTP
+
+Las llamadas están en el paquete `cliente`: `DisparoRapidoA2` y `DanioA3` extienden `ClienteDeCompanero`, que
+usa `RestClient` de Spring con 3 s para conectar y 5 s para responder, y manda el JSON con `Content-Length`.
+Arman el cuerpo con los nombres de campo que publica cada compañero; no comparten ninguna clase con sus
+proyectos. `DanioA3` traduce mis equipos (`CT`, `TT`) a los suyos (`ANTITERRORISTAS`, `TERRORISTAS`).
+
+La URL y la ruta salen de `application.properties` y se pueden cambiar con variables de entorno, sin tocar
+código:
+
+| Propiedad | Variable | Por defecto |
+|---|---|---|
+| `companeros.a2.url` | `A2_URL` | `http://localhost:8084` |
+| `companeros.a2.ruta-disparo-rapido` | `A2_RUTA` | `/api/reglas/disparo-rapido` |
+| `companeros.a3.url` | `A3_URL` | `http://localhost:8083` |
+| `companeros.a3.ruta-danio` | `A3_RUTA` | `/api/reglas/danio` |
+| `companeros.espera-conexion-ms` / `espera-respuesta-ms` | | 3000 / 5000 |
+
+### Errores del escenario
+
+No reenvío tal cual el código del compañero: lo **traduzco** a mi jerarquía de excepciones y adjunto lo que
+respondió.
+
+| Qué pasó | Excepción | HTTP |
+|---|---|---|
+| La regla de A2 rechazó (respondió 4xx) | `RechazoDeA2Exception` | 409 |
+| La regla de A3 rechazó (respondió 4xx) | `RechazoDeA3Exception` | 409 |
+| A2 o A3 no respondió, se pasó del tiempo, dio 5xx o respondió algo imposible | `CompaneroNoDisponibleException` | 503 |
+
+`RechazoDeA2Exception` y `RechazoDeA3Exception` son hijas de `RechazoDeCompaneroException` (abstracta), y
+`ManejadorErrores` tiene **un handler para cada una**: así distingue «falló la regla de A2» de «falló la de
+A3». El cuerpo lleva `rechazadoPor` (A2 o A3), `companero`, `statusDelCompanero` y `respuestaDelCompanero`.
+Elegí 409 como en mis reglas: el pedido está bien formado, pero el estado del juego no permite la jugada.
 
 ### OpenAPI
 
@@ -47,8 +140,8 @@ El servicio publica un documento OpenAPI 3 con [springdoc-openapi](https://sprin
 
 | URL | Qué es |
 |---|---|
-| http://localhost:8080/v3/api-docs | El documento OpenAPI en JSON: se importa en Insomnia (**Import** → **URL**) o se le pasa a un cliente. |
-| http://localhost:8080/swagger-ui.html | La misma documentación en el navegador, con **Try it out** para probar cada operación. |
+| http://localhost:8082/v3/api-docs | El documento OpenAPI en JSON: se importa en Insomnia (**Import** → **URL**) o se le pasa a un cliente. |
+| http://localhost:8082/swagger-ui.html | La misma documentación en el navegador, con **Try it out** para probar cada operación. |
 
 Las propiedades están en `src/main/resources/application.properties`:
 
@@ -62,8 +155,8 @@ Las propiedades están en `src/main/resources/application.properties`:
 
 La descripción general del documento (`OpenApiConfig`) explica las dos reglas, cómo consultarlas desde otro
 servicio y el formato de error. Cada operación tiene un resumen, sus parámetros, ejemplos de cuerpo y los
-códigos de error que puede devolver, con el tipo de excepción: el CRUD de armas, los jugadores, la
-simulación, los sonidos, el catálogo y las consultas de reglas. El documento pasa la validación de
+códigos de error que puede devolver, con el tipo de excepción: el escenario, el CRUD de armas, los
+jugadores, la simulación, los sonidos, el catálogo y las consultas de reglas. El documento pasa la validación de
 `openapi-spec-validator`.
 
 ### Mis reglas, para el grupo
@@ -83,23 +176,71 @@ vida 73 y blindaje 97 en los dos casos. Un dato imposible en el juego responde 4
 Todo lo que un compañero necesita (cómo arrancar mi servicio, ejemplos y qué le pido a cambio) está en
 [docs/PARA-COMPANEROS.md](docs/PARA-COMPANEROS.md).
 
-### Arrancar en otro puerto
+### Cómo arrancar los tres servicios
 
-Si los tres servicios del grupo corren en la misma máquina, cada uno necesita su puerto:
+**En una sola máquina**, tres terminales, cada repositorio en su commit de entrega. Primero A2 y A3, después
+A1 (A1 arranca igual sin ellos, pero el escenario responde 503 hasta que estén):
 
 ```bash
-./mvnw spring-boot:run -Dspring-boot.run.arguments=--server.port=8082
+cd mj-taller-git-2026 && ./mvnw spring-boot:run -Dspring-boot.run.arguments=--server.port=8084
+```
+```bash
+cd jb-taller-git-2026 && ./mvnw spring-boot:run -Dspring-boot.run.arguments=--server.port=8083
+```
+```bash
+cd MK-taller-git-2026 && ./mvnw spring-boot:run -Dspring-boot.run.arguments=--server.port=8082
+```
+
+**En las notebooks de la sala**, cada uno en su 8080, y A1 apunta a las IP de los otros:
+
+```bash
+A2_URL=http://IP_DE_MATIAS:8080 A3_URL=http://IP_DE_JOAQUIN:8080 ./mvnw spring-boot:run
 ```
 
 El OpenAPI toma la URL del puerto en el que arrancó.
 
-### Grupo (round robin)
+### Insomnia del escenario
 
-| Rol | Nombre | URL base | OpenAPI | Sus dos reglas |
-|---|---|---|---|---|
-| A1 (yo) | Marcelo Kropff | http://localhost:8080 | http://localhost:8080/v3/api-docs | Munición y vida (arriba) |
-| A2 | pendiente | | | |
-| A3 | pendiente | | | |
+En la colección, elegí el subentorno **«Grupo POO-09 (este servicio en 8082)»** y corré la carpeta **6** después de
+las carpetas 0 a 4: los OpenAPI de A1, A2 y A3, el escenario feliz, el rechazo de A2 (sin mira), el rechazo de
+A3 (fuego amigo) y los `GET` que muestran que los rechazos no cambiaron nada.
+
+Con los tres prendidos y la base vacía, `./insomnia/capturar-respuestas.sh` guarda las respuestas reales en
+`insomnia/respuestas/` (con un `resumen.md`), para que la corrección las vea aunque un compañero esté apagado.
+
+### Si un compañero no responde
+
+El escenario devuelve 503 con `rechazadoPor` y no guarda nada. Mi cliente está en el código, las URL están en
+este README y las respuestas reales quedan guardadas en `insomnia/respuestas/`. Lo que hice cuando un
+compañero no respondía se anota acá.
+
+### Qué hay que pensar (POO-09)
+
+**OpenAPI.** Vive en `/v3/api-docs` y se prueba en `/swagger-ui.html`. Aparecen el CRUD, la simulación, las
+consultas de las dos reglas y el escenario, cada operación con su descripción, ejemplos y errores, para que un
+extraño las invoque.
+
+**Grupo.** A1 soy yo; A2 es Matías y A3 es Joaquín (tabla de arriba). Somos un trío de CS2: no hace falta un
+OpenAPI de otro grupo.
+
+**Escenario.** El hecho del juego es un disparo rápido con francotirador: para que sea legal, el arma tiene que
+poder hacerlo (estable y con dos balas, regla de A2) y el objetivo tiene que poder recibirlo (enemigo vivo,
+regla de A3). Después del éxito, mi base tiene el arma con dos balas menos, el objetivo con menos vida y una
+jugada nueva. Si A2 acepta y A3 rechaza, no cambia nada.
+
+**Cliente.** Las URL y las rutas están en `application.properties` y se pisan con `A2_URL`, `A2_RUTA`,
+`A3_URL` y `A3_RUTA`.
+
+**Errores.** Los traduzco a mi jerarquía (`RechazoDeA2Exception`, `RechazoDeA3Exception`,
+`CompaneroNoDisponibleException`) y adjunto el código y el cuerpo que mandó el compañero. El handler distingue
+A2 de A3 porque cada rechazo es un tipo distinto con su propio handler.
+
+**Límite.** No cloné el código de los compañeros para copiar reglas: sus reglas se consultan por HTTP, con los
+campos de su contrato. Si su OpenAPI no alcanza, se lo pido a ellos.
+
+**Pregunta de anclaje: si un compañero renombra una ruta**, alcanza con leer su OpenAPI nuevo y cambiar
+`A2_RUTA` o `A3_RUTA` (o la propiedad), sin tocar código. Si cambia un nombre de campo, se toca solo
+`DisparoRapidoA2` o `DanioA3`. No hay nada copiado de su dominio.
 
 ## Situación de POO-08
 
@@ -184,6 +325,7 @@ reserva se cuenta en cargadores (`m_bReserveAmmoAsClips`): el AWP tiene 2 cargad
 - **Servicios** (`service.impl`): validan los datos que llegan del JSON, sostienen las dos reglas y lanzan
   la excepción que corresponde. Recién cuando todo se cumple, le mandan el mensaje al dominio y guardan.
 - **Controllers** (`rest.controller`): traducen HTTP; no tienen reglas.
+- **Clientes** (`cliente`, POO-09): llaman por HTTP a las reglas de los compañeros y traducen su respuesta.
 - **Catálogo** (`constants`): los valores fijos del juego.
 
 ### Propiedades de H2
@@ -222,6 +364,8 @@ Mientras el servicio corre, la base está bloqueada por él: la consola tiene qu
 | Método y ruta | Qué hace | Éxito | Errores |
 |---|---|---|---|
 | `GET /` | Confirma que el servicio está vivo y lista los endpoints. | 200 | |
+| `POST /api/escenarios/disparos-rapidos` | POO-09: disparo rápido que consulta a A2 y a A3 y guarda la jugada si los dos aceptan. | 201 | 400, 404, 409, 503 |
+| `GET /api/escenarios/disparos-rapidos` y `/{id}` | Las jugadas guardadas del escenario. | 200 | 404 |
 | `GET /v3/api-docs` y `/swagger-ui.html` | El OpenAPI en JSON y la página para probarlo. | 200 | |
 | `GET /api/reglas` | Las dos reglas en una frase. | 200 | |
 | `POST /api/reglas/disparo`, `/recarga`, `/impacto` | Consultar las reglas con el estado en el JSON, sin tocar la base. | 200 | 400, 409 |
@@ -295,7 +439,11 @@ RuntimeException
     ├── RecursoNoEncontradoException   404  no hay un arma o un jugador con ese id
     ├── MunicionInsuficienteException  409  regla de munición: sin balas o sin reserva
     ├── GranadaUsadaException          409  regla de munición: la granada ya se lanzó
-    └── JugadorEliminadoException      409  regla de vida: el jugador ya tiene vida 0
+    ├── JugadorEliminadoException      409  regla de vida: el jugador ya tiene vida 0
+    ├── RechazoDeCompaneroException (abstracta)   POO-09: la regla de un compañero rechazó
+    │   ├── RechazoDeA2Exception       409  rechazó A2 (Matías, disparo rápido)
+    │   └── RechazoDeA3Exception       409  rechazó A3 (Joaquín, daño con blindaje)
+    └── CompaneroNoDisponibleException 503  POO-09: A2 o A3 no respondió
 ```
 
 Las lanzan los servicios. `ManejadorErrores` es un `@RestControllerAdvice` con un `@ExceptionHandler` por
@@ -340,6 +488,10 @@ classDiagram
     class SonidoController {
         +sonidos(sitio, segundos)
     }
+    class EscenarioController {
+        +disparoRapido(DisparoRapidoRequest) 201
+        +jugadas()
+    }
     class ReglasController {
         +disparo(ConsultaDisparoRequest)
         +recarga(ConsultaRecargaRequest)
@@ -352,6 +504,9 @@ classDiagram
         +municionInsuficiente() 409
         +granadaUsada() 409
         +jugadorEliminado() 409
+        +rechazoDeA2() 409
+        +rechazoDeA3() 409
+        +companeroNoDisponible() 503
     }
     class ArmaService {
         <<interface>>
@@ -367,6 +522,29 @@ classDiagram
     }
     class ReglasService {
         <<interface>>
+    }
+    class EscenarioService {
+        <<interface>>
+        +disparoRapido(DisparoRapidoRequest) Jugada
+    }
+    class RegistroDeJugadas {
+        +guardar(JugadaAceptada) Jugada
+    }
+    class ClienteDeCompanero {
+        <<abstract>>
+        #consultar(Map) Map
+    }
+    class DisparoRapidoA2 {
+        +consultar(estabilidad, municionActual) Map
+    }
+    class DanioA3 {
+        +consultar(tirador, equipos, vida, blindaje, danio) ResultadoDanioA3
+    }
+    class JugadaRepository {
+        <<interface>>
+    }
+    class Jugada {
+        <<Entity>>
     }
     class CatalogoArmas {
         <<enumeration>>
@@ -433,6 +611,12 @@ classDiagram
     class MunicionInsuficienteException
     class GranadaUsadaException
     class JugadorEliminadoException
+    class RechazoDeCompaneroException {
+        <<abstract>>
+    }
+    class RechazoDeA2Exception
+    class RechazoDeA3Exception
+    class CompaneroNoDisponibleException
 
     ArmaCrudController ..> ArmaService : usa
     CatalogoController ..> ArmaService : usa
@@ -455,6 +639,15 @@ classDiagram
     ArmaRepository ..> Armas : guarda
     GranadaRepository ..> Granada : guarda
     JugadorRepository ..> Jugador : guarda
+    EscenarioController ..> EscenarioService : usa
+    EscenarioService ..> DisparoRapidoA2 : consulta A2
+    EscenarioService ..> DanioA3 : consulta A3
+    EscenarioService ..> RegistroDeJugadas : guarda si aceptan
+    RegistroDeJugadas ..> JugadaRepository : usa
+    JpaRepository <|-- JugadaRepository
+    JugadaRepository ..> Jugada : guarda
+    ClienteDeCompanero <|-- DisparoRapidoA2
+    ClienteDeCompanero <|-- DanioA3
     Armas ..> CatalogoArmas : modelo
     Armas <|-- ArmasDeFuego
     Armas <|-- Granada
@@ -470,6 +663,11 @@ classDiagram
     JuegoException <|-- MunicionInsuficienteException
     JuegoException <|-- GranadaUsadaException
     JuegoException <|-- JugadorEliminadoException
+    JuegoException <|-- RechazoDeCompaneroException
+    RechazoDeCompaneroException <|-- RechazoDeA2Exception
+    RechazoDeCompaneroException <|-- RechazoDeA3Exception
+    JuegoException <|-- CompaneroNoDisponibleException
+    ClienteDeCompanero ..> RechazoDeCompaneroException : lanza
     ManejadorErrores ..> JuegoException : atiende cada hija
     ArmaService ..> JuegoException : lanza
     SimulacionService ..> JuegoException : lanza
@@ -487,23 +685,27 @@ Cómo leer las flechas:
 - **Uso del repositorio** (`..>` con «usa» o «guarda», línea punteada con flecha): una capa le habla a la
   otra a través de una interfaz. El controller usa el servicio y el servicio usa el repositorio; ninguno
   conoce la clase concreta que Spring arma por detrás.
-- **Jerarquía de excepciones** (`<|--` desde `RuntimeException`): `JuegoException` es la base y sus cinco
-  hijas nombran lo que falló. Las flechas «lanza» muestran que las excepciones nacen en los servicios, y
-  «atiende cada hija» que `ManejadorErrores` tiene un handler por tipo.
+- **Jerarquía de excepciones** (`<|--` desde `RuntimeException`): `JuegoException` es la base y cada hija
+  nombra lo que falló; en POO-09 se suman los rechazos de cada compañero y el compañero no disponible. Las
+  flechas «lanza» muestran que las excepciones nacen en los servicios y en los clientes, y «atiende cada
+  hija» que `ManejadorErrores` tiene un handler por tipo.
+- **Clientes de los compañeros** (`DisparoRapidoA2`, `DanioA3`): heredan de `ClienteDeCompanero` y hablan
+  con las APIs de A2 y A3 por HTTP; el escenario los consulta antes de guardar.
 - **Composición** (`o--`): el `Jugador` tiene un `Chaleco` (o ninguno).
 
 El diagrama completo de la familia de armas está en [El modelo](#el-modelo).
 
 ### Colección de Insomnia
 
-El archivo es `insomnia/coleccion-armas-cs2.json` y tiene 59 pedidos.
+El archivo es `insomnia/coleccion-armas-cs2.json` y tiene 73 pedidos.
 
 1. Si ya habías usado el servicio, frenalo y borrá la carpeta `data/` para empezar con la base vacía.
 2. Arrancá el servicio con `./mvnw spring-boot:run`.
 3. En Insomnia: **Import** → **File** → elegí `insomnia/coleccion-armas-cs2.json` → **Scan** → **Import**.
 4. Abrí la colección **MK CS2 Armas (POO-08)** y, arriba a la izquierda, elegí el entorno **Base
    Environment**. Trae `base_url` (`http://localhost:8080`) y los ids que va a crear la colección:
-   `armaId` (AK-47), `sniperId` (AWP), `granadaId` (HE), `famasId`, `jugadorId` (Enemigo) y `botId`.
+   `armaId` (AK-47), `sniperId` (AWP), `granadaId` (HE), `famasId`, `jugadorId` (Enemigo) y `botId`, y para la
+   carpeta 6, `a2_url`, `a3_url`, `escenarioArmaId`, `escenarioObjetivoId` y `aliadoId`.
 5. Corré las carpetas en orden, de arriba abajo, tocando **Send** en cada pedido:
    - **0. Servicio vivo y catálogo:** `GET /` y el catálogo.
    - **1. CRUD (caso feliz):** se crea el AK-47, se lista, se lee, se le pone un apodo con `PATCH` y un
@@ -521,6 +723,8 @@ El archivo es `insomnia/coleccion-armas-cs2.json` y tiene 59 pedidos.
    - **5. POO-09: OpenAPI y consulta de reglas:** el documento OpenAPI, las dos reglas en una frase y cada
      consulta de regla con un caso que acepta y otro que rechaza. No usan la base, así que se pueden correr en
      cualquier momento.
+   - **6. POO-09: escenario:** con los tres servicios prendidos y el subentorno «Grupo POO-09», el escenario
+     feliz, el rechazo de A2 y el de A3 (ver [Insomnia del escenario](#insomnia-del-escenario)).
 
 Con la base vacía, los ids que se crean coinciden con los del entorno. Si no, copiá el `id` de cada `POST`
 a la variable que indica su descripción (**Manage Environments**, o el engranaje del entorno).
@@ -612,26 +816,36 @@ src/main/java/py/edu/uc/lp3/
 │   ├── Audible.java              interfaz: sonido() y default alcanceSonido()
 │   ├── BombaC4.java              otra familia: implementa Audible
 │   ├── Jugador.java              @Entity (tabla jugador)
-│   └── Chaleco.java              @Entity (tabla chaleco): Kevlar
-├── exceptions/                   JuegoException y sus cinco hijas
+│   ├── Chaleco.java              @Entity (tabla chaleco): Kevlar
+│   └── Jugada.java               @Entity (tabla jugada): una jugada del escenario de POO-09
+├── cliente/                      POO-09: llamadas HTTP a los compañeros
+│   ├── ClienteDeCompanero.java   URL, ruta, tiempos de espera y traducción de errores
+│   ├── DisparoRapidoA2.java      regla de disparo rápido de Matías
+│   ├── DanioA3.java              regla de daño de Joaquín
+│   └── ResultadoDanioA3.java     lo que responde A3
+├── exceptions/                   JuegoException y sus hijas (también los rechazos de A2 y A3)
 ├── interfaces/                   Cotizable, VideoJuegoPosicionable, Avatar, Posicion
 ├── repository/                   interfaces de Spring Data
 │   ├── ArmaRepository.java
 │   ├── GranadaRepository.java
-│   └── JugadorRepository.java
+│   ├── JugadorRepository.java
+│   └── JugadaRepository.java
 ├── service/                      capa de negocio (interfaces)
 │   ├── ArmaService.java · JugadorService.java · SimulacionService.java · SonidoService.java
-│   ├── ReglasService.java
+│   ├── ReglasService.java · EscenarioService.java
 │   ├── dto/                      pedidos y respuestas JSON
 │   └── impl/                     validaciones, reglas y excepciones
 │       ├── ArmaServiceImpl.java · JugadorServiceImpl.java
 │       ├── SimulacionServiceImpl.java · SonidoServiceImpl.java
 │       ├── ReglasServiceImpl.java   consulta de reglas sin tocar la base
+│       ├── EscenarioServiceImpl.java  POO-09: consulta a A2 y A3
+│       ├── RegistroDeJugadas.java    guarda la jugada aceptada en una transacción
 │       └── ReglasDeArmas.java    regla de munición y fábrica de armas
 └── rest/
     ├── OpenApiConfig.java        datos generales del OpenAPI
     └── controller/               entrada HTTP
         ├── IndexController.java      GET /
+        ├── EscenarioController.java  /api/escenarios/disparos-rapidos
         ├── ReglasController.java     /api/reglas
         ├── CatalogoController.java   /api/catalogo
         ├── ArmaCrudController.java   /api/armas (CRUD y munición)
@@ -639,6 +853,7 @@ src/main/java/py/edu/uc/lp3/
         ├── SimulacionController.java /api/simulaciones/dano
         ├── SonidoController.java     /api/sonidos
         ├── ErrorResponse.java        cuerpo de error
+        ├── ErrorDeCompaneroResponse.java  cuerpo de error del escenario
         └── ManejadorErrores.java     un @ExceptionHandler por tipo de excepción
 ```
 
@@ -750,11 +965,12 @@ classDiagram
         class Jugador {
             -Long id
             -String nombre
+            -String equipo
             -int vida
             -Chaleco chaleco
             #Jugador()
-            +Jugador(String nombre)
-            +Jugador(String nombre, Chaleco chaleco)
+            +Jugador(String nombre, String equipo)
+            +Jugador(String nombre, String equipo, Chaleco chaleco)
             +recibirImpacto(int, int) void
             +estaEliminado() boolean
         }
@@ -866,7 +1082,7 @@ al arma guardada con ese id, sin saber si es un rifle o una granada.
 | Constructores | `Pistola` | `Pistola()` (Glock-18), `Pistola(CatalogoArmas)`, `Pistola(CatalogoArmas, String equipo)` |
 | Constructores | `Sniper` | `Sniper()` (AWP), `Sniper(CatalogoArmas)`, `Sniper(CatalogoArmas, String equipo)` |
 | Constructores | `Granada` | `Granada()` (HE), `Granada(CatalogoArmas)`, `Granada(CatalogoArmas, String equipo)` |
-| Constructores | `Jugador` | `Jugador(String)` (sin chaleco) y `Jugador(String, Chaleco)`; más el `protected Jugador()` de JPA |
+| Constructores | `Jugador` | `Jugador(String nombre, String equipo)` (sin chaleco) y `Jugador(String, String, Chaleco)`; más el `protected Jugador()` de JPA |
 | Constructores | `Chaleco` | `Chaleco()` (Kevlar nuevo, 100) y `Chaleco(int durabilidad)` |
 | Constructores | `BombaC4` | `BombaC4(String sitio)` (recién plantada, 40 s) y `BombaC4(String, int)` |
 | `getPrecio` | `Vendible` | `getPrecio()` y `getPrecio(String)` (esta viene de `Cotizable`) |

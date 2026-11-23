@@ -133,7 +133,7 @@
       "_type": "request_group",
       "parentId": "wrk_mk_cs2",
       "name": "6. POO-09: escenario con A2 (Matías) y A3 (Joaquín)",
-      "description": "Necesita los tres servicios prendidos: este en 8082 (sub-entorno Grupo POO-09), Matías en 8084 y Joaquín en 8083. Correr después de las carpetas 0 a 4, en orden.",
+      "description": "Necesita los tres servicios prendidos: este en 8082 (subentorno Grupo POO-09), Matías en 8084 y Joaquín en 8083. Correr después de las carpetas 0 a 4, en orden.",
       "environment": {},
       "environmentPropertyOrder": null,
       "metaSortKey": 700
