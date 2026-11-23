@@ -233,7 +233,7 @@ Mientras el servicio corre, la base está bloqueada por él: la consola tiene qu
 | `DELETE /api/armas/{id}` | Borra el arma. | 204 | 404 |
 | `POST /api/armas/{id}/disparos?distancia=&veces=` | Regla de munición: dispara una vez o `veces` veces y guarda la munición. Una granada queda lanzada. | 200 | 400, 404, 409 |
 | `POST /api/armas/{id}/recargas` | Regla de munición: usa un cargador de la reserva. | 200 | 400 (granada), 404, 409 |
-| `POST /api/jugadores` | Crea un jugador con 100 de vida: `{"nombre", "chaleco": true/false}`. | 201 + `id` | 400 |
+| `POST /api/jugadores` | Crea un jugador con 100 de vida: `{"nombre", "equipo": "CT"/"TT", "chaleco": true/false}`. | 201 + `id` | 400 |
 | `GET /api/jugadores` | Lista los jugadores guardados con su vida y blindaje. Filtro opcional `?vivos=true`. | 200 | |
 | `GET /api/jugadores/{id}` | Un jugador. | 200 | 404 |
 | `POST /api/simulaciones/dano` | `{"armaId", "jugadorId", "distancia"}`: el arma guardada le dispara al jugador guardado y se guardan los dos. | 200 | 400, 404, 409 |
@@ -244,7 +244,7 @@ Ejemplo de creación y de simulación:
 ```bash
 curl -X POST localhost:8080/api/armas -H "Content-Type: application/json" -d '{"modelo":"AK-47"}'
 curl -X POST localhost:8080/api/jugadores -H "Content-Type: application/json" \
-     -d '{"nombre":"Enemigo","chaleco":true}'
+     -d '{"nombre":"Enemigo","equipo":"CT","chaleco":true}'
 curl -X POST localhost:8080/api/simulaciones/dano -H "Content-Type: application/json" \
      -d '{"armaId":1,"jugadorId":1,"distancia":10}'
 curl localhost:8080/api/jugadores/1      # vida 73 y blindaje 97: quedó guardado

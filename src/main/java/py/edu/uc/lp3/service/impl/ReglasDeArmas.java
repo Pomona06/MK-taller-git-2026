@@ -57,6 +57,15 @@ final class ReglasDeArmas {
         };
     }
 
+    /** El equipo de un arma o de un jugador: CT o TT, sin importar mayúsculas ni espacios. */
+    static String equipo(String texto) {
+        String equipo = texto == null ? "" : texto.strip().toUpperCase();
+        if (!"CT".equals(equipo) && !"TT".equals(equipo)) {
+            throw new ValorInvalidoException("el equipo debe ser CT o TT (recibido: " + texto + ")");
+        }
+        return equipo;
+    }
+
     /** La distancia en metros: omitida vale 10; negativa o no numérica es un error. */
     static double distancia(Double metros) {
         if (metros == null) {

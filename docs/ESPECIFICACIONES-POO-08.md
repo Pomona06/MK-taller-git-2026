@@ -66,7 +66,7 @@ Base: `http://localhost:8080`
 | `DELETE /api/armas/{id}` | Borra el arma. | 204 | 404 |
 | `POST /api/armas/{id}/disparos?distancia=&veces=` | Munición: dispara y guarda. | 200 | 400, 404, 409 |
 | `POST /api/armas/{id}/recargas` | Munición: usa un cargador de la reserva. | 200 | 400, 404, 409 |
-| `POST /api/jugadores` | Crea un jugador con 100 de vida: `{"nombre", "chaleco"}`. | 201 + `id` | 400 |
+| `POST /api/jugadores` | Crea un jugador con 100 de vida: `{"nombre", "equipo", "chaleco"}`. | 201 + `id` | 400 |
 | `GET /api/jugadores` | Lista los jugadores (`?vivos=true` para los que siguen vivos). | 200 | |
 | `GET /api/jugadores/{id}` | Un jugador con su vida y blindaje. | 200 | 404 |
 | `POST /api/simulaciones/dano` | `{"armaId", "jugadorId", "distancia"}`: el arma le dispara al jugador y se guardan los dos. | 200 | 400, 404, 409 |
@@ -97,7 +97,7 @@ Los sostiene la capa service, frente al JSON y frente a JPA:
   servicio verifica la regla antes de mandar `disparar()` o `recargar()`.
 - **Ráfaga:** solo la Glock-18 y la FAMAS la tienen; con ráfaga, un disparo gasta tres balas.
 - **Granada:** se lanza una sola vez; `lanzada` se guarda en la base. No lleva Name Tag y no se recarga.
-- **Jugador:** nombre no vacío; empieza con 100 de vida; la vida solo baja con `recibirImpacto()`, nunca por
+- **Jugador:** nombre no vacío; equipo CT o TT; empieza con 100 de vida; la vida solo baja con `recibirImpacto()`, nunca por
   debajo de 0; con vida 0 no recibe más daño.
 - **Chaleco:** un Kevlar nuevo tiene 100 de blindaje; solo baja con `gastar()`.
 - **C4:** sitio A o B; de 0 a 40 segundos.
@@ -139,7 +139,7 @@ Requiere Java 21. Para empezar con la base vacía, borrar la carpeta `data/` con
 | 2 | `POST /api/armas` `{"modelo":"AK-47"}` | 201, `id` 1, equipo TT, precio 2700, 30 balas y 3 cargadores. |
 | 3 | `GET /api/armas` y `GET /api/armas/1` | 200, el AK-47 aparece y coincide. |
 | 4 | `PATCH /api/armas/1` `{"apodo":"La Fiel"}` y `GET /api/armas/1` | 200, el apodo quedó guardado. |
-| 5 | `POST /api/jugadores` `{"nombre":"Enemigo","chaleco":true}` | 201, vida 100 y blindaje 100. |
+| 5 | `POST /api/jugadores` `{"nombre":"Enemigo","equipo":"CT","chaleco":true}` | 201, equipo CT, vida 100 y blindaje 100. |
 | 6 | `POST /api/simulaciones/dano` `{"armaId":1,"jugadorId":1,"distancia":10}` | 200: 35 de daño; 27 a la vida y 3 al chaleco. Vida 73, blindaje 97, carga 29. |
 | 7 | `GET /api/jugadores/1` y `GET /api/armas/1` | Vida 73, blindaje 97, carga 29: quedó guardado, también después de reiniciar. |
 | 8 | AWP (CT) contra el Bot sin chaleco a 10 m | 200: 114 de daño, vida 0, `"eliminado": true`. |

@@ -273,8 +273,8 @@
       "_id": "req_mk_09",
       "_type": "request",
       "parentId": "fld_mk_2",
-      "name": "POST crear jugador Enemigo con chaleco",
-      "description": "201: id 1, vida 100 y blindaje 100. Copiar el id a jugadorId.",
+      "name": "POST crear jugador Enemigo (CT) con chaleco",
+      "description": "201: id 1, equipo CT, vida 100 y blindaje 100. Copiar el id a jugadorId.",
       "method": "POST",
       "url": "{{ _.base_url }}/api/jugadores",
       "parameters": [],
@@ -293,7 +293,7 @@
       "settingRebuildPath": true,
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"nombre\": \"Enemigo\",\n  \"chaleco\": true\n}"
+        "text": "{\n  \"nombre\": \"Enemigo\",\n  \"equipo\": \"CT\",\n  \"chaleco\": true\n}"
       }
     },
     {
@@ -392,8 +392,8 @@
       "_id": "req_mk_14",
       "_type": "request",
       "parentId": "fld_mk_2",
-      "name": "POST crear jugador Bot sin chaleco",
-      "description": "201: id 2, vida 100, blindaje 0. Copiar el id a botId.",
+      "name": "POST crear jugador Bot (TT) sin chaleco",
+      "description": "201: id 2, equipo TT, vida 100, blindaje 0. Copiar el id a botId.",
       "method": "POST",
       "url": "{{ _.base_url }}/api/jugadores",
       "parameters": [],
@@ -412,7 +412,7 @@
       "settingRebuildPath": true,
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"nombre\": \"Bot\"\n}"
+        "text": "{\n  \"nombre\": \"Bot\",\n  \"equipo\": \"TT\"\n}"
       }
     },
     {
@@ -899,7 +899,7 @@
       "settingRebuildPath": true,
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"nombre\": \" \"\n}"
+        "text": "{\n  \"nombre\": \" \",\n  \"equipo\": \"CT\"\n}"
       }
     },
     {

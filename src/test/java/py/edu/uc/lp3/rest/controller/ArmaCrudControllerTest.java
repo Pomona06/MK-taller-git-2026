@@ -164,7 +164,7 @@ class ArmaCrudControllerTest {
     @Test
     void laSimulacionGuardaLaMunicionLaVidaYElBlindaje() throws Exception {
         Long ak = crearArma("{\"modelo\":\"AK-47\"}");
-        Long enemigo = crearJugador("{\"nombre\":\"Enemigo\",\"chaleco\":true}");
+        Long enemigo = crearJugador("{\"nombre\":\"Enemigo\",\"equipo\":\"CT\",\"chaleco\":true}");
         simular(ak, enemigo, 10).andExpect(status().isOk())
                 .andExpect(jsonPath("$.danoSinBlindaje").value(35))
                 .andExpect(jsonPath("$.vidaPerdida").value(27))
@@ -180,7 +180,7 @@ class ArmaCrudControllerTest {
     @Test
     void unJugadorEliminadoDevuelve409YNoSeGastaLaBala() throws Exception {
         Long awp = crearArma("{\"modelo\":\"AWP\",\"equipo\":\"CT\"}");
-        Long bot = crearJugador("{\"nombre\":\"Bot\"}");
+        Long bot = crearJugador("{\"nombre\":\"Bot\",\"equipo\":\"TT\"}");
         simular(awp, bot, 10).andExpect(status().isOk())
                 .andExpect(jsonPath("$.vidaPerdida").value(100))
                 .andExpect(jsonPath("$.eliminado").value(true));
@@ -193,7 +193,7 @@ class ArmaCrudControllerTest {
     @Test
     void laGranadaDeLaSimulacionTampocoSeReusa() throws Exception {
         Long he = crearArma("{\"modelo\":\"HE\",\"equipo\":\"CT\"}");
-        Long enemigo = crearJugador("{\"nombre\":\"Enemigo\",\"chaleco\":true}");
+        Long enemigo = crearJugador("{\"nombre\":\"Enemigo\",\"equipo\":\"CT\",\"chaleco\":true}");
         simular(he, enemigo, 3).andExpect(status().isOk())
                 .andExpect(jsonPath("$.vidaPerdida").value(59))
                 .andExpect(jsonPath("$.cargaDespues").doesNotExist());
@@ -207,10 +207,13 @@ class ArmaCrudControllerTest {
         postJson("/api/jugadores", "{\"nombre\":\"  \"}").andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.excepcion").value("ValorInvalidoException"));
         postJson("/api/jugadores", "{\"nombre\":\"" + "x".repeat(33) + "\"}").andExpect(status().isBadRequest());
+        postJson("/api/jugadores", "{\"nombre\":\"Sin equipo\"}").andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error", containsString("CT o TT")));
+        postJson("/api/jugadores", "{\"nombre\":\"Otro\",\"equipo\":\"XX\"}").andExpect(status().isBadRequest());
         assertEquals(0, jugadorRepository.count());
 
         Long ak = crearArma("{\"modelo\":\"AK-47\"}");
-        Long enemigo = crearJugador("{\"nombre\":\"Enemigo\"}");
+        Long enemigo = crearJugador("{\"nombre\":\"Enemigo\",\"equipo\":\"CT\"}");
         simular(ak, 9999L, 10).andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error", containsString("jugador")));
         simular(ak, enemigo, -1).andExpect(status().isBadRequest());

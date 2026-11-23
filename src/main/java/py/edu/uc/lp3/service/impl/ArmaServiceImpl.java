@@ -65,18 +65,10 @@ public class ArmaServiceImpl implements ArmaService {
             return modelo.equipoUnico().orElseThrow(() -> new ValorInvalidoException(modelo.getNombre()
                     + " es para los dos equipos: indicá \"equipo\": \"CT\" o \"TT\""));
         }
-        String equipo = validarEquipo(pedido);
+        String equipo = ReglasDeArmas.equipo(pedido);
         if (!modelo.loPuedeComprar(equipo)) {
             String dueno = modelo.isTerroristas() ? "TT (terroristas)" : "CT (antiterroristas)";
             throw new ValorInvalidoException("en CS2, " + modelo.getNombre() + " es solo para el equipo " + dueno);
-        }
-        return equipo;
-    }
-
-    private static String validarEquipo(String texto) {
-        String equipo = texto.strip().toUpperCase();
-        if (!"CT".equals(equipo) && !"TT".equals(equipo)) {
-            throw new ValorInvalidoException("el equipo debe ser CT o TT (recibido: " + texto + ")");
         }
         return equipo;
     }
@@ -89,7 +81,7 @@ public class ArmaServiceImpl implements ArmaService {
     @Transactional(readOnly = true)
     public List<Armas> listar(String equipo, Long precioMaximo) {
         if (equipo != null) {
-            return armaRepository.findByEquipo(validarEquipo(equipo));
+            return armaRepository.findByEquipo(ReglasDeArmas.equipo(equipo));
         }
         if (precioMaximo != null) {
             if (precioMaximo < 0) {
