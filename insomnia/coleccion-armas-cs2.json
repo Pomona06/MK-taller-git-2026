@@ -1,7 +1,7 @@
 {
   "_type": "export",
   "__export_format": 4,
-  "__export_date": "2026-11-22T12:00:00.000Z",
+  "__export_date": "2026-11-23T12:00:00.000Z",
   "__export_source": "insomnia.desktop.app:v10.3.0",
   "resources": [
     {
@@ -9,7 +9,7 @@
       "_type": "workspace",
       "parentId": null,
       "name": "MK CS2 Armas (POO-08)",
-      "description": "CRUD REST sobre H2 con el catálogo de CS2, simulaciones y errores (carpetas 0 a 4, en orden y con la base vacía), y el OpenAPI y la consulta de reglas de POO-09 (carpeta 5).",
+      "description": "CRUD REST sobre H2 con el catálogo de CS2, simulaciones y errores (carpetas 0 a 4, en orden y con la base vacía), el OpenAPI y la consulta de reglas de POO-09 (carpeta 5) y el escenario con los dos compañeros (carpeta 6).",
       "scope": "collection"
     },
     {
@@ -24,7 +24,12 @@
         "granadaId": 3,
         "famasId": 4,
         "jugadorId": 1,
-        "botId": 2
+        "botId": 2,
+        "a2_url": "http://localhost:8084",
+        "a3_url": "http://localhost:8083",
+        "escenarioArmaId": 6,
+        "escenarioObjetivoId": 3,
+        "aliadoId": 4
       },
       "dataPropertyOrder": {
         "&": [
@@ -34,12 +39,34 @@
           "granadaId",
           "famasId",
           "jugadorId",
-          "botId"
+          "botId",
+          "a2_url",
+          "a3_url",
+          "escenarioArmaId",
+          "escenarioObjetivoId",
+          "aliadoId"
         ]
       },
       "color": null,
       "isPrivate": false,
       "metaSortKey": 1
+    },
+    {
+      "_id": "env_mk_grupo",
+      "_type": "environment",
+      "parentId": "env_mk_base",
+      "name": "Grupo POO-09 (este servicio en 8082)",
+      "data": {
+        "base_url": "http://localhost:8082"
+      },
+      "dataPropertyOrder": {
+        "&": [
+          "base_url"
+        ]
+      },
+      "color": "#0b5cad",
+      "isPrivate": false,
+      "metaSortKey": 2
     },
     {
       "_id": "fld_mk_0",
@@ -100,6 +127,16 @@
       "environment": {},
       "environmentPropertyOrder": null,
       "metaSortKey": 600
+    },
+    {
+      "_id": "fld_mk_6",
+      "_type": "request_group",
+      "parentId": "wrk_mk_cs2",
+      "name": "6. POO-09: escenario con A2 (Matías) y A3 (Joaquín)",
+      "description": "Necesita los tres servicios prendidos: este en 8082 (sub-entorno Grupo POO-09), Matías en 8084 y Joaquín en 8083. Correr después de las carpetas 0 a 4, en orden.",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 700
     },
     {
       "_id": "req_mk_01",
@@ -1453,6 +1490,320 @@
         "mimeType": "application/json",
         "text": "{\n  \"modelo\": \"AK-47\",\n  \"vida\": 150\n}"
       }
+    },
+    {
+      "_id": "req_mk_60",
+      "_type": "request",
+      "parentId": "fld_mk_6",
+      "name": "GET OpenAPI de A1 (este servicio)",
+      "description": "200: mi documento OpenAPI.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/v3/api-docs",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 600,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {}
+    },
+    {
+      "_id": "req_mk_61",
+      "_type": "request",
+      "parentId": "fld_mk_6",
+      "name": "GET OpenAPI de A2 (Matías)",
+      "description": "200: el OpenAPI de Matías. De ahí salen la ruta y los campos de su regla de disparo rápido.",
+      "method": "GET",
+      "url": "{{ _.a2_url }}/v3/api-docs",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 610,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {}
+    },
+    {
+      "_id": "req_mk_62",
+      "_type": "request",
+      "parentId": "fld_mk_6",
+      "name": "GET OpenAPI de A3 (Joaquín)",
+      "description": "200: el OpenAPI de Joaquín. De ahí salen la ruta y los campos de su regla de daño.",
+      "method": "GET",
+      "url": "{{ _.a3_url }}/v3/api-docs",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 620,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {}
+    },
+    {
+      "_id": "req_mk_63",
+      "_type": "request",
+      "parentId": "fld_mk_6",
+      "name": "POST crear AWP para el escenario (CT)",
+      "description": "201: id 6 con la base que dejaron las carpetas 0 a 4. Copiar el id a escenarioArmaId.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/armas",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 630,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"modelo\": \"AWP\",\n  \"equipo\": \"CT\"\n}"
+      }
+    },
+    {
+      "_id": "req_mk_64",
+      "_type": "request",
+      "parentId": "fld_mk_6",
+      "name": "POST crear objetivo Halcón (TT) con chaleco",
+      "description": "201: id 3. Copiar el id a escenarioObjetivoId.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/jugadores",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 640,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nombre\": \"Halcón\",\n  \"equipo\": \"TT\",\n  \"chaleco\": true\n}"
+      }
+    },
+    {
+      "_id": "req_mk_65",
+      "_type": "request",
+      "parentId": "fld_mk_6",
+      "name": "POST crear Aliado (CT), del mismo equipo que el AWP",
+      "description": "201: id 4. Copiar el id a aliadoId.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/jugadores",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 650,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nombre\": \"Aliado\",\n  \"equipo\": \"CT\"\n}"
+      }
+    },
+    {
+      "_id": "req_mk_66",
+      "_type": "request",
+      "parentId": "fld_mk_6",
+      "name": "POST escenario feliz: disparo rápido con mira contra Halcón",
+      "description": "201: A2 acepta (con mira, estabilidad 1.0, 5 balas) y A3 acepta (enemigo vivo). El AWP gasta 2 balas y Halcón queda con la vida y el blindaje que calculó A3. Se guarda la jugada.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/escenarios/disparos-rapidos",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 660,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"armaId\": {{ _.escenarioArmaId }},\n  \"objetivoId\": {{ _.escenarioObjetivoId }},\n  \"tirador\": \"Sombra\",\n  \"distancia\": 40,\n  \"conMira\": true\n}"
+      }
+    },
+    {
+      "_id": "req_mk_67",
+      "_type": "request",
+      "parentId": "fld_mk_6",
+      "name": "GET jugadas guardadas",
+      "description": "200: una jugada, con lo que respondió cada compañero.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/escenarios/disparos-rapidos",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 670,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {}
+    },
+    {
+      "_id": "req_mk_68",
+      "_type": "request",
+      "parentId": "fld_mk_6",
+      "name": "GET AWP después del escenario",
+      "description": "200: carga 3 de 5.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/armas/{{ _.escenarioArmaId }}",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 680,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {}
+    },
+    {
+      "_id": "req_mk_69",
+      "_type": "request",
+      "parentId": "fld_mk_6",
+      "name": "GET Halcón después del escenario",
+      "description": "200: la vida y el blindaje que calculó A3.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/jugadores/{{ _.escenarioObjetivoId }}",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 690,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {}
+    },
+    {
+      "_id": "req_mk_70",
+      "_type": "request",
+      "parentId": "fld_mk_6",
+      "name": "409 rechazo de A2: disparo rápido sin mira (RechazoDeA2Exception)",
+      "description": "409: sin mira la estabilidad es 0.5 y la regla de Matías pide más de 0.7. No se consulta a A3 y no cambia nada.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/escenarios/disparos-rapidos",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 700,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"armaId\": {{ _.escenarioArmaId }},\n  \"objetivoId\": {{ _.escenarioObjetivoId }},\n  \"tirador\": \"Sombra\",\n  \"distancia\": 40,\n  \"conMira\": false\n}"
+      }
+    },
+    {
+      "_id": "req_mk_71",
+      "_type": "request",
+      "parentId": "fld_mk_6",
+      "name": "409 rechazo de A3: fuego amigo contra Aliado (RechazoDeA3Exception)",
+      "description": "409: Aliado es del mismo equipo que el AWP (CT) y la regla de Joaquín no permite fuego amigo. No cambia nada.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/escenarios/disparos-rapidos",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 710,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"armaId\": {{ _.escenarioArmaId }},\n  \"objetivoId\": {{ _.aliadoId }},\n  \"tirador\": \"Sombra\",\n  \"distancia\": 40,\n  \"conMira\": true\n}"
+      }
+    },
+    {
+      "_id": "req_mk_72",
+      "_type": "request",
+      "parentId": "fld_mk_6",
+      "name": "GET jugadas después de los rechazos (sigue 1)",
+      "description": "200: sigue habiendo una sola jugada.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/escenarios/disparos-rapidos",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 720,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {}
+    },
+    {
+      "_id": "req_mk_73",
+      "_type": "request",
+      "parentId": "fld_mk_6",
+      "name": "GET AWP después de los rechazos (sigue con 3)",
+      "description": "200: carga 3: los rechazos no gastaron balas.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/armas/{{ _.escenarioArmaId }}",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 730,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingFollowRedirects": "global",
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "body": {}
     }
   ]
 }
