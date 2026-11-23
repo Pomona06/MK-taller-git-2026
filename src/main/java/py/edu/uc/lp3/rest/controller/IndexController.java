@@ -27,6 +27,7 @@ public class IndexController {
                 "estado", "vivo",
                 "armasGuardadas", armaService.contar(),
                 "endpoints", List.of(
+                        "POST|GET /api/escenarios/disparos-rapidos (POO-09: consulta a A2 y A3 y guarda la jugada)",
                         "GET /v3/api-docs (OpenAPI) y /swagger-ui.html (probarlo en el navegador)",
                         "GET /api/reglas y POST /api/reglas/disparo|recarga|impacto (consultar las reglas sin tocar la base)",
                         "GET /api/catalogo (armas de CS2 que se pueden crear)",
