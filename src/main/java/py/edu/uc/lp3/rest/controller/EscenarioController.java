@@ -34,24 +34,28 @@ public class EscenarioController {
 
     @PostMapping
     @Operation(summary = "Disparo rápido con francotirador: consulta a A2 y a A3 y guarda la jugada si los dos aceptan",
-            description = "El francotirador guardado (AWP o SSG 08) hace un disparo rápido (dos balas) contra un jugador "
-                    + "guardado. Primero A2 (Matías) valida el disparo rápido: con mira la estabilidad es 1.0 y sin mira "
+            description = "El jugador guardado tiradorId hace un disparo rápido (dos balas) con un francotirador guardado "
+                    + "de su equipo (AWP o SSG 08) contra el jugador guardado objetivoId. Antes de consultar a nadie se "
+                    + "controla que el tirador esté vivo, que el arma sea de su equipo y que la bala llegue a esa "
+                    + "distancia. Primero A2 (Matías) valida el disparo rápido: con mira la estabilidad es 1.0 y sin mira "
                     + "0.5; hacen falta más de 0.7 y dos balas. Después A3 (Joaquín) valida el daño: el objetivo tiene "
                     + "que ser un enemigo vivo, y calcula la vida y el blindaje que le quedan. Si los dos aceptan, el arma "
                     + "gasta dos balas, el objetivo queda como dijo A3 y se guarda la jugada. Si alguno rechaza, no "
                     + "cambia nada y la respuesta dice quién fue.")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(examples = {
             @ExampleObject(name = "Feliz: AWP con mira contra un enemigo",
-                    value = "{\"armaId\": 2, \"objetivoId\": 1, \"tirador\": \"Sombra\", \"distancia\": 40, \"conMira\": true}"),
+                    value = "{\"armaId\": 2, \"tiradorId\": 2, \"objetivoId\": 1, \"distancia\": 40, \"conMira\": true}"),
             @ExampleObject(name = "Rechazo de A2: sin mira",
-                    value = "{\"armaId\": 2, \"objetivoId\": 1, \"tirador\": \"Sombra\", \"distancia\": 40, \"conMira\": false}")}))
+                    value = "{\"armaId\": 2, \"tiradorId\": 2, \"objetivoId\": 1, \"distancia\": 40, \"conMira\": false}")}))
     @ApiResponse(responseCode = "201", description = "Los dos aceptaron: la jugada quedó guardada")
-    @ApiResponse(responseCode = "400", description = "Faltan ids, la distancia es negativa o el arma no es un francotirador",
+    @ApiResponse(responseCode = "400", description = "Faltan ids, el tirador y el objetivo son el mismo, la distancia es "
+            + "negativa o mayor al alcance del arma, el arma no es un francotirador o no es del equipo del tirador",
             content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    @ApiResponse(responseCode = "404", description = "No existe el arma o el jugador",
+    @ApiResponse(responseCode = "404", description = "No existe el arma, el tirador o el objetivo",
             content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "409", description = "RechazoDeA2Exception o RechazoDeA3Exception: rechazó la regla de un "
-            + "compañero (también MunicionInsuficienteException o JugadorEliminadoException si el estado cambió)",
+            + "compañero; JugadorEliminadoException si el tirador está eliminado (también MunicionInsuficienteException "
+            + "si el estado cambió mientras se consultaba)",
             content = @Content(schema = @Schema(implementation = ErrorDeCompaneroResponse.class)))
     @ApiResponse(responseCode = "503", description = "CompaneroNoDisponibleException: A2 o A3 no respondió",
             content = @Content(schema = @Schema(implementation = ErrorDeCompaneroResponse.class)))

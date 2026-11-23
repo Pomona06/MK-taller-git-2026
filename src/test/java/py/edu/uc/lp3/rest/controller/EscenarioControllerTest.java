@@ -50,6 +50,7 @@ class EscenarioControllerTest {
     private JugadaRepository jugadaRepository;
 
     private Long awp;
+    private Long sombra;
     private Long enemigo;
 
     private static ServidorFalso arrancar() {
@@ -81,16 +82,27 @@ class EscenarioControllerTest {
         A3.responder(200, A3_ACEPTA);
         mvc.perform(post("/api/armas").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"modelo\":\"AWP\",\"equipo\":\"CT\"}")).andExpect(status().isCreated());
-        mvc.perform(post("/api/jugadores").contentType(MediaType.APPLICATION_JSON)
-                .content("{\"nombre\":\"Enemigo\",\"equipo\":\"TT\",\"chaleco\":true}")).andExpect(status().isCreated());
         awp = armaRepository.findAll().get(0).getId();
-        enemigo = jugadorRepository.findAll().get(0).getId();
+        sombra = crearJugador("Sombra", "CT");
+        enemigo = crearJugador("Enemigo", "TT");
+    }
+
+    private Long crearJugador(String nombre, String equipo) throws Exception {
+        String json = mvc.perform(post("/api/jugadores").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nombre\":\"" + nombre + "\",\"equipo\":\"" + equipo + "\",\"chaleco\":true}"))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        return Long.valueOf(json.replaceAll(".*\"id\":(\\d+).*", "$1"));
     }
 
     private ResultActions escenario(Object armaId, Object objetivoId, boolean conMira) throws Exception {
+        return escenario(armaId, sombra, objetivoId, 40, conMira);
+    }
+
+    private ResultActions escenario(Object armaId, Object tiradorId, Object objetivoId, double distancia,
+                                    boolean conMira) throws Exception {
         return mvc.perform(post("/api/escenarios/disparos-rapidos").contentType(MediaType.APPLICATION_JSON)
-                .content("{\"armaId\":" + armaId + ",\"objetivoId\":" + objetivoId
-                        + ",\"tirador\":\"Sombra\",\"distancia\":40,\"conMira\":" + conMira + "}"));
+                .content("{\"armaId\":" + armaId + ",\"tiradorId\":" + tiradorId + ",\"objetivoId\":" + objetivoId
+                        + ",\"distancia\":" + distancia + ",\"conMira\":" + conMira + "}"));
     }
 
     private void nadaCambio() throws Exception {
@@ -109,6 +121,8 @@ class EscenarioControllerTest {
                 .andExpect(jsonPath("$.balasGastadas").value(2))
                 .andExpect(jsonPath("$.cargaDespues").value(3))
                 .andExpect(jsonPath("$.danio").value(222))
+                .andExpect(jsonPath("$.tiradorId").value(sombra))
+                .andExpect(jsonPath("$.tirador").value("Sombra"))
                 .andExpect(jsonPath("$.vidaDespues").value(30))
                 .andExpect(jsonPath("$.blindajeDespues").value(50))
                 .andExpect(jsonPath("$.respuestaA3", containsString("vidaFinal")));
@@ -116,6 +130,7 @@ class EscenarioControllerTest {
         // Lo que se le mandó a cada compañero, con los nombres de su contrato.
         assertTrue(A2.getUltimoPedido().contains("\"estabilidad\":1.0"));
         assertTrue(A2.getUltimoPedido().contains("\"municionActual\":5"));
+        assertTrue(A3.getUltimoPedido().contains("\"tirador\":\"Sombra\""));
         assertTrue(A3.getUltimoPedido().contains("\"equipoTirador\":\"ANTITERRORISTAS\""));
         assertTrue(A3.getUltimoPedido().contains("\"equipoObjetivo\":\"TERRORISTAS\""));
         assertTrue(A3.getUltimoPedido().contains("\"danio\":222"));
@@ -177,8 +192,43 @@ class EscenarioControllerTest {
                 .andExpect(jsonPath("$.error", containsString("no es un francotirador")));
         escenario(awp, 9999, true).andExpect(status().isNotFound());
         escenario("null", enemigo, true).andExpect(status().isBadRequest());
+        escenario(awp, "null", enemigo, 40, true).andExpect(status().isBadRequest());
+        escenario(awp, 9999, enemigo, 40, true).andExpect(status().isNotFound());
         mvc.perform(get("/api/escenarios/disparos-rapidos/9999")).andExpect(status().isNotFound());
         assertEquals(0, A2.getPedidos());
         nadaCambio();
+    }
+
+    /** ¿Esto puede pasar en el juego? Lo que no puede pasar se rechaza antes de consultar a nadie. */
+    @Test
+    void loQueNoPuedePasarEnElJuegoNoLlegaALosCompaneros() throws Exception {
+        // Nadie se dispara a sí mismo.
+        escenario(awp, enemigo, enemigo, 40, true).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error", containsString("mismo jugador")));
+        // El AWP es de los CT: un TT no lo usa.
+        Long otroTT = crearJugador("Otro", "TT");
+        escenario(awp, otroTT, enemigo, 40, true).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error", containsString("solo lo usa un jugador de su equipo")));
+        // La bala del AWP llega hasta 208 m.
+        escenario(awp, sombra, enemigo, 300, true).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error", containsString("llega hasta 208 m")));
+        // Un tirador eliminado no dispara: se lo elimina con la simulación de POO-08 (AWP a 1 m, sin chaleco).
+        Long caido = crearJugadorSinChaleco("Caído", "CT");
+        mvc.perform(post("/api/simulaciones/dano").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"armaId\":" + awp + ",\"jugadorId\":" + caido + ",\"distancia\":1}"))
+                .andExpect(jsonPath("$.eliminado").value(true));
+        escenario(awp, caido, enemigo, 40, true).andExpect(status().isConflict())
+                .andExpect(jsonPath("$.excepcion").value("JugadorEliminadoException"))
+                .andExpect(jsonPath("$.error", containsString("no puede disparar")));
+        assertEquals(0, A2.getPedidos());
+        assertEquals(0, A3.getPedidos());
+        assertEquals(0, jugadaRepository.count());
+    }
+
+    private Long crearJugadorSinChaleco(String nombre, String equipo) throws Exception {
+        String json = mvc.perform(post("/api/jugadores").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nombre\":\"" + nombre + "\",\"equipo\":\"" + equipo + "\"}"))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        return Long.valueOf(json.replaceAll(".*\"id\":(\\d+).*", "$1"));
     }
 }

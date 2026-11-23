@@ -21,7 +21,8 @@ import java.time.LocalDateTime;
  * vida y el blindaje que calculó A3, y se crea la Jugada. Está separado de
  * EscenarioServiceImpl para que las llamadas HTTP a los compañeros queden
  * fuera de la transacción. Antes de cambiar nada vuelve a verificar las
- * reglas propias (munición y jugador eliminado), por si el estado cambió.
+ * reglas propias (munición, y que el tirador y el objetivo sigan vivos), por
+ * si el estado cambió mientras se esperaba a los compañeros.
  */
 @Component
 public class RegistroDeJugadas {
@@ -43,10 +44,15 @@ public class RegistroDeJugadas {
     public Jugada guardar(JugadaAceptada j) {
         Armas arma = armaRepository.findById(j.armaId())
                 .orElseThrow(() -> new RecursoNoEncontradoException("un arma", j.armaId()));
+        Jugador tirador = jugadorRepository.findById(j.tiradorId())
+                .orElseThrow(() -> new RecursoNoEncontradoException("un jugador", j.tiradorId()));
         Jugador objetivo = jugadorRepository.findById(j.objetivoId())
                 .orElseThrow(() -> new RecursoNoEncontradoException("un jugador", j.objetivoId()));
         Sniper sniper = (Sniper) arma;
         ReglasDeArmas.verificarQuePuedeDisparar(sniper, EscenarioServiceImpl.BALAS_DEL_DISPARO_RAPIDO);
+        if (tirador.estaEliminado()) {
+            throw new JugadorEliminadoException(tirador.getNombre(), "disparar");
+        }
         if (objetivo.estaEliminado()) {
             throw new JugadorEliminadoException(objetivo.getNombre());
         }
@@ -62,7 +68,8 @@ public class RegistroDeJugadas {
         armaRepository.save(sniper);
         jugadorRepository.save(objetivo);
 
-        return jugadaRepository.save(new Jugada(LocalDateTime.now(), j.tirador(), sniper.getEquipo(), sniper.getId(),
+        return jugadaRepository.save(new Jugada(LocalDateTime.now(), tirador.getId(), tirador.getNombre(),
+                tirador.getEquipo(), sniper.getId(),
                 sniper.getNombre(), objetivo.getId(), objetivo.getNombre(), objetivo.getEquipo(), j.distancia(),
                 j.conMira(), j.estabilidad(), EscenarioServiceImpl.BALAS_DEL_DISPARO_RAPIDO, sniper.getCarga(),
                 j.danio(), vidaAntes, objetivo.getVida(), blindajeAntes, objetivo.getBlindaje(),
