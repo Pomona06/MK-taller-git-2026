@@ -1,0 +1,1 @@
+{"pedido": "GET http://localhost:8082/api/jugadores/1", "status": 200, "respuesta": {"blindaje":0,"eliminado":true,"equipo":"TT","id":1,"nombre":"Halcón","vida":0}}

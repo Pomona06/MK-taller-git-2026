@@ -1,0 +1,1 @@
+{"pedido": "GET http://localhost:8082/api/armas/1", "status": 200, "respuesta": {"tipo":"sniper","apodo":null,"automatica":false,"capacidadCargador":5,"carga":3,"cargadoresRestantes":2,"conMira":false,"dano":115,"descripcion":"AWP","equipo":"CT","id":1,"modoRafaga":false,"nombre":"AWP","precio":4750}}
