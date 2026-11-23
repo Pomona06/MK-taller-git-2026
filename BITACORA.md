@@ -125,3 +125,7 @@ Usé el mismo asistente y el mismo modelo en todos los chats: taller de Git, eje
   que lo cambie en todo el repositorio. Antes confirmó los contratos de los dos con sus OpenAPI reales, que
   Joaquín guardó junto con las respuestas de su prueba con los tres servicios: los campos que manda mi
   cliente coinciden.
+- Le pedí que me explicara cómo hacer la prueba con los tres. Me mostró que no hacía falta juntarnos: cloné los
+  repositorios de Matías y Joaquín, arranqué los tres servicios en mi computadora (8080, 8082 y 8083) y corrí
+  el script de captura. Los 14 pedidos dieron lo esperado; subí las respuestas reales y revisó que su
+  contenido fuera correcto antes de documentarlas en el README.
