@@ -1,6 +1,7 @@
 package py.edu.uc.lp3.cliente;
 
 import org.springframework.http.MediaType;
+import org.springframework.http.client.BufferingClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
@@ -37,7 +38,10 @@ abstract class ClienteDeCompanero {
         SimpleClientHttpRequestFactory fabrica = new SimpleClientHttpRequestFactory();
         fabrica.setConnectTimeout(Duration.ofMillis(esperaConexionMs));
         fabrica.setReadTimeout(Duration.ofMillis(esperaRespuestaMs));
-        this.restClient = RestClient.builder().baseUrl(urlBase).requestFactory(fabrica).build();
+        // Buffering: el cuerpo se manda entero, con Content-Length, en vez de por partes (chunked),
+        // para que lo entienda cualquier servidor.
+        this.restClient = RestClient.builder().baseUrl(urlBase)
+                .requestFactory(new BufferingClientHttpRequestFactory(fabrica)).build();
     }
 
     /** Hace el POST a la ruta configurada con ese cuerpo y devuelve la respuesta aceptada. */

@@ -20,11 +20,13 @@ public class ServidorFalso implements AutoCloseable {
     private volatile String ultimoPedido;
     private volatile String ultimaRuta;
     private volatile int pedidos;
+    private volatile String ultimoLargo;
 
     public ServidorFalso() throws IOException {
         servidor = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
         servidor.createContext("/", intercambio -> {
             ultimaRuta = intercambio.getRequestURI().getPath();
+            ultimoLargo = intercambio.getRequestHeaders().getFirst("Content-Length");
             ultimoPedido = new String(intercambio.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
             pedidos++;
             byte[] cuerpo = respuesta.getBytes(StandardCharsets.UTF_8);
@@ -53,6 +55,11 @@ public class ServidorFalso implements AutoCloseable {
 
     public String getUltimaRuta() {
         return ultimaRuta;
+    }
+
+    /** El encabezado Content-Length del último pedido (null si llegó por partes). */
+    public String getUltimoLargo() {
+        return ultimoLargo;
     }
 
     public int getPedidos() {

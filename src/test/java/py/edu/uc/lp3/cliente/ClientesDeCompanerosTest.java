@@ -38,6 +38,8 @@ class ClientesDeCompanerosTest {
         assertEquals("/api/reglas/disparo-rapido", servidor.getUltimaRuta());
         assertTrue(servidor.getUltimoPedido().contains("\"estabilidad\":1.0"));
         assertTrue(servidor.getUltimoPedido().contains("\"municionActual\":5"));
+        assertEquals(String.valueOf(servidor.getUltimoPedido().getBytes(java.nio.charset.StandardCharsets.UTF_8).length),
+                servidor.getUltimoLargo(), "el cuerpo va con Content-Length, no por partes");
     }
 
     @Test
