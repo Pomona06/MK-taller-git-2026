@@ -46,21 +46,23 @@ objetivo es un enemigo vivo y calcula cómo queda.
 | Rol en mi entrega | Integrante | Repositorio | URL base | OpenAPI | Sus dos reglas |
 |---|---|---|---|---|---|
 | **A1** | Marcelo Kropff (`Pomona06`) | [MK-taller-git-2026](https://github.com/Pomona06/MK-taller-git-2026) | `http://localhost:8082` | `/v3/api-docs` · `/swagger-ui.html` | Munición y vida ([Las dos reglas](#las-dos-reglas)) |
-| **A2** | Matías Jara (`Vanzfranhait`) | [mj-taller-git-2026](https://github.com/Vanzfranhait/mj-taller-git-2026) | `http://localhost:8084` | `/v3/api-docs` | Explosión de granada y recarga (disparo) rápida de francotirador |
+| **A2** | Matías Jara (`Vanzfranhait`) | [mj-taller-git-2026](https://github.com/Vanzfranhait/mj-taller-git-2026) (commit [`c2ac475`](https://github.com/Vanzfranhait/mj-taller-git-2026/commit/c2ac475)) | `http://localhost:8080` | `/v3/api-docs` | Explosión de granada y recarga (disparo) rápida de francotirador |
 | **A3** | Joaquín Benegas (`joaquinBenegas0`) | [jb-taller-git-2026](https://github.com/joaquinBenegas0/jb-taller-git-2026) | `http://localhost:8083` | `/v3/api-docs` · `/swagger-ui.html` | Munición por modo de disparo y daño con blindaje |
 
-Puertos acordados en el grupo para correr los tres en una sola máquina: Marcelo 8082, Joaquín 8083 y Matías
-8084. Round robin: yo consulto a Matías (A2) y a Joaquín (A3); Matías consulta mi regla de munición y la
+Puertos acordados en el grupo para correr los tres en una sola máquina: Matías 8080, Marcelo 8082 y Joaquín
+8083. Como 8080 también es el puerto por defecto de este servicio, en la prueba del grupo este servicio se
+arranca siempre con `--server.port=8082`. Round robin: yo consulto a Matías (A2) y a Joaquín (A3); Matías consulta mi regla de munición y la
 regla de Joaquín; Joaquín consulta la regla de Matías y mi regla de vida.
 
 ### Las reglas que consulto
 
 - **A2 · Matías, disparo rápido de francotirador.** En su README: «un francotirador con estabilidad > 0.7
   puede disparar rápido (consume 2 de munición), pero queda inestable (estabilidad 0.5) después». Lo consulto
-  en `POST /api/reglas/disparo-rapido`, su consulta sin efectos en su base, con `estabilidad` y
-  `municionActual`. Acepta con 200; rechaza con 400 (`ReglaDeJuegoException`,
-  `{"error":"regla_de_juego","mensaje":...}`). *La ruta y los campos están tomados de su contrato escrito y
-  del README de Joaquín, que también lo consulta; se confirman con su OpenAPI.*
+  en `POST /api/reglas/disparo-rapido`, su consulta sin efectos en su base (commit `c2ac475`), con
+  `{"estabilidad": 1.0, "municionActual": 5}`. Acepta con 200 `{"permitido": true, "municionDespues": 3,
+  "estabilidadDespues": 0.5}`; rechaza con 400 `{"error": "regla_de_juego", "mensaje": "El francotirador no
+  está estabilizado"}` (o «No hay munición suficiente para el disparo rápido»). Los nombres y tipos de los
+  campos (`estabilidad` decimal, `municionActual` entero) están confirmados con su OpenAPI.
 - **A3 · Joaquín, daño con blindaje.** En su contrato: «solo se le dispara a un enemigo vivo (otro equipo,
   vida mayor a 0); el blindaje absorbe hasta la mitad del daño y el resto baja la vida, que nunca queda por
   debajo de 0». Lo consulto en `POST /api/reglas/danio` con `tirador`, `equipoTirador`, `objetivo`,
@@ -112,7 +114,7 @@ código:
 
 | Propiedad | Variable | Por defecto |
 |---|---|---|
-| `companeros.a2.url` | `A2_URL` | `http://localhost:8084` |
+| `companeros.a2.url` | `A2_URL` | `http://localhost:8080` |
 | `companeros.a2.ruta-disparo-rapido` | `A2_RUTA` | `/api/reglas/disparo-rapido` |
 | `companeros.a3.url` | `A3_URL` | `http://localhost:8083` |
 | `companeros.a3.ruta-danio` | `A3_RUTA` | `/api/reglas/danio` |
@@ -183,7 +185,7 @@ Todo lo que un compañero necesita (cómo arrancar mi servicio, ejemplos y qué 
 A1 (A1 arranca igual sin ellos, pero el escenario responde 503 hasta que estén):
 
 ```bash
-cd mj-taller-git-2026 && ./mvnw spring-boot:run -Dspring-boot.run.arguments=--server.port=8084
+cd mj-taller-git-2026 && ./mvnw spring-boot:run -Dspring-boot.run.arguments=--server.port=8080
 ```
 ```bash
 cd jb-taller-git-2026 && ./mvnw spring-boot:run -Dspring-boot.run.arguments=--server.port=8083

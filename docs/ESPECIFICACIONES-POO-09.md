@@ -19,7 +19,7 @@ Trío de Counter-Strike 2. En mi entrega:
 | Rol | Integrante | Repositorio | URL base | OpenAPI | Regla que consulto |
 |---|---|---|---|---|---|
 | **A1** (yo) | Marcelo Kropff (`Pomona06`) | [MK-taller-git-2026](https://github.com/Pomona06/MK-taller-git-2026) | `http://localhost:8082` | `/v3/api-docs` · `/swagger-ui.html` | — |
-| **A2** | Matías Jara (`Vanzfranhait`) | [mj-taller-git-2026](https://github.com/Vanzfranhait/mj-taller-git-2026) | `http://localhost:8084` | `/v3/api-docs` | Disparo rápido de francotirador: `POST /api/reglas/disparo-rapido` |
+| **A2** | Matías Jara (`Vanzfranhait`) | [mj-taller-git-2026](https://github.com/Vanzfranhait/mj-taller-git-2026) (commit `c2ac475`) | `http://localhost:8080` | `/v3/api-docs` | Disparo rápido de francotirador: `POST /api/reglas/disparo-rapido` |
 | **A3** | Joaquín Benegas (`joaquinBenegas0`) | [jb-taller-git-2026](https://github.com/joaquinBenegas0/jb-taller-git-2026) | `http://localhost:8083` | `/v3/api-docs` · `/swagger-ui.html` | Daño con blindaje: `POST /api/reglas/danio` |
 
 Las reglas que consulto, en una frase cada una:
@@ -58,7 +58,7 @@ Las URL de A2 y A3 están en `application.properties` y se cambian con `A2_URL`,
 En una sola máquina, primero A2 y A3, después A1:
 
 ```bash
-cd mj-taller-git-2026 && ./mvnw spring-boot:run -Dspring-boot.run.arguments=--server.port=8084
+cd mj-taller-git-2026 && ./mvnw spring-boot:run -Dspring-boot.run.arguments=--server.port=8080
 ```
 ```bash
 cd jb-taller-git-2026 && ./mvnw spring-boot:run -Dspring-boot.run.arguments=--server.port=8083

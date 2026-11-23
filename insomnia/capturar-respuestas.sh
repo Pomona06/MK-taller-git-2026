@@ -8,7 +8,7 @@
 set -u
 
 A1="${A1_URL:-http://localhost:8082}"   # este servicio (Marcelo)
-A2="${A2_URL:-http://localhost:8084}"   # Matías: disparo rápido
+A2="${A2_URL:-http://localhost:8080}"   # Matías: disparo rápido
 A3="${A3_URL:-http://localhost:8083}"   # Joaquín: daño con blindaje
 DIR="$(cd "$(dirname "$0")" && pwd)/respuestas"
 mkdir -p "$DIR"
