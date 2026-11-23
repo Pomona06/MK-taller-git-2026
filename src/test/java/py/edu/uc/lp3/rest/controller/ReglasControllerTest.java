@@ -50,6 +50,23 @@ class ReglasControllerTest {
                 .andExpect(jsonPath("$[1].nombre").value("Regla de vida"));
     }
 
+    /** ¿Esto puede pasar en el juego? Ni 715 millones de ráfagas ni una bala que llega a 1 km. */
+    @Test
+    void numerosImposiblesSeRechazan() throws Exception {
+        // 3 × 715827883 no entra en un int: antes se desbordaba y la consulta decía que sí, con balas negativas.
+        consultar("disparo", "{\"modelo\":\"FAMAS\",\"modoRafaga\":true,\"veces\":715827883}")
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.excepcion").value("MunicionInsuficienteException"));
+        consultar("impacto", "{\"modelo\":\"AWP\",\"distancia\":1000}").andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error", containsString("llega hasta 208 m")));
+        consultar("impacto", "{\"modelo\":\"USP-S\",\"distancia\":150}").andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error", containsString("llega hasta 104 m")));
+        consultar("impacto", "{\"modelo\":\"AWP\",\"distancia\":200}").andExpect(status().isOk());
+        // Un JSON mal escrito responde con el mismo formato de error que el resto.
+        consultar("impacto", "{\"modelo\":").andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.excepcion").value("HttpMessageNotReadableException"));
+    }
+
     @Test
     void reglaDeMunicionParaDisparar() throws Exception {
         consultar("disparo", "{\"modelo\":\"AK-47\",\"carga\":1}").andExpect(status().isOk())
