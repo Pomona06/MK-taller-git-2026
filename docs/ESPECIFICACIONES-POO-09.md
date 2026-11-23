@@ -7,7 +7,7 @@
 | **Ejercicio** | `ejercicio-poo-09-apis-cruzadas-2026-11-16` |
 | **Dominio** | Counter-Strike 2 |
 | **Repositorio** | https://github.com/Pomona06/MK-taller-git-2026 |
-| **Enlace al commit de la solución** | https://github.com/Pomona06/MK-taller-git-2026/commit/0b556f780d6bfa85699515624b36b558ff87997a |
+| **Enlace al commit de la solución** | https://github.com/Pomona06/MK-taller-git-2026/commit/b0c71a11d66c24c30f0b963d58c509974f70d80e |
 | **Colección de Insomnia** | [`insomnia/coleccion-armas-cs2.json`](../insomnia/coleccion-armas-cs2.json), carpetas 5 y 6 |
 
 ---
@@ -134,4 +134,4 @@ sección «Situación de POO-08».
 
 ## 5. Enlace al commit
 
-https://github.com/Pomona06/MK-taller-git-2026/commit/0b556f780d6bfa85699515624b36b558ff87997a
+https://github.com/Pomona06/MK-taller-git-2026/commit/b0c71a11d66c24c30f0b963d58c509974f70d80e

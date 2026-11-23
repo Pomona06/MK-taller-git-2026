@@ -11,7 +11,7 @@ paquetes según el template de la cátedra. Las armas, los jugadores y sus chale
 - Bitácora de IA: [BITACORA.md](BITACORA.md)
 - Especificaciones aplicadas a CS2: [POO-09](docs/ESPECIFICACIONES-POO-09.md) · [POO-08](docs/ESPECIFICACIONES-POO-08.md) · [POO-06](docs/ESPECIFICACIONES.md)
 - Colección de Insomnia: [`insomnia/coleccion-armas-cs2.json`](insomnia/coleccion-armas-cs2.json)
-- Enlace al commit de la solución POO-09: https://github.com/Pomona06/MK-taller-git-2026/commit/0b556f780d6bfa85699515624b36b558ff87997a
+- Enlace al commit de la solución POO-09: https://github.com/Pomona06/MK-taller-git-2026/commit/b0c71a11d66c24c30f0b963d58c509974f70d80e
 - Enlace al commit de la corrección de POO-08: https://github.com/Pomona06/MK-taller-git-2026/commit/4198ec615bf7dd930a3b04c835b04f962877418d
 - Enlace al commit entregado de POO-08 (antes de la corrección): https://github.com/Pomona06/MK-taller-git-2026/commit/e1f5309ec85711a4ed4cf5b854950a821bed5858
 - Enlace al commit de la solución POO-06: https://github.com/Pomona06/MK-taller-git-2026/commit/e7a1c2019b316689e0d4b630e5aee0edf2a06bf2
