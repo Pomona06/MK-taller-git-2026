@@ -129,3 +129,23 @@ Usé el mismo asistente y el mismo modelo en todos los chats: taller de Git, eje
   repositorios de Matías y Joaquín, arranqué los tres servicios en mi computadora (8080, 8082 y 8083) y corrí
   el script de captura. Los 14 pedidos dieron lo esperado; subí las respuestas reales y revisó que su
   contenido fuera correcto antes de documentarlas en el README.
+
+### POO-09: revisión final antes de entregar
+
+- Le pedí una última revisión de todo el proyecto con la nota del profesor sobre POO-08 en mente («¿esto
+  puede pasar en el juego?» frente a cada dato que acepta la aplicación) y con lo que dicen el enunciado, la
+  rúbrica y los README de Matías y Joaquín.
+- Leyó todo el código y probó la API con datos imposibles. Encontró un error de programación: con la FAMAS en
+  ráfaga y `veces=715827883`, la cuenta de balas (3 × 715 827 883) no entraba en un `int`, daba un número
+  negativo y la regla de munición la dejaba pasar; el servidor tardó 16 segundos y respondió 500, y la
+  consulta de disparo decía «puede disparar» con balas negativas. Lo corrigió haciendo la cuenta con `long`.
+- Encontró tres datos que el juego no permite: disparos a cualquier distancia (agregó el alcance real de cada
+  arma, `m_flRange` de `weapons.vdata`: 208 m los rifles y francotiradores, 104 m las pistolas), un tirador
+  del escenario que era solo un nombre (ahora es un jugador guardado, vivo y del equipo del arma) y equipos de
+  más de cinco jugadores (`EquipoCompletoException`). También agregó dos handlers para que un JSON mal escrito
+  responda con el mismo formato de error.
+- Antes de cambiar la regla de vida revisó en los README y las respuestas publicadas de Joaquín qué distancias
+  me manda (10 y 40 m) y que Matías consulta otra regla, para no romperles nada.
+- Agregó un test por cada caso (53 en total), los pedidos nuevos en la colección de Insomnia (79) y la
+  sección «Revisión final» del README. Recorrió la colección completa y el script de captura contra el
+  servicio con compañeros simulados.

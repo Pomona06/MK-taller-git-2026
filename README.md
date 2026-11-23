@@ -36,8 +36,8 @@ tablas cambiaron.
 
 ## POO-09: APIs cruzadas
 
-**El escenario en una frase:** un jugador hace un **disparo rápido** (dos balas de una vez) con su
-francotirador contra un enemigo, y la jugada solo se guarda en mi H2 si la regla de disparo rápido de A2
+**El escenario en una frase:** un jugador hace un **disparo rápido** (dos balas de una vez) con un
+francotirador de su equipo contra un enemigo, y la jugada solo se guarda en mi H2 si la regla de disparo rápido de A2
 (Matías) dice que el arma está estable y tiene dos balas, y la regla de daño de A3 (Joaquín) dice que el
 objetivo es un enemigo vivo y calcula cómo queda.
 
@@ -72,17 +72,21 @@ regla de Joaquín; Joaquín consulta la regla de Matías y mi regla de vida.
 
 ### El escenario: `POST /api/escenarios/disparos-rapidos`
 
-Pedido: `{"armaId": 6, "objetivoId": 3, "tirador": "Sombra", "distancia": 40, "conMira": true}`.
+Pedido: `{"armaId": 6, "tiradorId": 5, "objetivoId": 3, "distancia": 40, "conMira": true}` (el AWP de los
+CT, Sombra y Halcón, con los ids que deja la colección de Insomnia).
 
-1. `EscenarioServiceImpl` valida el pedido y busca el arma y el objetivo en mi base. Si el arma no es un
-   francotirador (AWP o SSG 08), responde 400 sin consultar a nadie.
+1. `EscenarioServiceImpl` valida el pedido y busca el arma, el tirador y el objetivo en mi base. Antes de
+   consultar a nadie controla lo que no puede pasar en el juego: el arma tiene que ser un francotirador (AWP o
+   SSG 08) **del equipo del tirador**, la bala tiene que **llegar** a esa distancia (208 m, el alcance del AWP
+   en el juego), el tirador tiene que estar **vivo** y no puede ser el mismo objetivo. Si algo falla, responde
+   400 (o 409 `JugadorEliminadoException` si el tirador está eliminado) y no consulta a A2 ni a A3.
 2. **A2 primero (Matías):** ¿puede hacer el disparo rápido? La estabilidad sale de mi modelo: **con mira**
    (`conMira: true`) el arma está estable, 1.0; **sin mira**, 0.5. La munición es la carga del cargador. Va
    primero porque, si el disparo no puede ocurrir, no tiene sentido preguntar qué le haría al objetivo.
 3. **A3 después (Joaquín):** ¿qué le hacen las dos balas al objetivo? El daño que le mando es el de mi regla
    de distancia (`danoA`) por dos balas; él decide si es un enemigo vivo y con cuánta vida y blindaje queda.
 4. **Si los dos aceptan**, `RegistroDeJugadas` abre una transacción, vuelve a verificar mis reglas (dos balas
-   en el cargador y objetivo no eliminado), gasta las dos balas, deja al objetivo con la vida y el blindaje que
+   en el cargador, tirador y objetivo no eliminados), gasta las dos balas, deja al objetivo con la vida y el blindaje que
    calculó A3 y guarda una `Jugada` (tabla `jugada`) con lo que respondió cada compañero. Responde **201**, y
    `GET /api/escenarios/disparos-rapidos` la muestra.
 5. **Si alguno rechaza**, no se llegó a tocar la base: las dos consultas van antes de la transacción. Responde
@@ -175,7 +179,8 @@ cambiar mi base, hay tres endpoints que reciben el estado en el JSON y no usan l
 | `POST /api/reglas/impacto` | Vida: ¿qué le hace el disparo al jugador? | 200 | 409 `JugadorEliminadoException` |
 
 Usan las mismas reglas que la simulación: por ejemplo, el AK-47 a 10 m contra un jugador con chaleco da
-vida 73 y blindaje 97 en los dos casos. Un dato imposible en el juego responde 400 (`ValorInvalidoException`).
+vida 73 y blindaje 97 en los dos casos. Un dato imposible en el juego responde 400 (`ValorInvalidoException`):
+por ejemplo, una distancia mayor al alcance del arma (208 m los rifles y francotiradores, 104 m las pistolas).
 Todo lo que un compañero necesita (cómo arrancar mi servicio, ejemplos y qué le pido a cambio) está en
 [docs/PARA-COMPANEROS.md](docs/PARA-COMPANEROS.md).
 
@@ -205,15 +210,20 @@ El OpenAPI toma la URL del puerto en el que arrancó.
 ### Insomnia del escenario
 
 En la colección, elegí el subentorno **«Grupo POO-09 (este servicio en 8082)»** y corré la carpeta **6** después de
-las carpetas 0 a 4: los OpenAPI de A1, A2 y A3, el escenario feliz, el rechazo de A2 (sin mira), el rechazo de
-A3 (fuego amigo) y los `GET` que muestran que los rechazos no cambiaron nada.
+las carpetas 0 a 4: los OpenAPI de A1, A2 y A3; crear el AWP, Halcón, Aliado y el tirador Sombra; el escenario
+feliz; el rechazo de A2 (sin mira); el rechazo de A3 (fuego amigo); dos rechazos propios que no llegan a los
+compañeros (Halcón, que es TT, no usa el AWP de los CT; a 300 m la bala del AWP no llega); los `GET` que
+muestran que los rechazos no cambiaron nada, y un sexto CT que no entra (`EquipoCompletoException`).
 
 Con los tres prendidos, `./insomnia/capturar-respuestas.sh` guarda las respuestas reales en
 `insomnia/respuestas/` (con un `resumen.md`), para que la corrección las vea aunque un compañero esté apagado.
 
 **Prueba real con los tres servicios** (23 de noviembre de 2026, 16:35; Matías en `c2ac475`, Joaquín en
 `ecba4ed` y este servicio en `5de6e65`): los 14 pedidos de `capturar-respuestas.sh` dieron lo esperado y las
-respuestas están en [`insomnia/respuestas/`](insomnia/respuestas/) ([resumen](insomnia/respuestas/resumen.md)):
+respuestas están en [`insomnia/respuestas/`](insomnia/respuestas/) ([resumen](insomnia/respuestas/resumen.md)).
+En esa versión el tirador era solo un nombre (`"tirador": "Sombra"`); en la revisión final pasó a ser un jugador
+guardado (`tiradorId`, ver [Revisión final](#revisión-final-esto-puede-pasar-en-el-juego)). Lo que se les manda
+a Matías y a Joaquín no cambió:
 
 | Pedido | HTTP | Qué respondió |
 |---|---|---|
@@ -260,6 +270,24 @@ campos de su contrato. Si su OpenAPI no alcanza, se lo pido a ellos.
 `A2_RUTA` o `A3_RUTA` (o la propiedad), sin tocar código. Si cambia un nombre de campo, se toca solo
 `DisparoRapidoA2` o `DanioA3`. No hay nada copiado de su dominio.
 
+### Revisión final: ¿esto puede pasar en el juego?
+
+Antes de entregar repasé cada dato que acepta la API con la pregunta de la nota del profesor sobre POO-08:
+«¿esto puede pasar en el juego?». Encontré estos casos y los cerré:
+
+| Qué aceptaba la API | ¿Puede pasar en CS2? | Cómo quedó |
+|---|---|---|
+| `POST /api/armas/{id}/disparos?veces=715827883` con la FAMAS en ráfaga | No, y además era un error de programación: 3 × 715 827 883 no entra en un `int`, la cuenta daba un número negativo y la regla de munición la dejaba pasar. El servidor intentaba disparar 715 millones de veces y terminaba con un error 500. La consulta `POST /api/reglas/disparo` respondía «puede disparar», con balas negativas. | La cuenta se hace con `long`: responde 409 `MunicionInsuficienteException` y no cambia nada. |
+| Un disparo a 1 km (o a 100 km) | No: la bala de cada arma recorre como máximo su `m_flRange` de `weapons.vdata` (8192 unidades, 208 m, los rifles y francotiradores; 4096, 104 m, las pistolas). | Regla de alcance en `ReglasDeArmas.verificarAlcance`: 400 en los disparos, la simulación, la consulta de impacto y el escenario. El catálogo muestra `alcanceMetros`. |
+| En el escenario, el tirador era un nombre libre (`"tirador": "Sombra"`) | No: podía disparar un jugador eliminado, uno del otro equipo con el AWP de los CT o el mismo objetivo. | El tirador es un jugador guardado (`tiradorId`). Tiene que estar vivo (si no, 409 `JugadorEliminadoException`), ser del equipo del arma y no ser el objetivo (si no, 400). Se controla antes de consultar a A2 y A3. |
+| Cualquier cantidad de jugadores en un equipo | No: en Premier y Competitivo se juega 5 contra 5. | El sexto jugador de un equipo responde 409 `EquipoCompletoException`. |
+| Un JSON mal escrito o `/api/armas/abc` | Es un error del pedido, no del juego, pero respondía con el formato genérico de Spring. | Dos handlers más en `ManejadorErrores`: 400 con el mismo formato `{"error", "excepcion"}` que el resto. |
+
+Cada caso tiene su test y, salvo el desbordamiento, su pedido en la carpeta 6 de Insomnia. También verifiqué
+que los README de Matías y Joaquín anotan las mismas tres URL (8080, 8082 y 8083) y que lo que consultan de mi
+servicio sigue igual: Matías usa `POST /api/reglas/disparo` con `modelo` y `carga`, y Joaquín
+`POST /api/reglas/impacto` con `modelo`, `distancia` (10 y 40 m, dentro del alcance), `vida` y `blindaje`.
+
 ## Situación de POO-08
 
 La corrección de POO-08 tuvo **observaciones y descuentos**: 17 de 24 (nota 7,1). Están **todas cerradas**.
@@ -300,23 +328,24 @@ El `POST` de un arma lleva el **modelo** y el **equipo**, nada más. El precio, 
 reserva y si tiene ráfaga salen de `CatalogoArmas`, así que no se puede guardar un AK-47 con una bala ni
 una HE con 500 de daño. `GET /api/catalogo` muestra la lista.
 
-| Modelo | Clase | Precio | Equipo | Daño | Relación de blindaje | Cargador | Reserva | Disparo |
-|---|---|---|---|---|---|---|---|---|
-| AK-47 | `Rifle` | 2700 | TT | 36 | 1,55 | 30 | 3 cargadores | automático |
-| Galil AR | `Rifle` | 1800 | TT | 30 | 1,55 | 35 | 4 cargadores | automático |
-| M4A4 | `Rifle` | 2900 | CT | 33 | 1,40 | 30 | 4 cargadores | automático |
-| FAMAS | `Rifle` | 1950 | CT | 30 | 1,40 | 25 | 4 cargadores | automático o ráfaga |
-| Glock-18 | `Pistola` | 200 | TT | 30 | 0,94 | 20 | 3 cargadores | semiautomático o ráfaga |
-| USP-S | `Pistola` | 200 | CT | 35 | 1,01 | 12 | 2 cargadores | semiautomático |
-| Desert Eagle | `Pistola` | 700 | los dos | 53 | 1,864 | 7 | 3 cargadores | semiautomático |
-| AWP | `Sniper` | 4750 | los dos | 115 | 1,95 | 5 | 2 cargadores | semiautomático |
-| SSG 08 | `Sniper` | 1700 | los dos | 88 | 1,70 | 10 | 2 cargadores | semiautomático |
-| HE | `Granada` | 300 | los dos | 99 | 1,2 | — | — | se lanza una vez |
-| Flashbang | `Granada` | 200 | los dos | 0 (ciega) | — | — | — | se lanza una vez |
+| Modelo | Clase | Precio | Equipo | Daño | Relación de blindaje | Cargador | Reserva | Disparo | Alcance |
+|---|---|---|---|---|---|---|---|---|---|
+| AK-47 | `Rifle` | 2700 | TT | 36 | 1,55 | 30 | 3 cargadores | automático | 208 m |
+| Galil AR | `Rifle` | 1800 | TT | 30 | 1,55 | 35 | 4 cargadores | automático | 208 m |
+| M4A4 | `Rifle` | 2900 | CT | 33 | 1,40 | 30 | 4 cargadores | automático | 208 m |
+| FAMAS | `Rifle` | 1950 | CT | 30 | 1,40 | 25 | 4 cargadores | automático o ráfaga | 208 m |
+| Glock-18 | `Pistola` | 200 | TT | 30 | 0,94 | 20 | 3 cargadores | semiautomático o ráfaga | 104 m |
+| USP-S | `Pistola` | 200 | CT | 35 | 1,01 | 12 | 2 cargadores | semiautomático | 104 m |
+| Desert Eagle | `Pistola` | 700 | los dos | 53 | 1,864 | 7 | 3 cargadores | semiautomático | 104 m |
+| AWP | `Sniper` | 4750 | los dos | 115 | 1,95 | 5 | 2 cargadores | semiautomático | 208 m |
+| SSG 08 | `Sniper` | 1700 | los dos | 88 | 1,70 | 10 | 2 cargadores | semiautomático | 208 m |
+| HE | `Granada` | 300 | los dos | 99 | 1,2 | — | — | se lanza una vez | — |
+| Flashbang | `Granada` | 200 | los dos | 0 (ciega) | — | — | — | se lanza una vez | — |
 
 **De dónde salen los valores.** De los archivos de datos de CS2 que publica SteamDatabase en
 [GameTracking-CS2](https://github.com/SteamDatabase/GameTracking-CS2): `weapons.vdata` (precio, daño,
-relación de blindaje, cargador, reserva, automática, ráfaga y modificador de alcance) e `items_game.txt`
+relación de blindaje, cargador, reserva, automática, ráfaga, modificador de alcance y alcance, `m_flRange`) e
+`items_game.txt`
 (qué equipo la puede comprar). En esos archivos, el M4A4 figura como `weapon_m4a1`. Los consulté el 21 de
 noviembre de 2026: son los valores actuales de CS2, y algunos cambiaron respecto de CS:GO. Por ejemplo, la
 reserva se cuenta en cargadores (`m_bReserveAmmoAsClips`): el AWP tiene 2 cargadores de 5 balas.
@@ -329,7 +358,10 @@ reserva se cuenta en cargadores (`m_bReserveAmmoAsClips`): el AWP tiene 2 cargad
   los archivos, con una fórmula como la de CS:GO; la fórmula no está en esos archivos y no la pude
   verificar (ver [Simulación de daño](#simulación-de-daño-tres-clases-del-modelo)).
 - La HE hace su daño completo dentro de 5 m y nada fuera; en el juego, el daño baja con la distancia a la
-  explosión.
+  explosión. La distancia de una granada no tiene máximo: `m_flRange` es el recorrido de una bala.
+- Los jugadores son de un equipo y hay hasta 5 por equipo, como en Premier y Competitivo. La simulación de
+  POO-08 no mira el equipo: en una partida competitiva el fuego amigo existe, aunque el juego le reduce el
+  daño y el modelo no.
 - La flashbang tiene daño 0: ciega y no quita vida al explotar.
 - Al recargar se descartan las balas que quedaban en el cargador.
 - El apodo (Name Tag) tiene hasta 20 caracteres y el nombre del jugador hasta 32: son límites propios del
@@ -395,7 +427,7 @@ Mientras el servicio corre, la base está bloqueada por él: la consola tiene qu
 | `DELETE /api/armas/{id}` | Borra el arma. | 204 | 404 |
 | `POST /api/armas/{id}/disparos?distancia=&veces=` | Regla de munición: dispara una vez o `veces` veces y guarda la munición. Una granada queda lanzada. | 200 | 400, 404, 409 |
 | `POST /api/armas/{id}/recargas` | Regla de munición: usa un cargador de la reserva. | 200 | 400 (granada), 404, 409 |
-| `POST /api/jugadores` | Crea un jugador con 100 de vida: `{"nombre", "equipo": "CT"/"TT", "chaleco": true/false}`. | 201 + `id` | 400 |
+| `POST /api/jugadores` | Crea un jugador con 100 de vida: `{"nombre", "equipo": "CT"/"TT", "chaleco": true/false}`. Hasta 5 por equipo. | 201 + `id` | 400, 409 |
 | `GET /api/jugadores` | Lista los jugadores guardados con su vida y blindaje. Filtro opcional `?vivos=true`. | 200 | |
 | `GET /api/jugadores/{id}` | Un jugador. | 200 | 404 |
 | `POST /api/simulaciones/dano` | `{"armaId", "jugadorId", "distancia"}`: el arma guardada le dispara al jugador guardado y se guardan los dos. | 200 | 400, 404, 409 |
@@ -458,6 +490,7 @@ RuntimeException
     ├── MunicionInsuficienteException  409  regla de munición: sin balas o sin reserva
     ├── GranadaUsadaException          409  regla de munición: la granada ya se lanzó
     ├── JugadorEliminadoException      409  regla de vida: el jugador ya tiene vida 0
+    ├── EquipoCompletoException        409  el equipo ya tiene sus 5 jugadores
     ├── RechazoDeCompaneroException (abstracta)   POO-09: la regla de un compañero rechazó
     │   ├── RechazoDeA2Exception       409  rechazó A2 (Matías, disparo rápido)
     │   └── RechazoDeA3Exception       409  rechazó A3 (Joaquín, daño con blindaje)
@@ -466,8 +499,10 @@ RuntimeException
 
 Las lanzan los servicios. `ManejadorErrores` es un `@RestControllerAdvice` con un `@ExceptionHandler` por
 cada tipo, cada uno con su `@ResponseStatus`, y responde `{"error": "<mensaje>", "excepcion": "<tipo>"}`.
+Tiene dos handlers más para lo que Spring no puede leer (un JSON mal escrito o `/api/armas/abc`), que
+responden 400 con el mismo formato.
 Elegí 409 (*Conflict*) para las reglas porque el pedido está bien formado, pero el estado del arma o del
-jugador no permite hacerlo; 400 queda para datos que son ilegales en sí mismos. Las tres hermanas de 409 se
+jugador no permite hacerlo; 400 queda para datos que son ilegales en sí mismos. Las hermanas de 409 se
 distinguen por el campo `excepcion` del JSON y por el mensaje.
 
 **¿Comprobada o no comprobada?** `JuegoException` extiende `RuntimeException`, así que toda la familia es
@@ -583,6 +618,7 @@ classDiagram
     class JugadorRepository {
         <<interface>>
         +findByVidaGreaterThan(int) List~Jugador~
+        +countByEquipo(String) long
     }
     class JpaRepository~T, ID~ {
         <<interface>>
@@ -629,6 +665,7 @@ classDiagram
     class MunicionInsuficienteException
     class GranadaUsadaException
     class JugadorEliminadoException
+    class EquipoCompletoException
     class RechazoDeCompaneroException {
         <<abstract>>
     }
@@ -681,6 +718,7 @@ classDiagram
     JuegoException <|-- MunicionInsuficienteException
     JuegoException <|-- GranadaUsadaException
     JuegoException <|-- JugadorEliminadoException
+    JuegoException <|-- EquipoCompletoException
     JuegoException <|-- RechazoDeCompaneroException
     RechazoDeCompaneroException <|-- RechazoDeA2Exception
     RechazoDeCompaneroException <|-- RechazoDeA3Exception
@@ -715,7 +753,7 @@ El diagrama completo de la familia de armas está en [El modelo](#el-modelo).
 
 ### Colección de Insomnia
 
-El archivo es `insomnia/coleccion-armas-cs2.json` y tiene 73 pedidos.
+El archivo es `insomnia/coleccion-armas-cs2.json` y tiene 79 pedidos.
 
 1. Si ya habías usado el servicio, frenalo y borrá la carpeta `data/` para empezar con la base vacía.
 2. Arrancá el servicio con `./mvnw spring-boot:run`.
@@ -723,7 +761,7 @@ El archivo es `insomnia/coleccion-armas-cs2.json` y tiene 73 pedidos.
 4. Abrí la colección **MK CS2 Armas (POO-08)** y, arriba a la izquierda, elegí el entorno **Base
    Environment**. Trae `base_url` (`http://localhost:8080`) y los ids que va a crear la colección:
    `armaId` (AK-47), `sniperId` (AWP), `granadaId` (HE), `famasId`, `jugadorId` (Enemigo) y `botId`, y para la
-   carpeta 6, `a2_url`, `a3_url`, `escenarioArmaId`, `escenarioObjetivoId` y `aliadoId`.
+   carpeta 6, `a2_url`, `a3_url`, `escenarioArmaId`, `escenarioObjetivoId`, `aliadoId` y `escenarioTiradorId`.
 5. Corré las carpetas en orden, de arriba abajo, tocando **Send** en cada pedido:
    - **0. Servicio vivo y catálogo:** `GET /` y el catálogo.
    - **1. CRUD (caso feliz):** se crea el AK-47, se lista, se lee, se le pone un apodo con `PATCH` y un
@@ -742,7 +780,8 @@ El archivo es `insomnia/coleccion-armas-cs2.json` y tiene 73 pedidos.
      consulta de regla con un caso que acepta y otro que rechaza. No usan la base, así que se pueden correr en
      cualquier momento.
    - **6. POO-09: escenario:** con los tres servicios prendidos y el subentorno «Grupo POO-09», el escenario
-     feliz, el rechazo de A2 y el de A3 (ver [Insomnia del escenario](#insomnia-del-escenario)).
+     feliz, el rechazo de A2, el de A3, dos rechazos propios y el sexto CT que no entra
+     (`EquipoCompletoException`) (ver [Insomnia del escenario](#insomnia-del-escenario)).
 
 Con la base vacía, los ids que se crean coinciden con los del entorno. Si no, copiá el `id` de cada `POST`
 a la variable que indica su descripción (**Manage Environments**, o el engranaje del entorno).
@@ -1148,6 +1187,11 @@ lanzada, un segundo uso responde 409 y ya no aparece en los sonidos.
 Las validaciones estaban en los constructores y en los métodos del dominio. Siguiendo el criterio de la
 cátedra, ahora están en la capa service: el dominio guarda el estado y hace los cálculos de cada tipo de
 arma, y el servicio decide si una acción es posible antes de mandarle el mensaje.
+
+Antes de entregar POO-09 volví a hacerme la misma pregunta con cada dato que acepta la API, y aparecieron
+cuatro cosas más que no pueden pasar en CS2: una cantidad de disparos tan grande que la cuenta se desbordaba,
+balas que llegaban a cualquier distancia, un tirador que era solo un nombre y equipos de más de cinco. Están
+en [Revisión final](#revisión-final-esto-puede-pasar-en-el-juego).
 
 ### ¿Qué pasa si el controller asigna a mano la vida o la munición?
 
